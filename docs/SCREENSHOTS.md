@@ -42,7 +42,7 @@ Emergency newsroom: priority political and security updates, grouped into storie
 
 Live TV and video: only streams and uploads YouTube confirms are playable
 
-![Live TV and video: only streams and uploads YouTube confirms are playable](screenshots/07-live-tv-video.jpg)
+![Live TV and video: only streams and uploads YouTube confirms are playable](screenshots/07-live-tv-video.png)
 
 ### Earth watch
 
