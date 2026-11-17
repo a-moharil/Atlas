@@ -48,7 +48,11 @@ Live TV and video: only streams and uploads YouTube confirms are playable
 
 Earth watch: global wind field, hazards and climate anomalies
 
-![Earth watch: global wind field, hazards and climate anomalies](screenshots/08-earth-watch.jpg)
+![Earth watch: global wind field](screenshots/08-earth-watch.png)
+![Earth watch: global temperature](screenshots/08b-earth-watch.png)
+![Earth watch: global rain](screenshots/08c-earth-watch.png)
+![Earth watch: global ocean currents](screenshots/08d-earth-watch.png)
+
 
 ### Earth watch, India view
 
