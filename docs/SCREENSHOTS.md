@@ -66,19 +66,13 @@ Satellite atlas: imagery and hazard layers with the Survey of India boundary
 
 India regional map: where Indian coverage is concentrated
 
-![India regional map: where Indian coverage is concentrated](screenshots/10-india-regional-map.jpg)
+![India regional map: where Indian coverage is concentrated](screenshots/10-india-regional-map.png)
 
 ### Conflict atlas
 
 Conflict atlas: published maps, reporting and theatres
 
 ![Conflict atlas: published maps, reporting and theatres](screenshots/11-conflict-atlas.jpg)
-
-### Geopolitics
-
-Geopolitics: summits, blocs and diplomatic sources
-
-![Geopolitics: summits, blocs and diplomatic sources](screenshots/12-geopolitics.jpg)
 
 ### Macroeconomics
 
