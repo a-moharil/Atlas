@@ -1,0 +1,76 @@
+{
+  "methodology": "Outlet-level ratings are third-party assessments, not judgments about each article, accuracy or its author. Ratings primarily assess US political framing and may translate poorly to Indian or geopolitical contexts. Academic and official material is not automatically neutral. Unknown means unrated, not centrist.",
+  "methodology_url": "https://www.allsides.com/about/media-bias-rating-methods",
+  "profiles": {
+    "reuters_world": {
+      "lean": "Center",
+      "confidence": "High",
+      "scope": "Reuters online written reporting",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/reuters-media-bias"
+    },
+    "reuters_india": {
+      "lean": "Center",
+      "confidence": "High",
+      "scope": "Reuters online written reporting; US political scale, not India-specific assessment",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/reuters-media-bias"
+    },
+    "ap_world": {
+      "lean": "Lean Left",
+      "confidence": "Medium",
+      "scope": "AP US political online reporting; not automatically global-desk content",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/associated-press-media-bias"
+    },
+    "bbc_world": {
+      "lean": "Center",
+      "confidence": "Medium",
+      "scope": "BBC written online reporting; not TV or radio",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/bbc-news-media-bias"
+    },
+    "bbc_asia": {
+      "lean": "Center",
+      "confidence": "Medium",
+      "scope": "BBC written online reporting; extrapolated to Asia desk",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/bbc-news-media-bias"
+    },
+    "guardian_world": {
+      "lean": "Left",
+      "confidence": "Low",
+      "scope": "The Guardian online articles",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/guardian-media-bias"
+    },
+    "aj_world": {
+      "lean": "Lean Left",
+      "confidence": "Low",
+      "scope": "Al Jazeera online articles",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/al-jazeera-media-bias"
+    },
+    "fox_world": {
+      "lean": "Right",
+      "confidence": "Medium",
+      "scope": "Fox News Digital written web content; not broadcast",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/fox-news-media-bias"
+    },
+    "ft_world": {
+      "lean": "Center",
+      "confidence": "Low",
+      "scope": "Financial Times online journalism; excludes a judgement of individual articles",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/financial-times-media-bias"
+    },
+    "wsj_world": {
+      "lean": "Center",
+      "confidence": "High",
+      "scope": "WSJ news section only; opinion section rated separately",
+      "provider": "AllSides",
+      "url": "https://www.allsides.com/news-source/wall-street-journal-media-bias"
+    }
+  }
+}

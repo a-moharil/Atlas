@@ -1,0 +1,76 @@
+{
+  "sources": [
+    {
+      "id": "reuters_world",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 41,
+      "error": ""
+    },
+    {
+      "id": "reuters_india",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 50,
+      "error": ""
+    },
+    {
+      "id": "ap_world",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "bbc_world",
+      "attempted": "2026-11-16T16:04:28Z",
+      "success": "2026-11-16T16:04:28Z",
+      "state": "ok",
+      "count": 23,
+      "error": ""
+    },
+    {
+      "id": "bbc_asia",
+      "attempted": "2026-11-16T16:04:28Z",
+      "success": "2026-11-16T16:04:28Z",
+      "state": "ok",
+      "count": 17,
+      "error": ""
+    },
+    {
+      "id": "aj_world",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 25,
+      "error": ""
+    },
+    {
+      "id": "wion",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "fox_world",
+      "attempted": "2026-11-16T16:04:29Z",
+      "success": "2026-11-16T16:04:29Z",
+      "state": "ok",
+      "count": 10,
+      "error": ""
+    }
+  ],
+  "groups_48h": 12,
+  "candidates": 13,
+  "rejections": {
+    "below threshold": 42,
+    "outside window": 242,
+    "not political": 191,
+    "non-political noise": 3
+  }
+}

@@ -1,0 +1,1608 @@
+{
+  "asof": "2026-11-15",
+  "title": "Geopolitical Convergence Observatory",
+  "sources": [
+    {
+      "id": "P1",
+      "title": "CCC · theoretical foundations: multipolarity, ASEAN, controlled engagement",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=20",
+      "pages": "20–30",
+      "notes": "Chapters 3.2–3.5; arguments and proposals are authored theory, not independent evidence."
+    },
+    {
+      "id": "P2",
+      "title": "CCC · institutional instruments and operational programs",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=46",
+      "pages": "46–49",
+      "notes": "CDIF, RIDP, JESI, CFTA, EWCRS and institutional adaptation."
+    },
+    {
+      "id": "P3",
+      "title": "CCC · conflict mitigation, Russo-Western balancing",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=59",
+      "pages": "59–65",
+      "notes": "Security dilemma, preventive diplomacy, trade and balanced interdependence."
+    },
+    {
+      "id": "P4",
+      "title": "CCC · financing models and port governance",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=67",
+      "pages": "67–72",
+      "notes": "Shared port governance, financing, infrastructure commissions and risk allocation."
+    },
+    {
+      "id": "P5",
+      "title": "CCC · risks, asymmetries, Western and Russian resistance",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=75",
+      "pages": "75–79",
+      "notes": "Western resistance, Russian reluctance toward shared governance, Balkan fragmentation."
+    },
+    {
+      "id": "P6",
+      "title": "CCC · implementation roadmap",
+      "org": "CCC manuscript",
+      "date": "2025-06",
+      "type": "paper",
+      "url": "data/ccc-source.pdf#page=82",
+      "pages": "82–88",
+      "notes": "Founding convention, ratification, pilots and confidence-building measures."
+    },
+    {
+      "id": "S01",
+      "title": "Territorial Integrity of Ukraine — UN General Assembly 68/262",
+      "org": "United Nations",
+      "date": "2014-03-27",
+      "type": "primary",
+      "url": "https://mandates.un.org/mandate/A/RES/68/262",
+      "notes": "Reaffirms Ukrainian territorial integrity and rejects Crimea status change based on March 2014 vote."
+    },
+    {
+      "id": "S02",
+      "title": "NATO member countries — Finland and Sweden accession history",
+      "org": "NATO",
+      "date": "2024-03-07",
+      "type": "primary",
+      "url": "https://www.nato.int/en/about-us/organization/nato-member-countries",
+      "notes": "Finland joined 4 April 2023, Sweden joined 7 March 2024."
+    },
+    {
+      "id": "S03",
+      "title": "Ukraine’s path towards EU accession",
+      "org": "European Commission",
+      "date": "2026-10-14",
+      "type": "primary",
+      "url": "https://commission.europa.eu/topics/eu-solidarity-ukraine/ukraines-path-towards-eu-accession_en",
+      "notes": "June 2024 negotiations opened, additional clusters opened 2026."
+    },
+    {
+      "id": "S04",
+      "title": "REPowerEU — security of gas supply",
+      "org": "European Commission",
+      "date": "2026-11",
+      "type": "primary",
+      "url": "https://energy.ec.europa.eu/topics/energy-security/security-gas-supply_en",
+      "notes": "Russian share of EU gas imports: 45% in 2021 versus 12% in 2025; phased ban 2026."
+    },
+    {
+      "id": "S05",
+      "title": "Quad joint press release on economic prosperity and security",
+      "org": "Australian Foreign Ministry / Quad",
+      "date": "2026-10-31",
+      "type": "primary",
+      "url": "https://www.foreignminister.gov.au/minister/penny-wong/media-release/quad-joint-press-release-economic-prosperity-and-security",
+      "notes": "Ports in Fiji, critical minerals, fuel resilience, subsea cables, semiconductor chokepoints, export credit agencies."
+    },
+    {
+      "id": "S06",
+      "title": "Quad leaders expected to meet in Manila on Tuesday",
+      "org": "Reuters",
+      "date": "2026-11-14",
+      "type": "reporting",
+      "url": "https://www.reuters.com/world/asia-pacific/trump-other-quad-leaders-meet-manila-tuesday-sources-say-2026-11-14/",
+      "notes": "Reported expected summit on 17 November; avoid stating as already held or irrevocably confirmed."
+    },
+    {
+      "id": "S07",
+      "title": "A new “Yalta”? US, Russia seek Shenzhen meeting; China cautious",
+      "org": "Reuters",
+      "date": "2026-11-14",
+      "type": "reporting",
+      "url": "https://www.reuters.com/world/china/new-yalta-trump-putin-push-meeting-that-xi-is-wary-hosting-2026-11-14/",
+      "notes": "US/Russia announcement, Chinese caution, no agreed agenda/format as of Nov 14."
+    },
+    {
+      "id": "S08",
+      "title": "Xi to attend APEC leaders’ meeting in Shenzhen, 18–19 November",
+      "org": "Chinese Ministry of Foreign Affairs",
+      "date": "2026-11-13",
+      "type": "primary",
+      "url": "https://www.fmprc.gov.cn/mfa_eng./xw/zyxw/202611/t20261113_12058556.html",
+      "notes": "Official APEC event dates and China chairing."
+    },
+    {
+      "id": "S09",
+      "title": "Trilateral Russia–Ukraine–US peace talks reopen in Abu Dhabi",
+      "org": "Associated Press / Washington Post",
+      "date": "2026-11-10",
+      "type": "reporting",
+      "url": "https://www.washingtonpost.com/world/2026/11/10/russia-ukraine-begin-us-backed-peace-talks-abu-dhabi/",
+      "notes": "Direct talks; wider European security architecture discussed; European officials consulted separately."
+    },
+    {
+      "id": "S10",
+      "title": "Informal European Council meeting — diplomatic coordination",
+      "org": "European Council",
+      "date": "2026-11-13",
+      "type": "primary",
+      "url": "https://www.consilium.europa.eu/en/meetings/european-council/2026/11/13/",
+      "notes": "EU institutions + France Germany Italy Poland UK; Ukraine sovereignty; 26–27 November financing discussion."
+    },
+    {
+      "id": "S11",
+      "title": "South China Sea code incomplete despite 80% provisional text",
+      "org": "Reuters",
+      "date": "2026-11-15",
+      "type": "reporting",
+      "url": "https://www.reuters.com/world/china/asean-china-fail-conclude-south-china-sea-code-conduct-2026-11-15/",
+      "notes": "ASEAN-China code not concluded; binding status disputed."
+    },
+    {
+      "id": "S12",
+      "title": "Measuring Connectivity across the India–Middle East–Europe Corridor",
+      "org": "OECD",
+      "date": "2026-11-05",
+      "type": "primary",
+      "url": "https://www.oecd.org/en/publications/measuring-connectivity-across-the-india-middle-east-europe-corridor_0117c321-en.html",
+      "notes": "IMEC is evolving into a network of corridors; key gaps, governance and ports; not complete end-to-end."
+    },
+    {
+      "id": "S13",
+      "title": "PM Modi meets President Putin at BRICS summit",
+      "org": "Government of India / PIB",
+      "date": "2026-09-11",
+      "type": "primary",
+      "url": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2309208&lang=2&reg=48",
+      "notes": "Energy, defence, economy, maritime trade and diplomatic cooperation."
+    },
+    {
+      "id": "S14",
+      "title": "Iran attacks navigation systems on island in Strait of Hormuz, sources say",
+      "org": "Reuters",
+      "date": "2026-11-11",
+      "type": "reporting",
+      "url": "https://www.reuters.com/world/middle-east/iran-attacks-shipping-navigation-systems-omans-didamar-island-sources-say-2026-11-11/",
+      "notes": "Reported attack; full extent not independently verified. Describes shipping disruptions."
+    },
+    {
+      "id": "S15",
+      "title": "New START treaty expiry overview",
+      "org": "US Congressional Research Service (mirrored)",
+      "date": "2026-02-09",
+      "type": "analysis",
+      "url": "https://www.everycrsreport.com/files/2026-02-09_IN12640_04964a4688db1af345b0e558d79a95d65bcb6dbb.html",
+      "notes": "Treaty expiration 5 February 2026; supporting context for arms control discussion."
+    },
+    {
+      "id": "S16",
+      "title": "Ukraine and Russia agree in principle on prisoner exchange",
+      "org": "The National / UAE",
+      "date": "2026-11-12",
+      "type": "reporting",
+      "url": "https://www.thenationalnews.com/news/uae/2026/11/12/president-sheikh-mohamed-meets-witkoff-and-kushner-during-russia-ukraine-talks/",
+      "notes": "Progress on prisoner exchange and ceasefire-monitoring discussions; no general peace agreement."
+    },
+    {
+      "id": "S17",
+      "title": "ASEAN leaders summit opens in Manila",
+      "org": "Associated Press",
+      "date": "2026-11-15",
+      "type": "reporting",
+      "url": "https://apnews.com/article/ca9bb47cc109a1cae57be787b137095",
+      "notes": "49th ASEAN summit 15–17 Nov; regional diplomacy on maritime disputes."
+    },
+    {
+      "id": "S18",
+      "title": "Chairperson-in-Office welcomes Minsk agreement",
+      "org": "OSCE",
+      "date": "2014-09-05",
+      "type": "primary",
+      "url": "https://www.osce.org/cio/123245",
+      "notes": "Direct record of the September 2014 ceasefire and diplomatic process."
+    },
+    {
+      "id": "S19",
+      "title": "2017 Quad consultation: Australia–India–Japan–US",
+      "org": "US Department of State (archived)",
+      "date": "2017-11-12",
+      "type": "primary",
+      "url": "https://2017-2021.state.gov/australia-india-japan-u-s-consultations-on-the-indo-pacific/",
+      "notes": "Senior officials met in Manila on 12 November 2017; maritime security and regional rules discussed."
+    },
+    {
+      "id": "S20",
+      "title": "Russian gas imports: Council adopts stepwise ban",
+      "org": "Council of the European Union",
+      "date": "2026-01-26",
+      "type": "primary",
+      "url": "https://www.consilium.europa.eu/en/press/press-releases/2026/01/26/russian-gas-imports-council-gives-final-greenlight-to-a-stepwise-ban/",
+      "notes": "Formal adoption on 26 January 2026, subject to staggered implementation and transition periods."
+    }
+  ],
+  "claims": [
+    {
+      "id": "C01",
+      "chapter": "3.2",
+      "name": "Overlapping multipolar relationships",
+      "domain": "governance",
+      "kind": "diagnostic",
+      "status": "consistent",
+      "confidence": "moderate",
+      "detail": "India cooperates through Quad while retaining Russia–BRICS engagement. Multiple powers bargain across forums instead of strict bipolar assignment.",
+      "supports": [
+        "S05",
+        "S13"
+      ],
+      "challenges": [
+        "S02"
+      ],
+      "refs": [
+        "P1"
+      ],
+      "test": "Track whether cross-institution participation survives acute strategic disputes."
+    },
+    {
+      "id": "C02",
+      "chapter": "3.4",
+      "name": "Controlled engagement / multi-alignment",
+      "domain": "diplomacy",
+      "kind": "diagnostic",
+      "status": "consistent",
+      "confidence": "high",
+      "detail": "India continues Quad participation and BRICS/Russia engagement, making this a concrete case of the manuscript’s India-based analogy.",
+      "supports": [
+        "S05",
+        "S13"
+      ],
+      "challenges": [],
+      "refs": [
+        "P1"
+      ],
+      "test": "Measure sustained diplomatic and economic participation across competing institutional groupings."
+    },
+    {
+      "id": "C03",
+      "chapter": "3.3",
+      "name": "Plural regional diplomacy à la ASEAN",
+      "domain": "diplomacy",
+      "kind": "mechanism",
+      "status": "mixed",
+      "confidence": "moderate",
+      "detail": "ASEAN and China maintain prolonged code-of-conduct discussions; disagreement on binding status shows the difficulty of translating dialogue into enforceable rules.",
+      "supports": [
+        "S11",
+        "S17"
+      ],
+      "challenges": [
+        "S11"
+      ],
+      "refs": [
+        "P1"
+      ],
+      "test": "Has a legally effective and enforceable code been adopted and implemented?"
+    },
+    {
+      "id": "C04",
+      "chapter": "3.5, 6.3",
+      "name": "Diversify dependence to limit coercion",
+      "domain": "energy",
+      "kind": "mechanism",
+      "status": "consistent",
+      "confidence": "high",
+      "detail": "EU phased removal of Russian gas, Quad critical-minerals and fuel work show diversification as an actual strategy. This supports risk-management logic, not the wider cross-bloc integration outcome.",
+      "supports": [
+        "S04",
+        "S05"
+      ],
+      "challenges": [],
+      "refs": [
+        "P1",
+        "P2"
+      ],
+      "test": "Document dependency concentration and whether diversification measurably reduces leverage."
+    },
+    {
+      "id": "C05",
+      "chapter": "7.1–7.3",
+      "name": "Regional security architecture matters beyond borders",
+      "domain": "security",
+      "kind": "diagnostic",
+      "status": "consistent",
+      "confidence": "moderate",
+      "detail": "The 2026 war negotiations encompass broader European security and NATO assurances, consonant with CCC’s wider framing, without implying any legitimisation of territorial conquest.",
+      "supports": [
+        "S09",
+        "S10"
+      ],
+      "challenges": [],
+      "refs": [
+        "P3"
+      ],
+      "test": "Does an agreed settlement address enforceable regional guarantees and independent sovereignty?"
+    },
+    {
+      "id": "C06",
+      "chapter": "4.4, 7.2",
+      "name": "Institutionalised mediation and confidence measures",
+      "domain": "diplomacy",
+      "kind": "mechanism",
+      "status": "early",
+      "confidence": "moderate",
+      "detail": "Abu Dhabi talks and a reported prospective prisoner exchange illustrate negotiation, but not a durable impartial institutional system.",
+      "supports": [
+        "S09",
+        "S16"
+      ],
+      "challenges": [
+        "S10"
+      ],
+      "refs": [
+        "P3",
+        "P6"
+      ],
+      "test": "Permanent, independently monitored arrangements with meaningful participation of affected parties."
+    },
+    {
+      "id": "C07",
+      "chapter": "8.1–8.3",
+      "name": "Port and corridor infrastructure as geopolitical assets",
+      "domain": "maritime",
+      "kind": "diagnostic",
+      "status": "consistent",
+      "confidence": "high",
+      "detail": "Quad port plans and OECD IMEC analysis confirm the importance of shared port and corridor governance as strategic concerns.",
+      "supports": [
+        "S05",
+        "S12"
+      ],
+      "challenges": [],
+      "refs": [
+        "P4"
+      ],
+      "test": "Actual cross-border governance and transparent benefit sharing, not solely plans and funds."
+    },
+    {
+      "id": "C08",
+      "chapter": "3.5, 7.3",
+      "name": "Russia–Europe economic convergence",
+      "domain": "trade",
+      "kind": "outcome",
+      "status": "contrary",
+      "confidence": "high",
+      "detail": "EU gas imports from Russia fell sharply and a phased EU import ban was adopted. Cross-rival economic re-integration is not the observed trajectory.",
+      "supports": [],
+      "challenges": [
+        "S04"
+      ],
+      "refs": [
+        "P1",
+        "P3"
+      ],
+      "test": "Reciprocal, legally anchored market access and energy commitments spanning Russia and Western-aligned states."
+    },
+    {
+      "id": "C09",
+      "chapter": "3.4, 7.3",
+      "name": "Strategic equidistance in Central/Eastern Europe",
+      "domain": "security",
+      "kind": "outcome",
+      "status": "contrary",
+      "confidence": "high",
+      "detail": "Finland and Sweden entered NATO and Ukraine has advanced EU accession, indicating convergence on European alliances in this geographic setting.",
+      "supports": [],
+      "challenges": [
+        "S02",
+        "S03"
+      ],
+      "refs": [
+        "P1",
+        "P3"
+      ],
+      "test": "Durable sovereign participation in a nonexclusive third forum without weakening current alliances."
+    },
+    {
+      "id": "C10",
+      "chapter": "4–5, 10",
+      "name": "CCC-style inclusive institution established",
+      "domain": "governance",
+      "kind": "outcome",
+      "status": "unobserved",
+      "confidence": "high",
+      "detail": "No verified CCC founding convention, treaty ratification, dispute mechanism or cross-bloc pilot infrastructure operating under the proposed charter.",
+      "supports": [],
+      "challenges": [],
+      "refs": [
+        "P2",
+        "P6"
+      ],
+      "test": "Convention, ratification, a functioning secretariat and pilots approved by participating states."
+    },
+    {
+      "id": "C11",
+      "chapter": "9.1–9.2",
+      "name": "Great-power resistance to shared governance",
+      "domain": "governance",
+      "kind": "diagnostic",
+      "status": "consistent",
+      "confidence": "moderate",
+      "detail": "Debates over who is represented at EU security talks and at a possible US–China–Russia meeting echo the manuscript’s concerns about institutional inclusivity and unequal leverage.",
+      "supports": [
+        "S07",
+        "S10"
+      ],
+      "challenges": [],
+      "refs": [
+        "P5"
+      ],
+      "test": "Do affected smaller states gain binding decision rights rather than post-hoc consultation?"
+    },
+    {
+      "id": "C12",
+      "chapter": "10.1–10.3",
+      "name": "Incremental pilots precede diplomatic convergence",
+      "domain": "infrastructure",
+      "kind": "mechanism",
+      "status": "mixed",
+      "confidence": "moderate",
+      "detail": "Quad and IMEC produce sector-based cooperation and coordination structures, but largely among selected partners rather than between strategic rivals.",
+      "supports": [
+        "S05",
+        "S12"
+      ],
+      "challenges": [
+        "S04"
+      ],
+      "refs": [
+        "P6",
+        "P4"
+      ],
+      "test": "Pilots crossing competing alignments that demonstrate reciprocal costs and gains."
+    }
+  ],
+  "events": [
+    {
+      "id": "E01",
+      "date": "2014-03-18",
+      "title": "Russia annexes Crimea",
+      "location": "Sevastopol / Crimea",
+      "arena": "europe",
+      "category": "security",
+      "status": "historical",
+      "summary": "Annexation followed by UN General Assembly reaffirmation of Ukrainian territorial integrity.",
+      "actors": [
+        "Russia",
+        "Ukraine",
+        "UN"
+      ],
+      "sources": [
+        "S01"
+      ],
+      "claims": [
+        "C05",
+        "C11"
+      ]
+    },
+    {
+      "id": "E02",
+      "date": "2014-09-05",
+      "title": "Minsk process begins",
+      "location": "Minsk",
+      "arena": "europe",
+      "category": "diplomacy",
+      "status": "historical",
+      "summary": "A set of ceasefire and political arrangements attempted to manage the conflict in eastern Ukraine; implementation proved fragile.",
+      "actors": [
+        "Ukraine",
+        "Russia",
+        "OSCE"
+      ],
+      "sources": [
+        "S18"
+      ],
+      "claims": [
+        "C06"
+      ]
+    },
+    {
+      "id": "E03",
+      "date": "2017-11-12",
+      "title": "Quad diplomatic format revived",
+      "location": "Manila",
+      "arena": "indo",
+      "category": "diplomacy",
+      "status": "historical",
+      "summary": "Officials from India, Australia, Japan and the United States renewed Quadrilateral consultations.",
+      "actors": [
+        "India",
+        "Australia",
+        "Japan",
+        "United States"
+      ],
+      "sources": [
+        "S19"
+      ],
+      "claims": [
+        "C01",
+        "C02"
+      ]
+    },
+    {
+      "id": "E04",
+      "date": "2022-02-24",
+      "title": "Full-scale invasion of Ukraine",
+      "location": "Ukraine",
+      "arena": "europe",
+      "category": "security",
+      "status": "historical",
+      "summary": "Russia commenced its full-scale invasion; war and economic sanctions intensified across Europe.",
+      "actors": [
+        "Russia",
+        "Ukraine",
+        "European Union"
+      ],
+      "sources": [
+        "S03",
+        "S04"
+      ],
+      "claims": [
+        "C05",
+        "C08"
+      ]
+    },
+    {
+      "id": "E05",
+      "date": "2023-04-04",
+      "title": "Finland joins NATO",
+      "location": "Helsinki",
+      "arena": "europe",
+      "category": "security",
+      "status": "historical",
+      "summary": "A major change in the Baltic security environment following Russia’s full-scale invasion.",
+      "actors": [
+        "Finland",
+        "NATO"
+      ],
+      "sources": [
+        "S02"
+      ],
+      "claims": [
+        "C09"
+      ]
+    },
+    {
+      "id": "E06",
+      "date": "2023-09-09",
+      "title": "IMEC announced at G20",
+      "location": "New Delhi",
+      "arena": "global",
+      "category": "infrastructure",
+      "status": "historical",
+      "summary": "India–Middle East–Europe Corridor announced as a transcontinental connectivity initiative.",
+      "actors": [
+        "India",
+        "European Union",
+        "United States",
+        "United Arab Emirates"
+      ],
+      "sources": [
+        "S12"
+      ],
+      "claims": [
+        "C07",
+        "C12"
+      ]
+    },
+    {
+      "id": "E07",
+      "date": "2024-03-07",
+      "title": "Sweden joins NATO",
+      "location": "Stockholm",
+      "arena": "europe",
+      "category": "security",
+      "status": "historical",
+      "summary": "Sweden becomes NATO’s 32nd member.",
+      "actors": [
+        "Sweden",
+        "NATO"
+      ],
+      "sources": [
+        "S02"
+      ],
+      "claims": [
+        "C09"
+      ]
+    },
+    {
+      "id": "E08",
+      "date": "2024-06-25",
+      "title": "Ukraine EU accession talks formally begin",
+      "location": "Luxembourg",
+      "arena": "europe",
+      "category": "governance",
+      "status": "historical",
+      "summary": "Formal EU accession negotiations commenced following Ukraine’s sovereign application.",
+      "actors": [
+        "Ukraine",
+        "European Union"
+      ],
+      "sources": [
+        "S03"
+      ],
+      "claims": [
+        "C09"
+      ]
+    },
+    {
+      "id": "E09",
+      "date": "2025-06",
+      "title": "CCC manuscript dated June 2025",
+      "location": "Europe",
+      "arena": "global",
+      "category": "theory",
+      "status": "manuscript",
+      "summary": "Analytical boundary: earlier events test retrospective interpretation, subsequent developments can test prospective relevance.",
+      "actors": [
+        "CCC"
+      ],
+      "sources": [
+        "P1",
+        "P6"
+      ],
+      "claims": [
+        "C01",
+        "C10"
+      ]
+    },
+    {
+      "id": "E10",
+      "date": "2026-01-26",
+      "title": "EU adopts phased Russian gas import ban",
+      "location": "Brussels",
+      "arena": "europe",
+      "category": "energy",
+      "status": "historical",
+      "summary": "EU REPowerEU regulation hardens strategic energy separation and diversification.",
+      "actors": [
+        "European Union",
+        "Russia"
+      ],
+      "sources": [
+        "S04",
+        "S20"
+      ],
+      "claims": [
+        "C04",
+        "C08"
+      ]
+    },
+    {
+      "id": "E11",
+      "date": "2026-09-11",
+      "title": "India–Russia meeting at BRICS summit",
+      "location": "New Delhi",
+      "arena": "global",
+      "category": "diplomacy",
+      "status": "historical",
+      "summary": "Discussion of defence, energy, economic ties and maritime disruptions.",
+      "actors": [
+        "India",
+        "Russia",
+        "BRICS"
+      ],
+      "sources": [
+        "S13"
+      ],
+      "claims": [
+        "C01",
+        "C02"
+      ]
+    },
+    {
+      "id": "E12",
+      "date": "2026-10-31",
+      "title": "Quad ministers publish economic-security agenda",
+      "location": "Atlanta",
+      "arena": "indo",
+      "category": "technology",
+      "status": "historical",
+      "summary": "Includes mineral recycling, energy reserves, ports, subsea cables and semiconductor vulnerabilities.",
+      "actors": [
+        "Quad",
+        "India",
+        "Japan",
+        "Australia",
+        "United States"
+      ],
+      "sources": [
+        "S05"
+      ],
+      "claims": [
+        "C04",
+        "C07",
+        "C12"
+      ]
+    },
+    {
+      "id": "E13",
+      "date": "2026-11-05",
+      "title": "OECD maps IMEC connectivity and bottlenecks",
+      "location": "Paris",
+      "arena": "maritime",
+      "category": "infrastructure",
+      "status": "historical",
+      "summary": "Network-of-corridors framework, ports and cross-border governance; IMEC not fully operational.",
+      "actors": [
+        "OECD",
+        "India",
+        "European Union"
+      ],
+      "sources": [
+        "S12"
+      ],
+      "claims": [
+        "C07",
+        "C12"
+      ]
+    },
+    {
+      "id": "E14",
+      "date": "2026-11-10",
+      "title": "US-mediated Russia–Ukraine talks in Abu Dhabi",
+      "location": "Abu Dhabi",
+      "arena": "europe",
+      "category": "diplomacy",
+      "status": "historical",
+      "summary": "Direct talks resume, discussing humanitarian measures and security architecture; no comprehensive ceasefire.",
+      "actors": [
+        "United States",
+        "Ukraine",
+        "Russia"
+      ],
+      "sources": [
+        "S09",
+        "S16"
+      ],
+      "claims": [
+        "C05",
+        "C06"
+      ]
+    },
+    {
+      "id": "E15",
+      "date": "2026-11-13",
+      "title": "EU announces European negotiating coordination",
+      "location": "Dublin",
+      "arena": "europe",
+      "category": "diplomacy",
+      "status": "historical",
+      "summary": "EU institutions and five European states coordinate EU role, insisting Ukraine decides its territory.",
+      "actors": [
+        "European Union",
+        "United Kingdom",
+        "Ukraine"
+      ],
+      "sources": [
+        "S10"
+      ],
+      "claims": [
+        "C05",
+        "C11"
+      ]
+    },
+    {
+      "id": "E16",
+      "date": "2026-11-15",
+      "title": "ASEAN–China South China Sea code remains unsettled",
+      "location": "Manila",
+      "arena": "indo",
+      "category": "maritime",
+      "status": "historical",
+      "summary": "Roughly 80% provisionally agreed, but legal binding effect unresolved.",
+      "actors": [
+        "ASEAN",
+        "China",
+        "Philippines"
+      ],
+      "sources": [
+        "S11"
+      ],
+      "claims": [
+        "C03"
+      ]
+    },
+    {
+      "id": "E17",
+      "date": "2026-11-17",
+      "title": "Expected Quad leaders’ summit",
+      "location": "Manila",
+      "arena": "indo",
+      "category": "diplomacy",
+      "status": "expected",
+      "summary": "Reported as expected: maritime navigation, critical minerals and economic security. Outcome not yet known.",
+      "actors": [
+        "Quad",
+        "India",
+        "Japan",
+        "Australia",
+        "United States"
+      ],
+      "sources": [
+        "S06"
+      ],
+      "claims": [
+        "C02",
+        "C12"
+      ]
+    },
+    {
+      "id": "E18",
+      "date": "2026-11-18",
+      "title": "Quad export-credit agencies scheduled to meet",
+      "location": "Tokyo",
+      "arena": "indo",
+      "category": "infrastructure",
+      "status": "announced",
+      "summary": "Official October Quad communiqué names Tokyo as location on 18 November; this is separate from Manila leaders’ meeting.",
+      "actors": [
+        "Quad",
+        "Japan"
+      ],
+      "sources": [
+        "S05"
+      ],
+      "claims": [
+        "C12"
+      ]
+    },
+    {
+      "id": "E19",
+      "date": "2026-11-18",
+      "title": "APEC Economic Leaders’ Meeting begins",
+      "location": "Shenzhen",
+      "arena": "indo",
+      "category": "diplomacy",
+      "status": "announced",
+      "summary": "Chinese MFA officially announced APEC in Shenzhen for 18–19 November.",
+      "actors": [
+        "APEC",
+        "China",
+        "United States"
+      ],
+      "sources": [
+        "S08"
+      ],
+      "claims": [
+        "C01"
+      ]
+    },
+    {
+      "id": "E20",
+      "date": "2026-11-19",
+      "title": "Proposed US–China–Russia meeting at APEC",
+      "location": "Shenzhen",
+      "arena": "global",
+      "category": "diplomacy",
+      "status": "reported",
+      "summary": "White House and Kremlin plans reported; format and agenda not finalised in Reuters reporting as of 14 November.",
+      "actors": [
+        "United States",
+        "China",
+        "Russia"
+      ],
+      "sources": [
+        "S07"
+      ],
+      "claims": [
+        "C01",
+        "C11"
+      ]
+    },
+    {
+      "id": "E21",
+      "date": "2026-11-26",
+      "title": "European Council to consider Ukraine financing",
+      "location": "Brussels",
+      "arena": "europe",
+      "category": "governance",
+      "status": "announced",
+      "summary": "26–27 November agenda includes financial support for Ukraine from 2027 onward.",
+      "actors": [
+        "European Union",
+        "Ukraine"
+      ],
+      "sources": [
+        "S10"
+      ],
+      "claims": [
+        "C05"
+      ]
+    }
+  ],
+  "summits": [
+    {
+      "id": "T1",
+      "date": "2026-11-15",
+      "end": "2026-11-17",
+      "name": "49th ASEAN leaders’ summit",
+      "place": "Manila, Philippines",
+      "state": "underway",
+      "actors": [
+        "ASEAN",
+        "China",
+        "India",
+        "United States"
+      ],
+      "summary": "South China Sea rules, maritime disputes, broader regional diplomacy.",
+      "sources": [
+        "S11",
+        "S17"
+      ],
+      "watch": "Text of code of conduct, binding clauses, consensus and follow-up arrangements."
+    },
+    {
+      "id": "T2",
+      "date": "2026-11-17",
+      "end": "2026-11-17",
+      "name": "Quad leaders’ meeting",
+      "place": "Manila, Philippines",
+      "state": "expected",
+      "actors": [
+        "India",
+        "Japan",
+        "Australia",
+        "United States"
+      ],
+      "summary": "Reuters-reported meeting; critical minerals and secure waterways expected on agenda.",
+      "sources": [
+        "S06"
+      ],
+      "watch": "Final communiqué, signed arrangements, new infrastructure financing and participation."
+    },
+    {
+      "id": "T3",
+      "date": "2026-11-18",
+      "end": "2026-11-18",
+      "name": "Quad export-credit agencies",
+      "place": "Tokyo, Japan",
+      "state": "announced",
+      "actors": [
+        "India",
+        "Japan",
+        "Australia",
+        "United States"
+      ],
+      "summary": "Official Quad ministerial communiqué specifies 18 Nov meeting in Tokyo.",
+      "sources": [
+        "S05"
+      ],
+      "watch": "Practical deals, shared risk guarantee architecture and affected-country benefits."
+    },
+    {
+      "id": "T4",
+      "date": "2026-11-18",
+      "end": "2026-11-19",
+      "name": "APEC Economic Leaders’ Meeting",
+      "place": "Shenzhen, China",
+      "state": "announced",
+      "actors": [
+        "China",
+        "United States",
+        "APEC"
+      ],
+      "summary": "Official APEC summit, with potential side bilateral/multilateral meetings.",
+      "sources": [
+        "S08"
+      ],
+      "watch": "Trade, technology arrangements, regional institutional provisions."
+    },
+    {
+      "id": "T5",
+      "date": "2026-11-19",
+      "end": "2026-11-19",
+      "name": "Proposed US–China–Russia trilateral",
+      "place": "Shenzhen, China",
+      "state": "reported",
+      "actors": [
+        "United States",
+        "China",
+        "Russia"
+      ],
+      "summary": "US and Russia announced plans; format/agenda unsettled per 14 Nov Reuters reporting.",
+      "sources": [
+        "S07"
+      ],
+      "watch": "Attendance confirmation; nuclear risk dialogue, Ukraine sovereignty and who is consulted."
+    },
+    {
+      "id": "T6",
+      "date": "2026-11-26",
+      "end": "2026-11-27",
+      "name": "European Council",
+      "place": "Brussels, Belgium",
+      "state": "announced",
+      "actors": [
+        "European Union",
+        "Ukraine"
+      ],
+      "summary": "Ukraine financing for 2027 and beyond on agenda.",
+      "sources": [
+        "S10"
+      ],
+      "watch": "Duration, conditionality and implementation of assistance."
+    }
+  ],
+  "nodes": [
+    {
+      "id": "Washington",
+      "name": "Washington, D.C.",
+      "lat": 38.9,
+      "lon": -77.04,
+      "country": "United States",
+      "kind": "diplomacy"
+    },
+    {
+      "id": "Brussels",
+      "name": "Brussels",
+      "lat": 50.85,
+      "lon": 4.35,
+      "country": "European Union",
+      "kind": "governance"
+    },
+    {
+      "id": "Kyiv",
+      "name": "Kyiv",
+      "lat": 50.45,
+      "lon": 30.52,
+      "country": "Ukraine",
+      "kind": "security"
+    },
+    {
+      "id": "Moscow",
+      "name": "Moscow",
+      "lat": 55.75,
+      "lon": 37.62,
+      "country": "Russia",
+      "kind": "security"
+    },
+    {
+      "id": "Sevastopol",
+      "name": "Sevastopol",
+      "lat": 44.62,
+      "lon": 33.53,
+      "country": "Crimea",
+      "kind": "security"
+    },
+    {
+      "id": "Warsaw",
+      "name": "Warsaw",
+      "lat": 52.23,
+      "lon": 21.01,
+      "country": "Poland",
+      "kind": "security"
+    },
+    {
+      "id": "Helsinki",
+      "name": "Helsinki",
+      "lat": 60.17,
+      "lon": 24.94,
+      "country": "Finland",
+      "kind": "security"
+    },
+    {
+      "id": "Stockholm",
+      "name": "Stockholm",
+      "lat": 59.33,
+      "lon": 18.06,
+      "country": "Sweden",
+      "kind": "security"
+    },
+    {
+      "id": "New Delhi",
+      "name": "New Delhi",
+      "lat": 28.61,
+      "lon": 77.21,
+      "country": "India",
+      "kind": "diplomacy"
+    },
+    {
+      "id": "Tokyo",
+      "name": "Tokyo",
+      "lat": 35.68,
+      "lon": 139.7,
+      "country": "Japan",
+      "kind": "technology"
+    },
+    {
+      "id": "Canberra",
+      "name": "Canberra",
+      "lat": -35.28,
+      "lon": 149.13,
+      "country": "Australia",
+      "kind": "diplomacy"
+    },
+    {
+      "id": "Manila",
+      "name": "Manila",
+      "lat": 14.6,
+      "lon": 120.98,
+      "country": "Philippines",
+      "kind": "diplomacy"
+    },
+    {
+      "id": "Shenzhen",
+      "name": "Shenzhen",
+      "lat": 22.55,
+      "lon": 114.06,
+      "country": "China",
+      "kind": "technology"
+    },
+    {
+      "id": "Singapore",
+      "name": "Singapore",
+      "lat": 1.35,
+      "lon": 103.82,
+      "country": "Singapore",
+      "kind": "maritime"
+    },
+    {
+      "id": "Abu Dhabi",
+      "name": "Abu Dhabi",
+      "lat": 24.45,
+      "lon": 54.37,
+      "country": "United Arab Emirates",
+      "kind": "diplomacy"
+    },
+    {
+      "id": "Riyadh",
+      "name": "Riyadh",
+      "lat": 24.71,
+      "lon": 46.67,
+      "country": "Saudi Arabia",
+      "kind": "energy"
+    },
+    {
+      "id": "Tehran",
+      "name": "Tehran",
+      "lat": 35.69,
+      "lon": 51.39,
+      "country": "Iran",
+      "kind": "security"
+    },
+    {
+      "id": "Mundra",
+      "name": "Mundra Port",
+      "lat": 22.74,
+      "lon": 69.72,
+      "country": "India",
+      "kind": "maritime"
+    },
+    {
+      "id": "Khalifa Port",
+      "name": "Khalifa Port",
+      "lat": 24.79,
+      "lon": 54.69,
+      "country": "United Arab Emirates",
+      "kind": "maritime"
+    },
+    {
+      "id": "Haifa",
+      "name": "Haifa",
+      "lat": 32.79,
+      "lon": 34.99,
+      "country": "Israel",
+      "kind": "maritime"
+    },
+    {
+      "id": "Piraeus",
+      "name": "Piraeus",
+      "lat": 37.95,
+      "lon": 23.64,
+      "country": "Greece",
+      "kind": "maritime"
+    },
+    {
+      "id": "Odesa",
+      "name": "Odesa",
+      "lat": 46.48,
+      "lon": 30.73,
+      "country": "Ukraine",
+      "kind": "maritime"
+    },
+    {
+      "id": "Suva",
+      "name": "Suva",
+      "lat": -18.14,
+      "lon": 178.44,
+      "country": "Fiji",
+      "kind": "maritime"
+    },
+    {
+      "id": "Hormuz",
+      "name": "Strait of Hormuz",
+      "lat": 26.6,
+      "lon": 56.3,
+      "country": "Sea lane",
+      "kind": "maritime"
+    },
+    {
+      "id": "Bab el-Mandeb",
+      "name": "Bab el-Mandeb",
+      "lat": 12.58,
+      "lon": 43.42,
+      "country": "Sea lane",
+      "kind": "maritime"
+    },
+    {
+      "id": "Malacca",
+      "name": "Strait of Malacca",
+      "lat": 2.5,
+      "lon": 101.5,
+      "country": "Sea lane",
+      "kind": "maritime"
+    },
+    {
+      "id": "Black Sea",
+      "name": "Black Sea",
+      "lat": 43.2,
+      "lon": 35.3,
+      "country": "Sea lane",
+      "kind": "maritime"
+    },
+    {
+      "id": "Suez",
+      "name": "Suez Canal",
+      "lat": 30.4,
+      "lon": 32.4,
+      "country": "Sea lane",
+      "kind": "maritime"
+    },
+    {
+      "id": "Baku",
+      "name": "Baku",
+      "lat": 40.41,
+      "lon": 49.86,
+      "country": "Azerbaijan",
+      "kind": "infrastructure"
+    },
+    {
+      "id": "Bandar Abbas",
+      "name": "Bandar Abbas",
+      "lat": 27.18,
+      "lon": 56.27,
+      "country": "Iran",
+      "kind": "maritime"
+    },
+    {
+      "id": "Mumbai",
+      "name": "Mumbai",
+      "lat": 19.08,
+      "lon": 72.88,
+      "country": "India",
+      "kind": "maritime"
+    },
+    {
+      "id": "Athens",
+      "name": "Athens",
+      "lat": 37.98,
+      "lon": 23.72,
+      "country": "Greece",
+      "kind": "diplomacy"
+    }
+  ],
+  "links": [
+    {
+      "a": "Washington",
+      "b": "New Delhi",
+      "type": "quad",
+      "label": "Quad strategic cooperation"
+    },
+    {
+      "a": "New Delhi",
+      "b": "Tokyo",
+      "type": "quad",
+      "label": "Quad strategic cooperation"
+    },
+    {
+      "a": "Tokyo",
+      "b": "Canberra",
+      "type": "quad",
+      "label": "Quad strategic cooperation"
+    },
+    {
+      "a": "Canberra",
+      "b": "Washington",
+      "type": "quad",
+      "label": "Quad strategic cooperation"
+    },
+    {
+      "a": "New Delhi",
+      "b": "Moscow",
+      "type": "diplomacy",
+      "label": "India–Russia bilateral / BRICS engagement"
+    },
+    {
+      "a": "New Delhi",
+      "b": "Shenzhen",
+      "type": "diplomacy",
+      "label": "India–China diplomatic/economic interface; not a treaty route"
+    },
+    {
+      "a": "Moscow",
+      "b": "Shenzhen",
+      "type": "diplomacy",
+      "label": "Russia–China cooperation"
+    },
+    {
+      "a": "Washington",
+      "b": "Shenzhen",
+      "type": "diplomacy",
+      "label": "US–China bilateral engagement"
+    },
+    {
+      "a": "Kyiv",
+      "b": "Abu Dhabi",
+      "type": "diplomacy",
+      "label": "US-mediated talks, 10–11 November"
+    },
+    {
+      "a": "Moscow",
+      "b": "Abu Dhabi",
+      "type": "diplomacy",
+      "label": "US-mediated talks, 10–11 November"
+    },
+    {
+      "a": "Washington",
+      "b": "Abu Dhabi",
+      "type": "diplomacy",
+      "label": "US mediation, 10–11 November"
+    },
+    {
+      "a": "Brussels",
+      "b": "Kyiv",
+      "type": "diplomacy",
+      "label": "EU political / accession cooperation"
+    },
+    {
+      "a": "Mundra",
+      "b": "Khalifa Port",
+      "type": "imec",
+      "label": "IMEC: illustrative proposed corridor segment"
+    },
+    {
+      "a": "Khalifa Port",
+      "b": "Riyadh",
+      "type": "imec",
+      "label": "IMEC: illustrative proposed inland link"
+    },
+    {
+      "a": "Riyadh",
+      "b": "Haifa",
+      "type": "imec",
+      "label": "IMEC: aspirational connection; gaps remain"
+    },
+    {
+      "a": "Haifa",
+      "b": "Piraeus",
+      "type": "imec",
+      "label": "IMEC: illustrative Mediterranean shipping"
+    },
+    {
+      "a": "Piraeus",
+      "b": "Brussels",
+      "type": "imec",
+      "label": "IMEC: illustrative Europe network"
+    },
+    {
+      "a": "Mumbai",
+      "b": "Bandar Abbas",
+      "type": "instc",
+      "label": "INSTC conceptual alignment, not an exact transit route"
+    },
+    {
+      "a": "Bandar Abbas",
+      "b": "Baku",
+      "type": "instc",
+      "label": "INSTC conceptual alignment, not exact routing"
+    },
+    {
+      "a": "Baku",
+      "b": "Moscow",
+      "type": "instc",
+      "label": "INSTC conceptual alignment, not exact routing"
+    },
+    {
+      "a": "Odesa",
+      "b": "Black Sea",
+      "type": "maritime",
+      "label": "Black Sea commercial access"
+    },
+    {
+      "a": "Hormuz",
+      "b": "Bab el-Mandeb",
+      "type": "maritime",
+      "label": "Strategic chokepoint exposure, not a vessel route"
+    },
+    {
+      "a": "Bab el-Mandeb",
+      "b": "Suez",
+      "type": "maritime",
+      "label": "Red Sea–Suez axis"
+    },
+    {
+      "a": "Malacca",
+      "b": "Singapore",
+      "type": "maritime",
+      "label": "Singapore Strait / Malacca maritime geography"
+    }
+  ],
+  "capabilities": [
+    {
+      "actor": "United States",
+      "forums": "NATO · Quad · APEC",
+      "security": "NATO leadership, deterrence and nuclear-arms negotiations",
+      "economic": "Technology restrictions, investment and sanctions leverage",
+      "geography": "Indo-Pacific sea lanes, European security",
+      "ccc": "External major-power actor; tests whether cooperation permits smaller-state agency.",
+      "sources": [
+        "S05",
+        "S07",
+        "S10",
+        "S15"
+      ]
+    },
+    {
+      "actor": "China",
+      "forums": "APEC · BRICS · SCO · ASEAN dialogue",
+      "security": "South China Sea disputes, growing nuclear profile",
+      "economic": "Manufacturing and advanced supply-chain leverage",
+      "geography": "Western Pacific, Malacca-linked trade and technology routes",
+      "ccc": "External actor whose engagement may be cooperative or coercive depending on enforceable rules.",
+      "sources": [
+        "S07",
+        "S08",
+        "S11"
+      ]
+    },
+    {
+      "actor": "Russia",
+      "forums": "BRICS · SCO; EU/Ukraine talks via mediation",
+      "security": "War against Ukraine, nuclear power and territorial demands",
+      "economic": "Energy and resource exports, defence-industrial relationships",
+      "geography": "Eastern Europe, Black Sea, continental Eurasia",
+      "ccc": "Proposed charter participant; major obstacle is reciprocal sovereignty and shared governance.",
+      "sources": [
+        "S04",
+        "S07",
+        "S13"
+      ]
+    },
+    {
+      "actor": "India",
+      "forums": "Quad · BRICS · SCO · IMEC · G20",
+      "security": "Indian Ocean maritime security and selective security cooperation",
+      "economic": "Large market, industrial and corridor investment participation",
+      "geography": "Indian Ocean, Gulf and Indo-Pacific",
+      "ccc": "Explicit CCC model for controlled engagement and multi-alignment.",
+      "sources": [
+        "S05",
+        "S12",
+        "S13",
+        "P1"
+      ]
+    },
+    {
+      "actor": "European Union",
+      "forums": "EU · Eastern Partnership · IMEC interfaces",
+      "security": "Ukraine support, sanctions and coordination with NATO",
+      "economic": "Market standards, trade, finance and Russian-gas phase-out",
+      "geography": "Eastern Europe, Mediterranean corridor connections",
+      "ccc": "Potential complementary institution; also a competing source of alignment incentives.",
+      "sources": [
+        "S03",
+        "S04",
+        "S10",
+        "S12"
+      ]
+    },
+    {
+      "actor": "Ukraine",
+      "forums": "EU accession negotiations · UN · European diplomacy",
+      "security": "Defending sovereign territory; security guarantees central",
+      "economic": "Agricultural exports, infrastructure and reconstruction needs",
+      "geography": "Black Sea and East-Central Europe",
+      "ccc": "Core proposed participant; territorial integrity and equal agency are non-negotiable tests.",
+      "sources": [
+        "S01",
+        "S03",
+        "S09",
+        "S10",
+        "P4"
+      ]
+    },
+    {
+      "actor": "Japan",
+      "forums": "Quad · APEC · ASEAN dialogues",
+      "security": "Indo-Pacific maritime and strategic partnerships",
+      "economic": "Technology, export credit and supply-chain security",
+      "geography": "Western Pacific, East Asian industrial links",
+      "ccc": "Demonstrates selected-sector integration within a strategic coalition.",
+      "sources": [
+        "S05",
+        "S06"
+      ]
+    },
+    {
+      "actor": "Australia",
+      "forums": "Quad · APEC",
+      "security": "Indo-Pacific maritime cooperation",
+      "economic": "Critical-minerals and strategic supply-chain partnerships",
+      "geography": "South Pacific and Indian Ocean",
+      "ccc": "Potential example of economic resilience building and shared infrastructure governance.",
+      "sources": [
+        "S05"
+      ]
+    },
+    {
+      "actor": "ASEAN",
+      "forums": "ASEAN · ASEAN–China negotiations · ARF",
+      "security": "Consensus diplomacy, South China Sea Code of Conduct negotiations",
+      "economic": "Regional trade integration and strategic corridor access",
+      "geography": "South China Sea, Malacca and Southeast Asia",
+      "ccc": "Comparative institutional model; enforceability problems are key limits.",
+      "sources": [
+        "S11",
+        "S17",
+        "P1"
+      ]
+    },
+    {
+      "actor": "Gulf states",
+      "forums": "IMEC · energy and logistics partnerships",
+      "security": "Exposure to maritime disruption and wider Iran conflict",
+      "economic": "Oil supply, shipping hubs, ports and corridor finance",
+      "geography": "Hormuz, Arabian Peninsula, Red Sea and Gulf",
+      "ccc": "Infrastructure and energy chokepoints link apparently separate geopolitical theatres.",
+      "sources": [
+        "S12",
+        "S14"
+      ]
+    },
+    {
+      "actor": "Poland / Baltic states",
+      "forums": "NATO · EU · European negotiating coordination",
+      "security": "Eastern-flank deterrence and Russia threat perception",
+      "economic": "EU infrastructure and technology cooperation",
+      "geography": "Baltic region and East-Central Europe",
+      "ccc": "Potential members with strong existing alliance obligations; compatibility must be designed.",
+      "sources": [
+        "S02",
+        "S10",
+        "P1"
+      ]
+    }
+  ]
+}

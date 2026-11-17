@@ -1,0 +1,26 @@
+# Local data: your collected news, settings and caches never go to GitHub
+observatory.sqlite3
+observatory.sqlite3-*
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+model_cache/
+logo_cache/
+research_cache/
+previews/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Secrets and editor/OS clutter
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

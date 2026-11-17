@@ -1,0 +1,386 @@
+{
+  "elapsed_seconds": 35.1,
+  "configured": 63,
+  "successful": 62,
+  "entries": 2423,
+  "sources": [
+    {
+      "id": "mygov_consumer",
+      "state": "ok",
+      "count": 8,
+      "error": ""
+    },
+    {
+      "id": "mygov_communications",
+      "state": "ok",
+      "count": 57,
+      "error": ""
+    },
+    {
+      "id": "mygov_commerce",
+      "state": "ok",
+      "count": 10,
+      "error": ""
+    },
+    {
+      "id": "mygov_ayush",
+      "state": "ok",
+      "count": 51,
+      "error": ""
+    },
+    {
+      "id": "mygov_coal",
+      "state": "ok",
+      "count": 33,
+      "error": ""
+    },
+    {
+      "id": "mygov_chemicals",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_agriculture",
+      "state": "ok",
+      "count": 7,
+      "error": ""
+    },
+    {
+      "id": "mygov_aviation",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_earth",
+      "state": "ok",
+      "count": 38,
+      "error": ""
+    },
+    {
+      "id": "mygov_cooperation",
+      "state": "ok",
+      "count": 33,
+      "error": ""
+    },
+    {
+      "id": "mygov_corporate",
+      "state": "ok",
+      "count": 31,
+      "error": ""
+    },
+    {
+      "id": "mygov_education",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_culture",
+      "state": "ok",
+      "count": 33,
+      "error": ""
+    },
+    {
+      "id": "mygov_northeast",
+      "state": "ok",
+      "count": 14,
+      "error": ""
+    },
+    {
+      "id": "mygov_meity",
+      "state": "ok",
+      "count": 34,
+      "error": ""
+    },
+    {
+      "id": "mygov_defence",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_heavy",
+      "state": "ok",
+      "count": 38,
+      "error": ""
+    },
+    {
+      "id": "mygov_fisheries",
+      "state": "ok",
+      "count": 9,
+      "error": ""
+    },
+    {
+      "id": "mygov_foodprocessing",
+      "state": "ok",
+      "count": 50,
+      "error": ""
+    },
+    {
+      "id": "mygov_external",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_environment",
+      "state": "ok",
+      "count": 45,
+      "error": ""
+    },
+    {
+      "id": "mygov_finance",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_health",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_home",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_law",
+      "state": "ok",
+      "count": 38,
+      "error": ""
+    },
+    {
+      "id": "mygov_mines",
+      "state": "ok",
+      "count": 45,
+      "error": ""
+    },
+    {
+      "id": "mygov_water",
+      "state": "ok",
+      "count": 31,
+      "error": ""
+    },
+    {
+      "id": "mygov_labour",
+      "state": "ok",
+      "count": 21,
+      "error": ""
+    },
+    {
+      "id": "mygov_msme",
+      "state": "ok",
+      "count": 22,
+      "error": ""
+    },
+    {
+      "id": "mygov_minority",
+      "state": "ok",
+      "count": 35,
+      "error": ""
+    },
+    {
+      "id": "mygov_housing",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_information",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_personnel",
+      "state": "ok",
+      "count": 35,
+      "error": ""
+    },
+    {
+      "id": "mygov_petroleum",
+      "state": "ok",
+      "count": 17,
+      "error": ""
+    },
+    {
+      "id": "mygov_renewable",
+      "state": "ok",
+      "count": 58,
+      "error": ""
+    },
+    {
+      "id": "mygov_planning",
+      "state": "ok",
+      "count": 34,
+      "error": ""
+    },
+    {
+      "id": "mygov_power",
+      "state": "ok",
+      "count": 53,
+      "error": ""
+    },
+    {
+      "id": "mygov_parliament",
+      "state": "ok",
+      "count": 32,
+      "error": ""
+    },
+    {
+      "id": "mygov_ports",
+      "state": "ok",
+      "count": 47,
+      "error": ""
+    },
+    {
+      "id": "mygov_panchayat",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_statistics",
+      "state": "ok",
+      "count": 26,
+      "error": ""
+    },
+    {
+      "id": "mygov_science",
+      "state": "ok",
+      "count": 27,
+      "error": ""
+    },
+    {
+      "id": "mygov_social",
+      "state": "ok",
+      "count": 32,
+      "error": ""
+    },
+    {
+      "id": "mygov_steel",
+      "state": "ok",
+      "count": 40,
+      "error": ""
+    },
+    {
+      "id": "mygov_skills",
+      "state": "ok",
+      "count": 33,
+      "error": ""
+    },
+    {
+      "id": "mygov_roads",
+      "state": "ok",
+      "count": 8,
+      "error": ""
+    },
+    {
+      "id": "mygov_rural",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_railways",
+      "state": "ok",
+      "count": 41,
+      "error": ""
+    },
+    {
+      "id": "mygov_women",
+      "state": "ok",
+      "count": 57,
+      "error": ""
+    },
+    {
+      "id": "mygov_youth",
+      "state": "ok",
+      "count": 42,
+      "error": ""
+    },
+    {
+      "id": "mygov_tourism",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_space",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_tribal",
+      "state": "ok",
+      "count": 35,
+      "error": ""
+    },
+    {
+      "id": "mygov_atomic",
+      "state": "ok",
+      "count": 40,
+      "error": ""
+    },
+    {
+      "id": "mygov_textiles",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_pib",
+      "state": "error",
+      "count": 0,
+      "error": "ValueError: Cannot resolve feed host: www.pib.gov.in"
+    },
+    {
+      "id": "mygov_upi",
+      "state": "ok",
+      "count": 16,
+      "error": ""
+    },
+    {
+      "id": "mygov_budgets",
+      "state": "ok",
+      "count": 36,
+      "error": ""
+    },
+    {
+      "id": "mygov_pmo",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_anrf",
+      "state": "ok",
+      "count": 12,
+      "error": ""
+    },
+    {
+      "id": "mygov_mygov",
+      "state": "ok",
+      "count": 59,
+      "error": ""
+    },
+    {
+      "id": "mygov_evaluation",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    },
+    {
+      "id": "mygov_doctoral",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    }
+  ]
+}

@@ -1,0 +1,701 @@
+{
+  "states": [
+    {
+      "name": "Andhra Pradesh",
+      "lat": 15.9,
+      "lon": 79.8,
+      "aliases": [
+        "Andhra"
+      ]
+    },
+    {
+      "name": "Arunachal Pradesh",
+      "lat": 28.0,
+      "lon": 94.7,
+      "aliases": []
+    },
+    {
+      "name": "Assam",
+      "lat": 26.1,
+      "lon": 92.9,
+      "aliases": []
+    },
+    {
+      "name": "Bihar",
+      "lat": 25.6,
+      "lon": 85.6,
+      "aliases": []
+    },
+    {
+      "name": "Chhattisgarh",
+      "lat": 21.3,
+      "lon": 82.0,
+      "aliases": [
+        "Chattisgarh"
+      ]
+    },
+    {
+      "name": "Goa",
+      "lat": 15.4,
+      "lon": 74.0,
+      "aliases": []
+    },
+    {
+      "name": "Gujarat",
+      "lat": 22.7,
+      "lon": 71.7,
+      "aliases": []
+    },
+    {
+      "name": "Haryana",
+      "lat": 29.0,
+      "lon": 76.1,
+      "aliases": []
+    },
+    {
+      "name": "Himachal Pradesh",
+      "lat": 31.9,
+      "lon": 77.2,
+      "aliases": []
+    },
+    {
+      "name": "Jharkhand",
+      "lat": 23.6,
+      "lon": 85.3,
+      "aliases": []
+    },
+    {
+      "name": "Karnataka",
+      "lat": 15.2,
+      "lon": 75.7,
+      "aliases": [
+        "Karnatak"
+      ]
+    },
+    {
+      "name": "Kerala",
+      "lat": 10.5,
+      "lon": 76.5,
+      "aliases": []
+    },
+    {
+      "name": "Madhya Pradesh",
+      "lat": 23.5,
+      "lon": 78.5,
+      "aliases": []
+    },
+    {
+      "name": "Maharashtra",
+      "lat": 19.5,
+      "lon": 75.6,
+      "aliases": [
+        "Maharastra"
+      ]
+    },
+    {
+      "name": "Manipur",
+      "lat": 24.8,
+      "lon": 93.9,
+      "aliases": []
+    },
+    {
+      "name": "Meghalaya",
+      "lat": 25.5,
+      "lon": 91.3,
+      "aliases": []
+    },
+    {
+      "name": "Mizoram",
+      "lat": 23.3,
+      "lon": 92.8,
+      "aliases": []
+    },
+    {
+      "name": "Nagaland",
+      "lat": 26.1,
+      "lon": 94.4,
+      "aliases": []
+    },
+    {
+      "name": "Odisha",
+      "lat": 20.3,
+      "lon": 84.0,
+      "aliases": [
+        "Orissa"
+      ]
+    },
+    {
+      "name": "Punjab",
+      "lat": 31.1,
+      "lon": 75.3,
+      "aliases": []
+    },
+    {
+      "name": "Rajasthan",
+      "lat": 26.7,
+      "lon": 73.8,
+      "aliases": []
+    },
+    {
+      "name": "Sikkim",
+      "lat": 27.5,
+      "lon": 88.5,
+      "aliases": []
+    },
+    {
+      "name": "Tamil Nadu",
+      "lat": 11.1,
+      "lon": 78.6,
+      "aliases": [
+        "TN"
+      ]
+    },
+    {
+      "name": "Telangana",
+      "lat": 17.9,
+      "lon": 79.0,
+      "aliases": [
+        "Telengana"
+      ]
+    },
+    {
+      "name": "Tripura",
+      "lat": 23.8,
+      "lon": 91.7,
+      "aliases": []
+    },
+    {
+      "name": "Uttar Pradesh",
+      "lat": 26.8,
+      "lon": 80.9,
+      "aliases": [
+        "UP"
+      ]
+    },
+    {
+      "name": "Uttarakhand",
+      "lat": 30.1,
+      "lon": 79.1,
+      "aliases": [
+        "Uttaranchal"
+      ]
+    },
+    {
+      "name": "West Bengal",
+      "lat": 23.2,
+      "lon": 87.8,
+      "aliases": [
+        "Bengal"
+      ]
+    },
+    {
+      "name": "Andaman and Nicobar Islands",
+      "lat": 11.6,
+      "lon": 92.7,
+      "aliases": [
+        "Andaman",
+        "Nicobar"
+      ]
+    },
+    {
+      "name": "Chandigarh",
+      "lat": 30.7,
+      "lon": 76.8,
+      "aliases": []
+    },
+    {
+      "name": "Dadra and Nagar Haveli and Daman and Diu",
+      "lat": 20.4,
+      "lon": 72.9,
+      "aliases": []
+    },
+    {
+      "name": "Delhi",
+      "lat": 28.6,
+      "lon": 77.2,
+      "aliases": [
+        "NCT Delhi",
+        "Delhi NCR",
+        "New Delhi"
+      ]
+    },
+    {
+      "name": "Jammu and Kashmir",
+      "lat": 33.7,
+      "lon": 75.2,
+      "aliases": [
+        "J&K"
+      ]
+    },
+    {
+      "name": "Ladakh",
+      "lat": 34.2,
+      "lon": 77.8,
+      "aliases": []
+    },
+    {
+      "name": "Lakshadweep",
+      "lat": 10.6,
+      "lon": 72.6,
+      "aliases": []
+    },
+    {
+      "name": "Puducherry",
+      "lat": 11.9,
+      "lon": 79.8,
+      "aliases": [
+        "Pondicherry"
+      ]
+    }
+  ],
+  "cities": [
+    {
+      "name": "New Delhi",
+      "state": "Delhi",
+      "lat": 28.61,
+      "lon": 77.21,
+      "aliases": [
+        "Delhi NCR"
+      ]
+    },
+    {
+      "name": "Mumbai",
+      "state": "Maharashtra",
+      "lat": 19.08,
+      "lon": 72.88,
+      "aliases": [
+        "Bombay"
+      ]
+    },
+    {
+      "name": "Pune",
+      "state": "Maharashtra",
+      "lat": 18.52,
+      "lon": 73.86,
+      "aliases": []
+    },
+    {
+      "name": "Nagpur",
+      "state": "Maharashtra",
+      "lat": 21.15,
+      "lon": 79.09,
+      "aliases": []
+    },
+    {
+      "name": "Bengaluru",
+      "state": "Karnataka",
+      "lat": 12.97,
+      "lon": 77.59,
+      "aliases": [
+        "Bangalore"
+      ]
+    },
+    {
+      "name": "Mysuru",
+      "state": "Karnataka",
+      "lat": 12.3,
+      "lon": 76.64,
+      "aliases": [
+        "Mysore"
+      ]
+    },
+    {
+      "name": "Chennai",
+      "state": "Tamil Nadu",
+      "lat": 13.08,
+      "lon": 80.27,
+      "aliases": [
+        "Madras"
+      ]
+    },
+    {
+      "name": "Coimbatore",
+      "state": "Tamil Nadu",
+      "lat": 11.02,
+      "lon": 76.96,
+      "aliases": []
+    },
+    {
+      "name": "Madurai",
+      "state": "Tamil Nadu",
+      "lat": 9.93,
+      "lon": 78.12,
+      "aliases": []
+    },
+    {
+      "name": "Hyderabad",
+      "state": "Telangana",
+      "lat": 17.39,
+      "lon": 78.49,
+      "aliases": []
+    },
+    {
+      "name": "Warangal",
+      "state": "Telangana",
+      "lat": 17.97,
+      "lon": 79.6,
+      "aliases": []
+    },
+    {
+      "name": "Kolkata",
+      "state": "West Bengal",
+      "lat": 22.57,
+      "lon": 88.36,
+      "aliases": [
+        "Calcutta"
+      ]
+    },
+    {
+      "name": "Siliguri",
+      "state": "West Bengal",
+      "lat": 26.73,
+      "lon": 88.43,
+      "aliases": []
+    },
+    {
+      "name": "Ahmedabad",
+      "state": "Gujarat",
+      "lat": 23.02,
+      "lon": 72.57,
+      "aliases": []
+    },
+    {
+      "name": "Surat",
+      "state": "Gujarat",
+      "lat": 21.17,
+      "lon": 72.83,
+      "aliases": []
+    },
+    {
+      "name": "Vadodara",
+      "state": "Gujarat",
+      "lat": 22.31,
+      "lon": 73.18,
+      "aliases": [
+        "Baroda"
+      ]
+    },
+    {
+      "name": "Jaipur",
+      "state": "Rajasthan",
+      "lat": 26.91,
+      "lon": 75.79,
+      "aliases": []
+    },
+    {
+      "name": "Jodhpur",
+      "state": "Rajasthan",
+      "lat": 26.24,
+      "lon": 73.02,
+      "aliases": []
+    },
+    {
+      "name": "Udaipur",
+      "state": "Rajasthan",
+      "lat": 24.59,
+      "lon": 73.71,
+      "aliases": []
+    },
+    {
+      "name": "Lucknow",
+      "state": "Uttar Pradesh",
+      "lat": 26.85,
+      "lon": 80.95,
+      "aliases": []
+    },
+    {
+      "name": "Varanasi",
+      "state": "Uttar Pradesh",
+      "lat": 25.32,
+      "lon": 82.99,
+      "aliases": [
+        "Banaras"
+      ]
+    },
+    {
+      "name": "Kanpur",
+      "state": "Uttar Pradesh",
+      "lat": 26.45,
+      "lon": 80.33,
+      "aliases": []
+    },
+    {
+      "name": "Noida",
+      "state": "Uttar Pradesh",
+      "lat": 28.53,
+      "lon": 77.39,
+      "aliases": []
+    },
+    {
+      "name": "Agra",
+      "state": "Uttar Pradesh",
+      "lat": 27.18,
+      "lon": 78.01,
+      "aliases": []
+    },
+    {
+      "name": "Prayagraj",
+      "state": "Uttar Pradesh",
+      "lat": 25.44,
+      "lon": 81.85,
+      "aliases": [
+        "Allahabad"
+      ]
+    },
+    {
+      "name": "Patna",
+      "state": "Bihar",
+      "lat": 25.59,
+      "lon": 85.14,
+      "aliases": []
+    },
+    {
+      "name": "Gaya",
+      "state": "Bihar",
+      "lat": 24.79,
+      "lon": 85.0,
+      "aliases": []
+    },
+    {
+      "name": "Bhopal",
+      "state": "Madhya Pradesh",
+      "lat": 23.26,
+      "lon": 77.41,
+      "aliases": []
+    },
+    {
+      "name": "Indore",
+      "state": "Madhya Pradesh",
+      "lat": 22.72,
+      "lon": 75.86,
+      "aliases": []
+    },
+    {
+      "name": "Gwalior",
+      "state": "Madhya Pradesh",
+      "lat": 26.22,
+      "lon": 78.18,
+      "aliases": []
+    },
+    {
+      "name": "Bhubaneswar",
+      "state": "Odisha",
+      "lat": 20.29,
+      "lon": 85.82,
+      "aliases": []
+    },
+    {
+      "name": "Cuttack",
+      "state": "Odisha",
+      "lat": 20.46,
+      "lon": 85.88,
+      "aliases": []
+    },
+    {
+      "name": "Guwahati",
+      "state": "Assam",
+      "lat": 26.14,
+      "lon": 91.74,
+      "aliases": []
+    },
+    {
+      "name": "Dibrugarh",
+      "state": "Assam",
+      "lat": 27.47,
+      "lon": 94.91,
+      "aliases": []
+    },
+    {
+      "name": "Kochi",
+      "state": "Kerala",
+      "lat": 9.93,
+      "lon": 76.27,
+      "aliases": [
+        "Cochin"
+      ]
+    },
+    {
+      "name": "Thiruvananthapuram",
+      "state": "Kerala",
+      "lat": 8.52,
+      "lon": 76.94,
+      "aliases": [
+        "Trivandrum"
+      ]
+    },
+    {
+      "name": "Kozhikode",
+      "state": "Kerala",
+      "lat": 11.26,
+      "lon": 75.78,
+      "aliases": [
+        "Calicut"
+      ]
+    },
+    {
+      "name": "Chandigarh",
+      "state": "Chandigarh",
+      "lat": 30.73,
+      "lon": 76.78,
+      "aliases": []
+    },
+    {
+      "name": "Amritsar",
+      "state": "Punjab",
+      "lat": 31.63,
+      "lon": 74.87,
+      "aliases": []
+    },
+    {
+      "name": "Ludhiana",
+      "state": "Punjab",
+      "lat": 30.9,
+      "lon": 75.86,
+      "aliases": []
+    },
+    {
+      "name": "Srinagar",
+      "state": "Jammu and Kashmir",
+      "lat": 34.08,
+      "lon": 74.84,
+      "aliases": []
+    },
+    {
+      "name": "Jammu",
+      "state": "Jammu and Kashmir",
+      "lat": 32.73,
+      "lon": 74.86,
+      "aliases": []
+    },
+    {
+      "name": "Shimla",
+      "state": "Himachal Pradesh",
+      "lat": 31.1,
+      "lon": 77.17,
+      "aliases": []
+    },
+    {
+      "name": "Dehradun",
+      "state": "Uttarakhand",
+      "lat": 30.32,
+      "lon": 78.03,
+      "aliases": []
+    },
+    {
+      "name": "Ranchi",
+      "state": "Jharkhand",
+      "lat": 23.34,
+      "lon": 85.31,
+      "aliases": []
+    },
+    {
+      "name": "Jamshedpur",
+      "state": "Jharkhand",
+      "lat": 22.8,
+      "lon": 86.2,
+      "aliases": []
+    },
+    {
+      "name": "Raipur",
+      "state": "Chhattisgarh",
+      "lat": 21.25,
+      "lon": 81.63,
+      "aliases": []
+    },
+    {
+      "name": "Visakhapatnam",
+      "state": "Andhra Pradesh",
+      "lat": 17.68,
+      "lon": 83.22,
+      "aliases": [
+        "Vizag"
+      ]
+    },
+    {
+      "name": "Vijayawada",
+      "state": "Andhra Pradesh",
+      "lat": 16.52,
+      "lon": 80.64,
+      "aliases": []
+    },
+    {
+      "name": "Panaji",
+      "state": "Goa",
+      "lat": 15.49,
+      "lon": 73.82,
+      "aliases": []
+    },
+    {
+      "name": "Agartala",
+      "state": "Tripura",
+      "lat": 23.83,
+      "lon": 91.28,
+      "aliases": []
+    },
+    {
+      "name": "Imphal",
+      "state": "Manipur",
+      "lat": 24.81,
+      "lon": 93.94,
+      "aliases": []
+    },
+    {
+      "name": "Shillong",
+      "state": "Meghalaya",
+      "lat": 25.58,
+      "lon": 91.89,
+      "aliases": []
+    },
+    {
+      "name": "Aizawl",
+      "state": "Mizoram",
+      "lat": 23.73,
+      "lon": 92.72,
+      "aliases": []
+    },
+    {
+      "name": "Kohima",
+      "state": "Nagaland",
+      "lat": 25.67,
+      "lon": 94.11,
+      "aliases": []
+    },
+    {
+      "name": "Itanagar",
+      "state": "Arunachal Pradesh",
+      "lat": 27.1,
+      "lon": 93.61,
+      "aliases": []
+    },
+    {
+      "name": "Gangtok",
+      "state": "Sikkim",
+      "lat": 27.34,
+      "lon": 88.62,
+      "aliases": []
+    },
+    {
+      "name": "Port Blair",
+      "state": "Andaman and Nicobar Islands",
+      "lat": 11.67,
+      "lon": 92.75,
+      "aliases": []
+    },
+    {
+      "name": "Leh",
+      "state": "Ladakh",
+      "lat": 34.16,
+      "lon": 77.58,
+      "aliases": []
+    },
+    {
+      "name": "Puducherry",
+      "state": "Puducherry",
+      "lat": 11.94,
+      "lon": 79.83,
+      "aliases": []
+    }
+  ],
+  "boundary_source": "https://static.geodataviewer.com/datasets/india-states.geojson",
+  "boundary_source_license": "CC BY 2.5 India / DataMeet; provider describes source as historical and not survey-grade. Treat disputed territories and outdated geometry with caution."
+}

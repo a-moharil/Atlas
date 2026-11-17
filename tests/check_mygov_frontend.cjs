@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
+const base=path.join(__dirname,'..'),catalogue=JSON.parse(fs.readFileSync(path.join(base,'mygov_catalogue.json')));
+const nodes={},events={};const node=id=>nodes[id]??=( {innerHTML:'',focus(){},setSelectionRange(){}} );
+const c={console,URL,URLSearchParams,AbortSignal,Date,Set,Map,Math,Number,String,Array,Object,JSON,window:{},location:{hash:'#mygov'},document:{querySelector:node,addEventListener:(n,f)=>(events[n]??=[]).push(f)},localStorage:{getItem:()=>null,setItem(){}},setTimeout:()=>0,clearTimeout(){},fetch:async()=>({ok:true,json:async()=>({})})};vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(base,'static/mygov.js'),'utf8'),c);
+const api=c.window.ATLASMyGov;api.state.data={...catalogue,records:[{id:'fixture',title:'<script>unsafe</script> India UPI research allocation',summary:'Synthetic test fixture only',source:'Synthetic source',source_id:'mygov_meity',evidence_type:'Discovery lead',stage_hint:'Budget / allocation',ministries:['meity'],topics:['Digital','Research'],published:'2026-11-15T00:00:00Z'}],sources:[],source_health:{successful:0,configured:63},ministry_counts:{meity:1},topics:{Digital:1},method:'Fixture only',refreshed:'2026-11-16T00:00:00Z'};
+for(const tab of ['overview','schemes','ministries','research','investment','digital','updates','papers','sources']){api.state.tab=tab;api.render();assert(nodes['#main'].innerHTML.includes('MyGov observatory'),tab);assert(!nodes['#main'].innerHTML.includes('<script>unsafe'),tab)}
+api.state.tab='schemes';api.state.ministry='meity';api.render();assert(nodes['#main'].innerHTML.includes('IndiaAI Mission'));assert(!nodes['#main'].innerHTML.includes('<h3>PM-KISAN</h3>'));
+api.state.ministry='all';api.state.tab='research';api.state.kind='Doctoral';api.render();assert(nodes['#main'].innerHTML.includes('PMRF'));assert(!nodes['#main'].innerHTML.includes('<h3>BIRAC funding'));
+api.state.tab='updates';api.state.kind='all';api.render();assert(nodes['#main'].innerHTML.includes('&lt;script&gt;unsafe'));
+api.state.saved=true;api.render();assert(nodes['#main'].innerHTML.includes('No records match'));
+console.log('13 MyGov frontend checks passed: nine tabs, ministry/kind filters, escaping, saved-only empty state.');

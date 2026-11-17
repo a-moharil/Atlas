@@ -1,0 +1,13 @@
+services:
+  atlas:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - atlas_data:/storage
+    environment:
+      OBS_DB: /storage/observatory.sqlite3
+      OBS_REFRESH_SECONDS: "900"
+volumes:
+  atlas_data:

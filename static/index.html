@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08141c">
+<title>Atlas · India and world intelligence</title>
+<meta name="description" content="Live-source geopolitical, technology, financial and environmental intelligence with auditable refreshes, publisher bias context and real satellite layers.">
+<link rel="preload" href="/fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/atlas3.css">
+<link rel="stylesheet" href="/expert_panels.css">
+<link rel="stylesheet" href="/constellation.css">
+<link rel="stylesheet" href="/mygov.css">
+<link rel="stylesheet" href="/newsroom.css">
+<link rel="stylesheet" href="/atlas5.css">
+</head>
+<body>
+<script>
+/* Atlas error reporter: any script that fails to load or throws is shown on screen,
+   so a blank page always comes with a reason. */
+(function(){var shown={};function show(t){if(shown[t])return;shown[t]=1;var b=document.getElementById('atlasErr');if(!b){b=document.createElement('div');b.id='atlasErr';b.setAttribute('role','alert');b.innerHTML='<strong>Atlas found a problem</strong><button aria-label="Dismiss" onclick="this.parentNode.remove()">✕</button><ul></ul>';document.body.appendChild(b);}var li=document.createElement('li');li.textContent=t;b.querySelector('ul').appendChild(li);}
+window.__atlasReport=show;
+window.addEventListener('error',function(e){var t=e.target;if(t&&t!==window&&(t.tagName==='SCRIPT'||t.tagName==='LINK')){show('Could not load '+(t.src||t.href).replace(location.origin,'')+'. Hard-refresh with Ctrl+Shift+R; if it persists the file is missing or blocked by an extension.');return;}if(e.message)show(e.message+(e.filename?' — '+e.filename.replace(location.origin,'')+':'+e.lineno:''));},true);
+window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.name==='AbortError')return;show('Unhandled error: '+(r&&r.message?r.message:String(r)));});})();
+</script>
+<div class="atmos" aria-hidden="true"><div class="atmos-limb"></div><div class="atmos-grid"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs>
+  <symbol id="i-room" viewBox="0 0 20 20"><rect x="2.5" y="3" width="15" height="14" rx="2.5"/><path d="M2.5 8h15M8 8v9"/></symbol>
+  <symbol id="i-world" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.3 2.2 3.4 4.7 3.4 7.5S12.3 15.3 10 17.5M10 2.5C7.7 4.7 6.6 7.2 6.6 10s1.1 5.3 3.4 7.5"/></symbol>
+  <symbol id="i-india" viewBox="0 0 20 20"><path d="M7 2.8 9.6 3l1.2 2.1 2.8.6 1.9 2-1.8 1.4.4 2.3-2.4 2.1-1.2 3.7-1.3.1-1.4-3.4-1.9-2.6-.6-2.4L5 7.5l1-2.1z"/><path d="M14.9 7.7 17 7.3l.4 1.5-1.6.9"/></symbol>
+  <symbol id="i-tech" viewBox="0 0 20 20"><rect x="5.5" y="5.5" width="9" height="9" rx="1.5"/><path d="M8 2.5v3M12 2.5v3M8 14.5v3M12 14.5v3M2.5 8h3M2.5 12h3M14.5 8h3M14.5 12h3"/></symbol>
+  <symbol id="i-finance" viewBox="0 0 20 20"><path d="M3 16.5h14M4.5 13l3.5-4 3 2.5 4.5-6"/><path d="M12.5 5.5h3v3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 20 20"><path d="M10 3 17.5 16H2.5z"/><path d="M10 8v3.6M10 13.6v.4"/></symbol>
+  <symbol id="i-live" viewBox="0 0 20 20"><rect x="2.5" y="4.5" width="15" height="10" rx="2"/><path d="m8.5 7.3 3.6 2.2-3.6 2.2zM7 17h6"/></symbol>
+  <symbol id="i-sat" viewBox="0 0 20 20"><path d="m6 6 3-3 3 3-3 3zM11 11l3-3 3 3-3 3zM8.5 8.5l3 3M4 16a6 6 0 0 0 0 0M3.5 12.5a4 4 0 0 0 4 4"/></symbol>
+  <symbol id="i-earth" viewBox="0 0 20 20"><path d="M2.5 7.5c2.2-1.7 4.1-1.7 6 0s3.8 1.7 6 0M2.5 11c2.2-1.7 4.1-1.7 6 0s3.8 1.7 6 0M5.5 14.5c1.5-1 3-.8 4.5.3s3 1.3 4.5.3"/><path d="M15.5 3.5v5"/><circle cx="15.5" cy="3" r="1.3"/></symbol>
+  <symbol id="i-region" viewBox="0 0 20 20"><path d="M3 5.5 7.5 3l5 2.5L17 3v11.5L12.5 17l-5-2.5L3 17z"/><path d="M7.5 3v11.5M12.5 5.5V17"/></symbol>
+  <symbol id="i-conflict" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2.5"/><path d="M10 1.5v4M10 14.5v4M1.5 10h4M14.5 10h4"/></symbol>
+  <symbol id="i-geo" viewBox="0 0 20 20"><circle cx="5" cy="6" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="10" cy="15" r="2"/><path d="m6.8 6.9 2.4 6.3M13.4 6.4l-2.6 6.8M7 5.8l6-.6"/></symbol>
+  <symbol id="i-macro" viewBox="0 0 20 20"><path d="M3.5 16.5V9M8 16.5V4M12.5 16.5v-5M17 16.5V7"/></symbol>
+  <symbol id="i-constellation" viewBox="0 0 20 20"><circle cx="4.5" cy="13" r="1.4"/><circle cx="9" cy="5" r="1.4"/><circle cx="15.5" cy="8.5" r="1.4"/><circle cx="12.5" cy="15.5" r="1.4"/><path d="m5.3 11.8 3-5.6M10.3 5.7l3.9 2.1M15 9.9l-2 4.3M5.9 13.3l5.2 2"/></symbol>
+  <symbol id="i-library" viewBox="0 0 20 20"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3zM12.6 4.2l2.9-.8 3 12.6-2.9.7z"/></symbol>
+  <symbol id="i-policy" viewBox="0 0 20 20"><path d="M3 7.5 10 3l7 4.5M4.5 8v7M8 8v7M12 8v7M15.5 8v7M2.5 17h15"/></symbol>
+  <symbol id="i-sources" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="11" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6.5" height="5" rx="1.5"/><path d="M11 13h6.5M11 16h4"/></symbol>
+  <symbol id="i-audit" viewBox="0 0 20 20"><path d="M3 10h3l2-5 4 10 2-5h3"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="4" rx="1"/><path d="M4 7.5v9h12v-9M8 11h4"/></symbol>
+  <symbol id="i-lm" viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.2"/><circle cx="4" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="4" cy="15" r="1.6"/><circle cx="16" cy="15" r="1.6"/><path d="M5.3 6l3 2.6M14.7 6l-3 2.6M5.3 14l3-2.6M14.7 14l-3-2.6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 20 20"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 20 20"><path d="M3 6h14M3 10h14M3 14h14"/></symbol>
+ </defs>
+</svg>
+<div id="appShell">
+<aside id="navSide" aria-label="Atlas navigation">
+ <div class="brand">
+  <svg class="brandmark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15.5"/><ellipse cx="20" cy="20" rx="6.5" ry="15.5"/><path d="M4.5 20h31"/><circle class="brandSignal" cx="31" cy="9" r="3.2"/></svg>
+  <div class="brandText"><strong>Atlas</strong><small>India and world intelligence</small></div>
+ </div>
+ <nav id="navigation" aria-label="Primary">
+  <div class="navGroup">Monitor</div>
+  <button class="nav active" data-page="room"><svg><use href="#i-room"/></svg><span>Situation room</span></button>
+  <button class="nav" data-page="news"><svg><use href="#i-world"/></svg><span>World</span></button>
+  <button class="nav" data-page="india"><svg><use href="#i-india"/></svg><span>India</span></button>
+  <button class="nav" data-page="technology"><svg><use href="#i-tech"/></svg><span>Technology</span></button>
+  <button class="nav" data-page="finance"><svg><use href="#i-finance"/></svg><span>Finance and energy</span></button>
+  <button class="nav" data-page="emergency"><svg><use href="#i-alert"/></svg><span>Emergency newsroom</span></button>
+  <button class="nav" data-page="media"><svg><use href="#i-live"/></svg><span>Live TV and video</span></button>
+  <div class="navGroup">Maps</div>
+  <button class="nav" data-page="earth"><svg><use href="#i-earth"/></svg><span>Earth watch</span><em class="navNew">New</em></button>
+  <button class="nav" data-page="map"><svg><use href="#i-sat"/></svg><span>Satellite atlas</span></button>
+  <button class="nav" data-page="investigate"><svg><use href="#i-region"/></svg><span>India regional map</span></button>
+  <button class="nav" data-page="conflict"><svg><use href="#i-conflict"/></svg><span>Conflict atlas</span></button>
+  <div class="navGroup">Research</div>
+  <button class="nav" data-page="geopolitics"><svg><use href="#i-geo"/></svg><span>Geopolitics</span></button>
+  <button class="nav" data-page="macro"><svg><use href="#i-macro"/></svg><span>Macroeconomics</span></button>
+  <button class="nav" data-page="constellation"><svg><use href="#i-constellation"/></svg><span>Article constellation</span></button>
+  <button class="nav" data-page="research"><svg><use href="#i-library"/></svg><span>Research library</span></button>
+  <button class="nav" data-page="mygov"><svg><use href="#i-policy"/></svg><span>MyGov policy</span></button>
+  <div class="navGroup">System</div>
+  <button class="nav" data-page="sources"><svg><use href="#i-sources"/></svg><span>Sources</span><em class="navNew">New</em></button>
+  <button class="nav" data-page="lm"><svg><use href="#i-lm"/></svg><span>Language model</span><em class="navNew">New</em></button>
+  <button class="nav" data-page="coverage"><svg><use href="#i-audit"/></svg><span>Coverage audit</span></button>
+  <button class="nav" data-page="ccc"><svg><use href="#i-archive"/></svg><span>CCC archive</span></button>
+ </nav>
+ <div class="sideBottom">
+  <div class="monitor"><i id="serverLED" class="led"></i><span id="serverState">Connecting</span></div>
+  <small id="lastCycle">Collector not yet checked</small>
+ </div>
+</aside>
+<div class="workspace">
+ <header class="topbar">
+  <button id="menuToggle" aria-label="Open navigation" class="mobileMenu"><svg><use href="#i-menu"/></svg></button>
+  <div class="titleBox"><span id="pageKicker">Situation monitor</span><strong id="pageTitle">Situation room</strong></div>
+  <div class="topStatus">
+   <span id="serverBadge" class="statusPill unknown">Server unverified</span>
+   <span id="sourcesBadge" class="subitem">0 feeds healthy</span>
+   <span id="articlesBadge" class="subitem">0 records</span>
+   <button id="groupingBadge" class="statusPill unknown" data-page="lm" hidden>Keyword mode</button>
+  </div>
+  <div class="topActions">
+   <span id="syncLabel" class="statusText">Waiting for connection</span>
+   <div class="sizeSwitch" role="group" aria-label="Text size"><button id="fontLess" title="Smaller text" class="compact">A−</button><button id="fontMore" title="Larger text" class="compact">A+</button></div>
+   <button id="refreshNow" class="action primary"><svg><use href="#i-refresh"/></svg>Refresh feeds</button>
+  </div>
+ </header>
+ <main id="main" aria-live="polite"></main>
+ <footer>Atlas · India-centred global coverage. Bias and paywall labels describe publishers, not individual articles. Environmental layers belong to their original providers.</footer>
+</div>
+</div>
+<div id="playerDock" class="playerDock" hidden>
+ <div class="playerBar"><strong id="playerLabel">Live news</strong><div><button id="playerMin" aria-label="Minimise player">▁</button><button id="playerClose" aria-label="Close player">✕</button></div></div>
+ <div id="playerContent" class="playerContent"></div>
+ <div class="playerCaption" id="playerCaption">Stream availability depends on YouTube and the publisher.</div>
+</div>
+<div id="storyPanel" class="storyPanel" hidden><div class="storyShade" data-close="true"></div><article id="storyContent" class="storyDrawer"></article></div>
+<div id="notify" class="toast" role="status" aria-live="polite"></div>
+<script src="/india_investigation.js" defer></script>
+<script src="/expert_panels.js" defer></script>
+<script src="/tile_canvas.js" defer></script>
+<script src="/article_constellation.js" defer></script>
+<script src="/mygov.js" defer></script>
+<script src="/emergency.js" defer></script>
+<script src="/conflict_watch.js" defer></script>
+<script src="/earth_watch.js" defer></script>
+<script src="/sources.js" defer></script>
+<script src="/lm.js" defer></script>
+<script src="/wall.js" defer></script>
+<script src="/atlas3.js" defer></script>
+</body>
+</html>

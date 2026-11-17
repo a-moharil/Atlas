@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f5f6f3">
+<title>ATLAS | Visual Intelligence</title>
+<meta name="description" content="India-first geopolitical intelligence with sourced briefing, source transparency, interactive 3D globe, live environment layers and full-length video.">
+<link rel="stylesheet" href="/legacy_v2.css">
+</head><body>
+<a class="skip" href="#view">Skip navigation</a>
+<div class="layout">
+<aside class="rail" id="rail" aria-label="Navigation">
+ <div class="identity"><div class="emblem" aria-hidden="true">✳</div><div><div class="name">ATLAS<span class="name-period">.</span></div><div class="strap">VISUAL INTELLIGENCE</div></div></div>
+ <div class="rail-title">MONITOR</div>
+ <nav id="navigation">
+  <button data-page="pulse" class="navbtn selected"><span aria-hidden="true">◈</span> Situation room</button>
+  <button data-page="india" class="navbtn"><span aria-hidden="true">◎</span> India desk</button>
+  <button data-page="world" class="navbtn"><span aria-hidden="true">▤</span> World news</button>
+  <button data-page="research" class="navbtn"><span aria-hidden="true">▥</span> Research desk</button>
+  <button data-page="globe" class="navbtn"><span aria-hidden="true">◉</span> Global globe</button>
+  <button data-page="media" class="navbtn"><span aria-hidden="true">▶</span> Live TV & social</button>
+ </nav>
+ <div class="rail-title">TOOLS</div>
+ <nav>
+  <button data-page="summits" class="navbtn"><span aria-hidden="true">◷</span> Summit watch</button>
+  <button data-page="sources" class="navbtn"><span aria-hidden="true">☷</span> Sources & methods</button>
+  <button data-page="ccc" class="navbtn"><span aria-hidden="true">⌁</span> CCC archive</button>
+ </nav>
+ <div class="rail-bottom"><div class="run-state"><span class="dot idle" id="healthDot"></span><span id="healthLabel">Starting collector…</span></div><small>Open-source data · Local-first storage</small><span class="rail-note">Every publisher retains its own voice.</span></div>
+</aside>
+<div class="shell">
+ <header class="toolbar">
+  <button id="mobileNav" class="iconbtn mobile-only" title="Navigation" aria-label="Toggle navigation">☰</button>
+  <div class="toolbar-title"><span class="toolbar-overline">GEOPOLITICAL SITUATION ROOM</span><strong id="pageTitle">Situation room</strong></div>
+  <div class="toolbar-right">
+   <span class="sync" id="lastRefresh" aria-live="polite">Connecting…</span>
+   <button class="iconbtn" id="fontDown" title="Reduce text size" aria-label="Reduce text size">A−</button><button class="iconbtn" id="fontUp" title="Increase text size" aria-label="Increase text size">A+</button>
+   <button class="iconbtn" id="contrast" title="Toggle stronger contrast" aria-label="Toggle stronger contrast">◐</button>
+   <button class="button primary" id="refresh">↻ <span class="desktop-label">Refresh</span></button>
+  </div>
+ </header>
+ <main id="view" tabindex="-1"></main>
+ <footer class="foot">ATLAS research platform · Publisher attribution retained · Feed metadata is not independently verified · Geographic pins are labelled by evidence quality.</footer>
+</div>
+</div>
+<aside id="briefDrawer" class="drawer" hidden aria-label="Research brief" role="dialog" aria-modal="true"><div id="briefContent"></div></aside>
+<div id="shade" class="shade" hidden></div>
+<section id="playerDock" class="player-dock" hidden aria-label="Persistent media player">
+  <div class="dockbar"><strong id="playerTitle">News video</strong><div><button id="dockMin" class="iconbtn" title="Minimise player" aria-label="Minimise player">▱</button><button id="dockClose" class="iconbtn" aria-label="Close player">✕</button></div></div>
+  <div id="mediaFrame" class="media-frame"></div><p class="docknote">Videos play at their original length. The player is not replaced when you change sections. Availability depends on the publisher's embedding permissions.</p>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/legacy_v2.js" defer></script>
+</body></html>

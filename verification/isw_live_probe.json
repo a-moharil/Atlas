@@ -1,0 +1,75 @@
+{
+  "elapsed": 13.12,
+  "sources": [
+    {
+      "id": "isw_ukraine",
+      "attempted": "2026-11-16T16:03:39Z",
+      "success": "2026-11-16T16:03:39Z",
+      "state": "ok",
+      "count": 58,
+      "error": ""
+    },
+    {
+      "id": "isw_ctp",
+      "attempted": "2026-11-16T16:03:39Z",
+      "success": "2026-11-16T16:03:39Z",
+      "state": "ok",
+      "count": 32,
+      "error": ""
+    },
+    {
+      "id": "isw_middleeast",
+      "attempted": "2026-11-16T16:03:39Z",
+      "success": "2026-11-16T16:03:39Z",
+      "state": "ok",
+      "count": 55,
+      "error": ""
+    },
+    {
+      "id": "isw_maps",
+      "attempted": "2026-11-16T16:03:39Z",
+      "success": "2026-11-16T16:03:39Z",
+      "state": "ok",
+      "count": 60,
+      "error": ""
+    }
+  ],
+  "entry_count": 205,
+  "maps": {
+    "maps": [
+      {
+        "id": "ukraine",
+        "state": "public item verified",
+        "title": "Interactive Map: Russia's Invasion of Ukraine",
+        "owner": "gbarros_understandingwar",
+        "modified": "2026-11-16T14:03:04+00:00",
+        "viewer_verified": false
+      },
+      {
+        "id": "iran",
+        "state": "public item verified",
+        "title": "Interactive Map: U.S. and Israeli Strikes in Iran (2026)",
+        "owner": "cweinstein_understandingwar",
+        "modified": "2026-11-15T19:43:14+00:00",
+        "viewer_verified": false
+      },
+      {
+        "id": "syria",
+        "state": "public item verified",
+        "title": "Interactive Map: Assessed Control of Terrain in Syria",
+        "owner": "thestudyofwar",
+        "modified": "2026-10-01T21:35:10+00:00",
+        "viewer_verified": false
+      },
+      {
+        "id": "gaza",
+        "state": "public item verified",
+        "title": "Interactive Map: Israel's Operation in Gaza",
+        "owner": "gbarros_understandingwar",
+        "modified": "2026-10-01T21:35:39+00:00",
+        "viewer_verified": false
+      }
+    ],
+    "checked": "2026-11-16T16:03:59.110915+00:00"
+  }
+}

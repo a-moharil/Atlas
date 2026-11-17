@@ -1,0 +1,1050 @@
+{
+  "as_of": "2026-11-16",
+  "scope": "Dated official-source calendar + cross-bloc monitoring directory. Dates are not continuously revalidated; unconfirmed plans are marked reported.",
+  "events": [
+    {
+      "id": "un-third",
+      "name": "UNGA Third Committee, 81st session",
+      "organisation": "UN General Assembly",
+      "start": "2026-10-01",
+      "end": "2026-11-20",
+      "location": "New York",
+      "agenda": "Social, humanitarian and cultural issues. Session window, not an item-level meeting time.",
+      "agenda_status": "UN meetings calendar",
+      "source": "https://www.un.org/calendar/en/date",
+      "topics": [
+        "Diplomacy"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "un-second",
+      "name": "UNGA Second Committee, 81st session",
+      "organisation": "UN General Assembly",
+      "start": "2026-10-01",
+      "end": "2026-11-25",
+      "location": "New York",
+      "agenda": "Economic and financial issues. Session window, not an item-level meeting time.",
+      "agenda_status": "UN meetings calendar",
+      "source": "https://www.un.org/calendar/en/date",
+      "topics": [
+        "Trade",
+        "Climate"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "un-fourth",
+      "name": "UNGA Fourth Committee, 81st session",
+      "organisation": "UN General Assembly",
+      "start": "2026-10-01",
+      "end": "2026-11-18",
+      "location": "New York",
+      "agenda": "Special political and decolonisation matters. Session window.",
+      "agenda_status": "UN meetings calendar",
+      "source": "https://www.un.org/calendar/en/date",
+      "topics": [
+        "Diplomacy",
+        "Security"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "un-fifth",
+      "name": "UNGA Fifth Committee, 81st session",
+      "organisation": "UN General Assembly",
+      "start": "2026-10-05",
+      "end": "2026-12-14",
+      "location": "New York",
+      "agenda": "Administrative and budgetary questions. Dates listed as provisional by the UN calendar.",
+      "agenda_status": "UN meetings calendar; provisional",
+      "source": "https://www.un.org/calendar/en/date",
+      "topics": [
+        "Diplomacy"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "un-sixth",
+      "name": "UNGA Sixth Committee, 81st session",
+      "organisation": "UN General Assembly",
+      "start": "2026-10-05",
+      "end": "2026-11-20",
+      "location": "New York",
+      "agenda": "International legal questions. Dates listed as provisional by the UN calendar.",
+      "agenda_status": "UN meetings calendar; provisional",
+      "source": "https://www.un.org/calendar/en/date",
+      "topics": [
+        "Diplomacy"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "sc-nov",
+      "name": "Security Council provisional monthly programme",
+      "organisation": "UN Security Council",
+      "start": "2026-11-01",
+      "end": "2026-11-30",
+      "location": "New York",
+      "agenda": "Monthly programme of work, including briefings and consultations. Times and items may be revised.",
+      "agenda_status": "Official provisional programme; consult latest revision",
+      "source": "https://main.un.org/securitycouncil/en/content/programme-work",
+      "topics": [
+        "Security",
+        "Diplomacy"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "cop31",
+      "name": "UNFCCC COP31",
+      "organisation": "UNFCCC",
+      "start": "2026-11-09",
+      "end": "2026-11-20",
+      "location": "UNFCCC conference",
+      "agenda": "Climate negotiations, finance and implementation; consult the official itemised COP31 agenda for decisions and papers.",
+      "agenda_status": "Official programme portal",
+      "source": "https://unfccc.int/event/cop-31",
+      "topics": [
+        "Climate",
+        "Energy"
+      ],
+      "category": "Global institutions",
+      "verification": "official"
+    },
+    {
+      "id": "asean-49",
+      "name": "49th ASEAN Summit and related leaders meetings",
+      "organisation": "ASEAN",
+      "start": "2026-11-14",
+      "end": "2026-11-17",
+      "location": "Manila, Philippines",
+      "agenda": "Navigating Our Future, Together; regional stability, Myanmar, maritime cooperation and partner dialogues.",
+      "agenda_status": "Official announcement",
+      "source": "https://asean.org/secretary-general-of-asean-to-participate-in-the-49th-asean-summit-and-related-summits-in-the-philippines/",
+      "topics": [
+        "Security",
+        "Diplomacy",
+        "Maritime"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "asean-partners",
+      "name": "ASEAN Plus One partner summits",
+      "organisation": "ASEAN",
+      "start": "2026-11-16",
+      "end": "2026-11-17",
+      "location": "Manila, Philippines",
+      "agenda": "Meetings with Australia, China, India, Japan, Korea, UN and the US; specific bilateral agendas require official readouts.",
+      "agenda_status": "Official announcement",
+      "source": "https://pco.gov.ph/news_releases/president-marcos-presides-over-the-49th-asean-summit-and-related-summits/",
+      "topics": [
+        "Diplomacy",
+        "Trade"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "fac16",
+      "name": "Foreign Affairs Council",
+      "organisation": "European Union",
+      "start": "2026-11-16",
+      "end": "2026-11-16",
+      "location": "Brussels, Belgium",
+      "agenda": "Foreign ministers meeting; precise agenda and outcome are maintained on the Council calendar.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Diplomacy",
+        "Security"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "apec-ceo",
+      "name": "APEC CEO Summit",
+      "organisation": "APEC",
+      "start": "2026-11-17",
+      "end": "2026-11-18",
+      "location": "Shenzhen, China",
+      "agenda": "Business summit on growth, trade, technological innovation and regional cooperation.",
+      "agenda_status": "Official APEC calendar and Chinese foreign ministry announcement",
+      "source": "https://www.apec.org/",
+      "topics": [
+        "Trade",
+        "Technology"
+      ],
+      "category": "Economic institutions",
+      "verification": "official"
+    },
+    {
+      "id": "asean3",
+      "name": "29th ASEAN Plus Three Summit",
+      "organisation": "ASEAN+3",
+      "start": "2026-11-17",
+      "end": "2026-11-17",
+      "location": "Manila, Philippines",
+      "agenda": "Practical cooperation among ASEAN plus China, Japan and South Korea.",
+      "agenda_status": "Official announcement",
+      "source": "https://pco.gov.ph/news_releases/president-marcos-presides-over-the-49th-asean-summit-and-related-summits/",
+      "topics": [
+        "Diplomacy",
+        "Trade"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "eas21",
+      "name": "21st East Asia Summit",
+      "organisation": "East Asia Summit",
+      "start": "2026-11-17",
+      "end": "2026-11-17",
+      "location": "Manila, Philippines",
+      "agenda": "Strategic dialogue on regional and international developments.",
+      "agenda_status": "Official announcement",
+      "source": "https://pco.gov.ph/news_releases/president-marcos-presides-over-the-49th-asean-summit-and-related-summits/",
+      "topics": [
+        "Diplomacy",
+        "Security"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "quad-nov17",
+      "name": "Reported Quad leaders gathering",
+      "organisation": "Quad",
+      "start": "2026-11-17",
+      "end": "2026-11-17",
+      "location": "Manila, Philippines",
+      "agenda": "Reported preparations; critical minerals and maritime security are potential topics. No verified final official agenda in this baseline.",
+      "agenda_status": "Reported by Reuters; NOT an independently verified official summit agenda",
+      "source": "https://www.reuters.com/world/asia-pacific/trump-other-quad-leaders-meet-manila-tuesday-sources-say-2026-11-14/",
+      "topics": [
+        "Diplomacy",
+        "Maritime",
+        "Technology"
+      ],
+      "category": "Security partnerships",
+      "verification": "reported"
+    },
+    {
+      "id": "fac-defence17",
+      "name": "Foreign Affairs Council — Defence",
+      "organisation": "European Union",
+      "start": "2026-11-17",
+      "end": "2026-11-17",
+      "location": "Brussels, Belgium",
+      "agenda": "EU defence ministers meeting; consult official meeting page for detailed agenda and conclusions.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Security",
+        "Diplomacy"
+      ],
+      "category": "Security partnerships",
+      "verification": "official"
+    },
+    {
+      "id": "apec-leaders",
+      "name": "APEC Economic Leaders’ Meeting",
+      "organisation": "APEC",
+      "start": "2026-11-18",
+      "end": "2026-11-19",
+      "location": "Shenzhen, China",
+      "agenda": "Building an Asia-Pacific Community to Prosper Together. Bilateral programmes require separate confirmation.",
+      "agenda_status": "Official Chinese Ministry of Foreign Affairs announcement",
+      "source": "https://www.fmprc.gov.cn/mfa_eng./xw/zyxw/202611/t20261113_12058556.html",
+      "topics": [
+        "Trade",
+        "Diplomacy",
+        "Technology"
+      ],
+      "category": "Economic institutions",
+      "verification": "official"
+    },
+    {
+      "id": "eu-uk",
+      "name": "EU–UK Summit",
+      "organisation": "European Union",
+      "start": "2026-11-20",
+      "end": "2026-11-20",
+      "location": "Europe; consult calendar",
+      "agenda": "EU–UK leaders meeting; agenda specifics are subject to source updates.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Diplomacy",
+        "Trade"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "eu-balkan",
+      "name": "EU–Western Balkans Summit",
+      "organisation": "European Union",
+      "start": "2026-11-25",
+      "end": "2026-11-25",
+      "location": "Europe; consult calendar",
+      "agenda": "Regional integration and EU relations; consult institutional agenda and statements.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Diplomacy",
+        "Trade"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "euro-summit",
+      "name": "Euro Summit",
+      "organisation": "European Union",
+      "start": "2026-11-26",
+      "end": "2026-11-26",
+      "location": "Brussels, Belgium",
+      "agenda": "Euro area governance and macroeconomic priorities; exact agenda is official-source dependent.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Trade",
+        "Diplomacy"
+      ],
+      "category": "Economic institutions",
+      "verification": "official"
+    },
+    {
+      "id": "eu-council-special",
+      "name": "Special European Council",
+      "organisation": "European Union",
+      "start": "2026-11-26",
+      "end": "2026-11-27",
+      "location": "Brussels, Belgium",
+      "agenda": "EU leaders meeting; inspect Council conclusions for adopted decisions.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "topics": [
+        "Security",
+        "Diplomacy"
+      ],
+      "category": "Regional blocs",
+      "verification": "official"
+    },
+    {
+      "id": "osce33",
+      "name": "33rd OSCE Ministerial Council",
+      "organisation": "OSCE",
+      "start": "2026-12-03",
+      "end": "2026-12-04",
+      "location": "Lugano, Switzerland",
+      "agenda": "Pan-European security, Helsinki Principles, multilateral diplomacy, human rights and technology.",
+      "agenda_status": "Official announcement",
+      "source": "https://www.osce.org/event/mc_2026",
+      "topics": [
+        "Security",
+        "Diplomacy",
+        "Technology"
+      ],
+      "category": "Security partnerships",
+      "verification": "official"
+    },
+    {
+      "id": "g20miami",
+      "name": "G20 Leaders Summit",
+      "organisation": "G20",
+      "start": "2026-12-14",
+      "end": "2026-12-15",
+      "location": "Miami, Florida, United States",
+      "agenda": "Economic cooperation, growth and economic security; item-level agenda subject to presidency publications.",
+      "agenda_status": "Official announcement",
+      "source": "https://home.treasury.gov/news/press-releases/sb0398",
+      "topics": [
+        "Trade",
+        "Energy",
+        "Diplomacy"
+      ],
+      "category": "Economic institutions",
+      "verification": "official"
+    }
+  ],
+  "calendars": [
+    {
+      "name": "UN official conferences and meetings",
+      "type": "Institutional schedule",
+      "url": "https://www.un.org/calendar/en/date",
+      "scope": "UN bodies, sessions and committee dates"
+    },
+    {
+      "name": "UN Security Council programme",
+      "type": "Provisional monthly programme",
+      "url": "https://main.un.org/securitycouncil/en/content/programme-work",
+      "scope": "Official agenda and calendar, regularly revised"
+    },
+    {
+      "name": "UN Digital Library",
+      "type": "Official documentary record",
+      "url": "https://digitallibrary.un.org/",
+      "scope": "Documents, resolutions, agendas and voting records"
+    },
+    {
+      "name": "WTO events",
+      "type": "Institutional calendar",
+      "url": "https://www.wto.org/",
+      "scope": "Trade committees, ministerial decisions and consultations"
+    },
+    {
+      "name": "APEC events",
+      "type": "Summits and meetings",
+      "url": "https://www.apec.org/",
+      "scope": "Summit events, policy announcements and ministerials"
+    },
+    {
+      "name": "UNFCCC conferences",
+      "type": "Climate negotiations",
+      "url": "https://unfccc.int/process-and-meetings/conferences",
+      "scope": "COP agendas, technical papers and decisions"
+    },
+    {
+      "name": "IMF meetings",
+      "type": "Economic policy meetings",
+      "url": "https://www.imf.org/en/About/Meetings",
+      "scope": "IMF spring and annual meetings"
+    },
+    {
+      "name": "BIS events",
+      "type": "Central banking",
+      "url": "https://www.bis.org/events/index.htm",
+      "scope": "Central-bank conferences and working groups"
+    },
+    {
+      "name": "G20 portal",
+      "type": "Presidency and working groups",
+      "url": "https://www.g20.org/",
+      "scope": "Finance track, sherpa track and leaders summits"
+    },
+    {
+      "name": "ASEAN official site",
+      "type": "Regional diplomacy",
+      "url": "https://asean.org/",
+      "scope": "Summits, ministerial meetings and communiqués"
+    },
+    {
+      "name": "UNCTAD",
+      "type": "Trade and development",
+      "url": "https://unctad.org/",
+      "scope": "Global trade reports and multilateral meetings"
+    },
+    {
+      "name": "Quad · official monitor",
+      "type": "Security partnerships",
+      "url": "https://www.mea.gov.in/",
+      "scope": "Indo-Pacific critical minerals, maritime and technology cooperation"
+    },
+    {
+      "name": "NATO · official monitor",
+      "type": "Security partnerships",
+      "url": "https://www.nato.int/",
+      "scope": "Allied summits, defence ministerials and communiqués"
+    },
+    {
+      "name": "OSCE · official monitor",
+      "type": "Security partnerships",
+      "url": "https://www.osce.org/events",
+      "scope": "European security, prevention and confidence-building"
+    },
+    {
+      "name": "CSTO · official monitor",
+      "type": "Security partnerships",
+      "url": "https://odkb-csto.org/",
+      "scope": "Collective Security Treaty Organisation council and statements"
+    },
+    {
+      "name": "AUKUS · official monitor",
+      "type": "Security partnerships",
+      "url": "https://www.defense.gov/",
+      "scope": "Australia–UK–US defence and technology cooperation"
+    },
+    {
+      "name": "ASEAN · official monitor",
+      "type": "Regional blocs",
+      "url": "https://asean.org/",
+      "scope": "ASEAN summits and dialogue partners"
+    },
+    {
+      "name": "ASEAN+3 · official monitor",
+      "type": "Regional blocs",
+      "url": "https://aseanplusthree.asean.org/",
+      "scope": "ASEAN plus China, Japan and Republic of Korea"
+    },
+    {
+      "name": "East Asia Summit · official monitor",
+      "type": "Regional blocs",
+      "url": "https://eastasiasummit.asean.org/",
+      "scope": "Broad Indo-Pacific leaders-level strategy"
+    },
+    {
+      "name": "SAARC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.saarc-sec.org/",
+      "scope": "South Asian regional meetings and institutional status"
+    },
+    {
+      "name": "BIMSTEC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://bimstec.org/",
+      "scope": "Bay of Bengal regional organisation"
+    },
+    {
+      "name": "IORA · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.iora.int/",
+      "scope": "Indian Ocean regional meetings, trade and maritime"
+    },
+    {
+      "name": "SCO · official monitor",
+      "type": "Regional blocs",
+      "url": "https://eng.sectsco.org/",
+      "scope": "Shanghai Cooperation Organisation summits and ministerials"
+    },
+    {
+      "name": "BRICS · official monitor",
+      "type": "Economic institutions",
+      "url": "https://brics.br/",
+      "scope": "BRICS chairship and economic governance; check current chair links"
+    },
+    {
+      "name": "G20 · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.g20.org/",
+      "scope": "Leaders, sherpa and finance tracks"
+    },
+    {
+      "name": "G7 · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.g7france.fr/",
+      "scope": "G7 leaders and ministerial tracks, rotating presidency"
+    },
+    {
+      "name": "APEC · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.apec.org/",
+      "scope": "Economic leaders, business and ministerial meetings"
+    },
+    {
+      "name": "European Union · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "scope": "European Council and sectoral councils"
+    },
+    {
+      "name": "African Union · official monitor",
+      "type": "Regional blocs",
+      "url": "https://au.int/en/events",
+      "scope": "AU summits and peace/security councils"
+    },
+    {
+      "name": "ECOWAS · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.ecowas.int/",
+      "scope": "West African regional summits and declarations"
+    },
+    {
+      "name": "SADC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.sadc.int/",
+      "scope": "Southern African development and security meetings"
+    },
+    {
+      "name": "EAC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.eac.int/",
+      "scope": "East African Community summits"
+    },
+    {
+      "name": "Arab League · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.lasportal.org/",
+      "scope": "Arab League summits and ministerials"
+    },
+    {
+      "name": "GCC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.gcc-sg.org/",
+      "scope": "Gulf Cooperation Council summits and joint statements"
+    },
+    {
+      "name": "OIC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.oic-oci.org/",
+      "scope": "Organisation of Islamic Cooperation summits"
+    },
+    {
+      "name": "MERCOSUR · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.mercosur.int/",
+      "scope": "South American leaders and trade ministerials"
+    },
+    {
+      "name": "CELAC · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.celac.org/",
+      "scope": "Latin American and Caribbean regional diplomacy"
+    },
+    {
+      "name": "CARICOM · official monitor",
+      "type": "Regional blocs",
+      "url": "https://caricom.org/",
+      "scope": "Caribbean Community heads and ministerials"
+    },
+    {
+      "name": "Pacific Islands Forum · official monitor",
+      "type": "Regional blocs",
+      "url": "https://forumsec.org/",
+      "scope": "Pacific Island leaders and regional policy"
+    },
+    {
+      "name": "WTO · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.wto.org/",
+      "scope": "Ministerial conferences, dispute and committee calendars"
+    },
+    {
+      "name": "IMF · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.imf.org/en/About/Meetings",
+      "scope": "Spring and annual meetings"
+    },
+    {
+      "name": "World Bank · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.worldbank.org/en/meetings/splash/about",
+      "scope": "Development finance annual and spring meetings"
+    },
+    {
+      "name": "OECD · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.oecd.org/en/events.html",
+      "scope": "Council ministerial and economic conferences"
+    },
+    {
+      "name": "BIS · official monitor",
+      "type": "Economic institutions",
+      "url": "https://www.bis.org/events/index.htm",
+      "scope": "Central bank governors, committees and financial stability"
+    },
+    {
+      "name": "OPEC · official monitor",
+      "type": "Climate & energy",
+      "url": "https://www.opec.org/",
+      "scope": "Oil market and ministerial meetings"
+    },
+    {
+      "name": "IEA · official monitor",
+      "type": "Climate & energy",
+      "url": "https://www.iea.org/events",
+      "scope": "Energy ministers and research"
+    },
+    {
+      "name": "UNFCCC · official monitor",
+      "type": "Climate & energy",
+      "url": "https://unfccc.int/process-and-meetings/conferences",
+      "scope": "COP and climate negotiations"
+    },
+    {
+      "name": "IRENA · official monitor",
+      "type": "Climate & energy",
+      "url": "https://www.irena.org/Events",
+      "scope": "Renewable energy assemblies and ministerials"
+    },
+    {
+      "name": "IAEA · official monitor",
+      "type": "Global institutions",
+      "url": "https://www.iaea.org/events",
+      "scope": "Nuclear safety, safeguards and general conferences"
+    },
+    {
+      "name": "United Nations · official monitor",
+      "type": "Global institutions",
+      "url": "https://www.un.org/calendar/en/date",
+      "scope": "UN General Assembly, Security Council, committees"
+    },
+    {
+      "name": "ITU · official monitor",
+      "type": "Global institutions",
+      "url": "https://www.itu.int/",
+      "scope": "Telecommunications and digital infrastructure conferences"
+    },
+    {
+      "name": "WHO · official monitor",
+      "type": "Global institutions",
+      "url": "https://www.who.int/about/governance/world-health-assembly",
+      "scope": "World Health Assembly and public health governance"
+    },
+    {
+      "name": "UNCTAD · official monitor",
+      "type": "Global institutions",
+      "url": "https://unctad.org/meetings",
+      "scope": "Trade and development ministerial meetings"
+    },
+    {
+      "name": "Arctic Council · official monitor",
+      "type": "Regional blocs",
+      "url": "https://arctic-council.org/",
+      "scope": "Arctic states and permanent participants"
+    },
+    {
+      "name": "European Political Community · official monitor",
+      "type": "Regional blocs",
+      "url": "https://www.consilium.europa.eu/en/meetings/",
+      "scope": "European continental leaders forum"
+    },
+    {
+      "name": "Munich Security Conference · official monitor",
+      "type": "Security partnerships",
+      "url": "https://securityconference.org/en/",
+      "scope": "Security conferences; not a treaty-based bloc"
+    },
+    {
+      "name": "Shangri-La Dialogue · official monitor",
+      "type": "Security partnerships",
+      "url": "https://www.iiss.org/events/shangri-la-dialogue",
+      "scope": "Regional defence conference; not an intergovernmental organisation"
+    }
+  ],
+  "institutions": [
+    {
+      "name": "Quad",
+      "category": "Security partnerships",
+      "url": "https://www.mea.gov.in/",
+      "scope": "Indo-Pacific critical minerals, maritime and technology cooperation",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "NATO",
+      "category": "Security partnerships",
+      "url": "https://www.nato.int/",
+      "scope": "Allied summits, defence ministerials and communiqués",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "OSCE",
+      "category": "Security partnerships",
+      "url": "https://www.osce.org/events",
+      "scope": "European security, prevention and confidence-building",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "CSTO",
+      "category": "Security partnerships",
+      "url": "https://odkb-csto.org/",
+      "scope": "Collective Security Treaty Organisation council and statements",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "AUKUS",
+      "category": "Security partnerships",
+      "url": "https://www.defense.gov/",
+      "scope": "Australia–UK–US defence and technology cooperation",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "ASEAN",
+      "category": "Regional blocs",
+      "url": "https://asean.org/",
+      "scope": "ASEAN summits and dialogue partners",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "ASEAN+3",
+      "category": "Regional blocs",
+      "url": "https://aseanplusthree.asean.org/",
+      "scope": "ASEAN plus China, Japan and Republic of Korea",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "East Asia Summit",
+      "category": "Regional blocs",
+      "url": "https://eastasiasummit.asean.org/",
+      "scope": "Broad Indo-Pacific leaders-level strategy",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "SAARC",
+      "category": "Regional blocs",
+      "url": "https://www.saarc-sec.org/",
+      "scope": "South Asian regional meetings and institutional status",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "BIMSTEC",
+      "category": "Regional blocs",
+      "url": "https://bimstec.org/",
+      "scope": "Bay of Bengal regional organisation",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "IORA",
+      "category": "Regional blocs",
+      "url": "https://www.iora.int/",
+      "scope": "Indian Ocean regional meetings, trade and maritime",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "SCO",
+      "category": "Regional blocs",
+      "url": "https://eng.sectsco.org/",
+      "scope": "Shanghai Cooperation Organisation summits and ministerials",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "BRICS",
+      "category": "Economic institutions",
+      "url": "https://brics.br/",
+      "scope": "BRICS chairship and economic governance; check current chair links",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "G20",
+      "category": "Economic institutions",
+      "url": "https://www.g20.org/",
+      "scope": "Leaders, sherpa and finance tracks",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "G7",
+      "category": "Economic institutions",
+      "url": "https://www.g7france.fr/",
+      "scope": "G7 leaders and ministerial tracks, rotating presidency",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "APEC",
+      "category": "Economic institutions",
+      "url": "https://www.apec.org/",
+      "scope": "Economic leaders, business and ministerial meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "European Union",
+      "category": "Regional blocs",
+      "url": "https://www.consilium.europa.eu/en/meetings/calendar/",
+      "scope": "European Council and sectoral councils",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "African Union",
+      "category": "Regional blocs",
+      "url": "https://au.int/en/events",
+      "scope": "AU summits and peace/security councils",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "ECOWAS",
+      "category": "Regional blocs",
+      "url": "https://www.ecowas.int/",
+      "scope": "West African regional summits and declarations",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "SADC",
+      "category": "Regional blocs",
+      "url": "https://www.sadc.int/",
+      "scope": "Southern African development and security meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "EAC",
+      "category": "Regional blocs",
+      "url": "https://www.eac.int/",
+      "scope": "East African Community summits",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "Arab League",
+      "category": "Regional blocs",
+      "url": "https://www.lasportal.org/",
+      "scope": "Arab League summits and ministerials",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "GCC",
+      "category": "Regional blocs",
+      "url": "https://www.gcc-sg.org/",
+      "scope": "Gulf Cooperation Council summits and joint statements",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "OIC",
+      "category": "Regional blocs",
+      "url": "https://www.oic-oci.org/",
+      "scope": "Organisation of Islamic Cooperation summits",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "MERCOSUR",
+      "category": "Regional blocs",
+      "url": "https://www.mercosur.int/",
+      "scope": "South American leaders and trade ministerials",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "CELAC",
+      "category": "Regional blocs",
+      "url": "https://www.celac.org/",
+      "scope": "Latin American and Caribbean regional diplomacy",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "CARICOM",
+      "category": "Regional blocs",
+      "url": "https://caricom.org/",
+      "scope": "Caribbean Community heads and ministerials",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "Pacific Islands Forum",
+      "category": "Regional blocs",
+      "url": "https://forumsec.org/",
+      "scope": "Pacific Island leaders and regional policy",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "WTO",
+      "category": "Economic institutions",
+      "url": "https://www.wto.org/",
+      "scope": "Ministerial conferences, dispute and committee calendars",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "IMF",
+      "category": "Economic institutions",
+      "url": "https://www.imf.org/en/About/Meetings",
+      "scope": "Spring and annual meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "World Bank",
+      "category": "Economic institutions",
+      "url": "https://www.worldbank.org/en/meetings/splash/about",
+      "scope": "Development finance annual and spring meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "OECD",
+      "category": "Economic institutions",
+      "url": "https://www.oecd.org/en/events.html",
+      "scope": "Council ministerial and economic conferences",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "BIS",
+      "category": "Economic institutions",
+      "url": "https://www.bis.org/events/index.htm",
+      "scope": "Central bank governors, committees and financial stability",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "OPEC",
+      "category": "Climate & energy",
+      "url": "https://www.opec.org/",
+      "scope": "Oil market and ministerial meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "IEA",
+      "category": "Climate & energy",
+      "url": "https://www.iea.org/events",
+      "scope": "Energy ministers and research",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "UNFCCC",
+      "category": "Climate & energy",
+      "url": "https://unfccc.int/process-and-meetings/conferences",
+      "scope": "COP and climate negotiations",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "IRENA",
+      "category": "Climate & energy",
+      "url": "https://www.irena.org/Events",
+      "scope": "Renewable energy assemblies and ministerials",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "IAEA",
+      "category": "Global institutions",
+      "url": "https://www.iaea.org/events",
+      "scope": "Nuclear safety, safeguards and general conferences",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "United Nations",
+      "category": "Global institutions",
+      "url": "https://www.un.org/calendar/en/date",
+      "scope": "UN General Assembly, Security Council, committees",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "ITU",
+      "category": "Global institutions",
+      "url": "https://www.itu.int/",
+      "scope": "Telecommunications and digital infrastructure conferences",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "WHO",
+      "category": "Global institutions",
+      "url": "https://www.who.int/about/governance/world-health-assembly",
+      "scope": "World Health Assembly and public health governance",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "UNCTAD",
+      "category": "Global institutions",
+      "url": "https://unctad.org/meetings",
+      "scope": "Trade and development ministerial meetings",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "Arctic Council",
+      "category": "Regional blocs",
+      "url": "https://arctic-council.org/",
+      "scope": "Arctic states and permanent participants",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "European Political Community",
+      "category": "Regional blocs",
+      "url": "https://www.consilium.europa.eu/en/meetings/",
+      "scope": "European continental leaders forum",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "Munich Security Conference",
+      "category": "Security partnerships",
+      "url": "https://securityconference.org/en/",
+      "scope": "Security conferences; not a treaty-based bloc",
+      "date_status": "Monitor official calendar; no date asserted"
+    },
+    {
+      "name": "Shangri-La Dialogue",
+      "category": "Security partnerships",
+      "url": "https://www.iiss.org/events/shangri-la-dialogue",
+      "scope": "Regional defence conference; not an intergovernmental organisation",
+      "date_status": "Monitor official calendar; no date asserted"
+    }
+  ]
+}

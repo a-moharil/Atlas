@@ -1,0 +1,5 @@
+__pycache__/
+tests/
+*.png
+*.sqlite3*
+.git/
