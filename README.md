@@ -8,6 +8,19 @@ It runs entirely on your own computer. There is no account, no cloud service and
 
 > Atlas is a research and reading tool, not a news-verification or warning service. Bias and paywall labels describe publishers, not individual articles. Read the originals before drawing conclusions.
 
+## Preview
+
+| | |
+|---|---|
+| ![Situation room](docs/screenshots/01-situation-room.jpg) | ![Emergency newsroom](docs/screenshots/06-emergency-newsroom.jpg) |
+| **Situation room:** the day at a glance | **Emergency newsroom:** priority updates grouped into stories |
+| ![Compare coverage](docs/screenshots/04-compare-coverage.jpg) | ![Earth watch India](docs/screenshots/08b-earth-watch-india.jpg) |
+| **Compare coverage:** one story across outlets | **Earth watch:** live weather for India and global hazards |
+
+![A story card with its coverage gauge](docs/screenshots/05-story-card.jpg)
+
+**[See every page →](docs/SCREENSHOTS.md)**
+
 ---
 
 ## Contents
@@ -62,8 +75,8 @@ Across the app:
 **Requirements:** Python 3.10 or newer (developed and tested on 3.12 and 3.13), internet access for the feeds, and a modern browser. The core app has **no third-party Python dependencies**.
 
 ```bash
-git clone https://github.com/a-moharil/atlas.git
-cd atlas
+git clone https://github.com/a-moharil/Atlas.git
+cd Atlas
 python3 server.py                         # http://127.0.0.1:8765/
 # or: python3 server.py --host 127.0.0.1 --port 8800
 ```
@@ -133,7 +146,7 @@ sudo apt update && sudo apt install python3 python3-venv python3-pip
 There are two ways:
 
 - **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Atlas`.
-- **With Git:** run `git clone https://github.com/a-moharil/atlas.git`. Git makes later updates easier; see [section 5.4](#54-updating).
+- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.4](#54-updating).
 
 ### 3.4 Start Atlas
 
@@ -434,6 +447,8 @@ pip install playwright && python -m playwright install chromium
 
 The language model tests use a stand-in for Ollama. They don't need the real model.
 
+**Updating the screenshots.** With Atlas running and some news collected, run `pip install playwright` then `python tools/take_screenshots.py`. It uses Microsoft Edge or Google Chrome, captures every page into `docs/screenshots/`, and rewrites `docs/SCREENSHOTS.md`.
+
 ---
 
 ## 11. Project layout
@@ -457,6 +472,7 @@ atlas/
 ├─ start_windows.bat, start_linux_macos.sh, Dockerfile, compose.yaml
 ├─ static/                 front end (HTML, CSS, JS modules, fonts, map data)
 ├─ tests/                  unittest suites and Node front-end checks
+├─ tools/                  take_screenshots.py for the README preview
 ├─ verification/           recorded live-probe results from development
 └─ docs/history/           release notes and test reports for earlier versions
 ```
