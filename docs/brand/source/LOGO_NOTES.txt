@@ -1,0 +1,32 @@
+SANJAYA | FINAL SELECTED EMBLEM
+=================================
+Source: user's 2x2 comparison artwork, top-left panel (row 1, column 1).
+No redesign. The original PNG/JPG files are crops or resizes of the selected panel.
+
+CORE PALETTE
+  Amber: #E8B45A
+  Deep blue-green: #0B2430
+  Ivory detail: #F7E8C9
+
+WHAT TO USE
+  01_Master/Sanjaya_Logo_Original_Crop_615px.png  -- exact cropped original, lossless
+  01_Master/Sanjaya_Logo_Brand_Navy_2048.png    -- normalized brand-ground version, 2048px
+  01_Master/Sanjaya_Logo_Brand_Navy_2048.jpg    -- JPEG for general-purpose sharing
+  02_Transparent/Sanjaya_Logo_Transparent_2048.png -- amber/ivory mark on transparent ground
+  03_Vector_Print/Sanjaya_Logo_Vector_Dark.svg -- traced vector, brand-ground, editable paths
+  03_Vector_Print/Sanjaya_Logo_Vector_Transparent.svg -- traced vector, transparent ground
+  03_Vector_Print/*.pdf -- printable vector PDF assets
+  04_App_Icons -- standard PNG sizes and favicon.ico
+  05_Monochrome -- black-only logo variants
+
+IMPORTANT PRODUCTION NOTES
+  * The supplied original is a raster artwork, not an original vector design.
+  * SVG/PDF files are automatically traced APPROXIMATIONS of the visible emblem;
+    the original crop PNG is the pixel-faithful master. Inspect traces before print.
+  * The original is ~615px per quadrant. Upscaling to 2048px cannot restore
+    absent detail, although it ensures convenient image dimensions.
+  * At 16px and 32px, the iris network and small circuit dots lose definition.
+    For production favicons, a deliberately simplified micro-icon may be needed.
+  * SVGs have editable shapes but not a manually reconstructed layered source file.
+  * Do not crop the left-edge circuitry inadvertently; its intentional entry is
+    part of the selected emblem.

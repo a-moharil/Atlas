@@ -645,3 +645,14 @@ button.tag.leanTag:hover,button.tag.leanTag:focus-visible{filter:brightness(1.2)
 .signLine span{font-family:"Atlas Serif",serif;font-style:italic;font-size:.86rem;color:var(--ink-2)}
 .signLine:hover span,.signLine:focus-visible span{color:var(--amber)}
 @media (max-width:760px){.abThree{grid-template-columns:1fr}}
+
+/* v6.1 · Sanjaya emblem */
+.brandLogo{width:66px;height:auto;flex:none;display:block;filter:drop-shadow(0 0 10px rgba(232,180,90,.12))}
+.abEmblem{display:block;width:min(520px,90%);height:auto;margin:0 auto 18px}
+.abMark{margin:14px 0 6px;padding:18px;border-radius:14px;background:#0b2430;border:1px solid rgba(232,180,90,.22)}
+.abMark img{display:block;width:min(420px,100%);height:auto;margin:0 auto}
+.abParts{margin:16px 0 0;display:grid;gap:14px}
+.abParts>div{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:baseline}
+.abParts dt{font-family:"Schibsted Grotesk",system-ui,sans-serif;font-size:.92rem;font-weight:600;color:var(--amber)}
+.abParts dd{margin:0}
+@media (max-width:640px){.abParts>div{grid-template-columns:1fr;gap:4px}}

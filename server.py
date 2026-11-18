@@ -980,7 +980,7 @@ class Handler(BaseHTTPRequestHandler):
         ext = path.suffix.lower()
         mime = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
                 '.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.geojson':'application/geo+json; charset=utf-8',
-                '.svg':'image/svg+xml','.pdf':'application/pdf','.png':'image/png'}.get(ext, 'application/octet-stream')
+                '.svg':'image/svg+xml','.pdf':'application/pdf','.png':'image/png','.ico':'image/x-icon','.jpg':'image/jpeg'}.get(ext, 'application/octet-stream')
         self.send_response(200)
         self.send_header('Content-Type', mime)
         self.send_header('Cache-Control', 'no-store')
