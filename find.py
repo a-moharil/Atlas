@@ -51,7 +51,7 @@ def need(n: int) -> int:
     return n if n <= 2 else math.ceil(n * 0.6)
 
 
-def keyword_scores(groups, docs) -> dict:
+def keyword_scores(groups, docs, need_fn=None) -> dict:
     """docs: list of (id, title, text, source). Returns id -> (score, matched_terms, groups_hit)."""
     terms = sorted({t for g in groups for t in g})
     if not terms or not docs:
@@ -75,7 +75,7 @@ def keyword_scores(groups, docs) -> dict:
         hit = {t for t in terms if (i, t) in tf}
         if not hit:
             continue
-        groups_hit = [g for g in groups if len(hit & set(g)) >= need(len(g))]
+        groups_hit = [g for g in groups if len(hit & set(g)) >= (need_fn or need)(len(g))]
         if not groups_hit:
             continue
         s = 0.0

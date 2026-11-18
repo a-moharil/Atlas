@@ -71,7 +71,7 @@ def settings(con) -> dict:
 
 
 def set_setting(con, key, value):
-    allowed = {'threshold', 'window_hours', 'labels_enabled', 'ollama_model', 'ollama_url'}
+    allowed = {'threshold', 'window_hours', 'labels_enabled', 'ollama_model', 'ollama_url', 'ask_model'}
     if key not in allowed:
         raise ValueError('Unknown setting')
     if key == 'threshold':
@@ -80,7 +80,7 @@ def set_setting(con, key, value):
         raise ValueError('Window must be 24, 48, 72, 120 or 168 hours')
     if key == 'labels_enabled' and str(value) not in ('0', '1'):
         raise ValueError('labels_enabled must be 0 or 1')
-    if key == 'ollama_model' and not re.fullmatch(r'[A-Za-z0-9._:\-/]{2,80}', str(value)):
+    if key in ('ollama_model', 'ask_model') and not re.fullmatch(r'[A-Za-z0-9._:\-/]{2,80}', str(value)):
         raise ValueError('Invalid model name')
     if key == 'ollama_url' and not re.fullmatch(r'http://(127\.0\.0\.1|localhost)(:\d{2,5})?', str(value)):
         raise ValueError('Ollama must run on this computer (http://127.0.0.1:11434)')

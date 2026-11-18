@@ -45,6 +45,8 @@ import research_radar
 import coverage_graph
 import geo_video
 import find
+import wiki
+import ask
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -617,6 +619,84 @@ def _single(e):
     return pr
 
 
+WIKI_UA = 'Atlas/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
+
+
+def wiki_get(url, max_bytes=2_000_000):
+    """Wikipedia asks API clients for an identifying User-Agent."""
+    validate_external_url(url)
+    req = urllib.request.Request(url, headers={'User-Agent': WIKI_UA, 'Accept': 'application/json, text/html'})
+    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=20) as res:
+        block = res.read(max_bytes + 1)
+    if len(block) > max_bytes:
+        raise ValueError('Wikipedia response exceeded size limit')
+    return block
+
+
+def ask_question(data):
+    """Retrieve sources for a question and start a local Ollama answer (see ask.py)."""
+    q = re.sub(r'\s+', ' ', str(data.get('question', ''))).strip()[:600]
+    if len(q) < 3:
+        raise ValueError('Type a question.')
+    state = {e['id']: e for e in graph_entries()}
+    ids = [str(i)[:40] for i in (data.get('ids') or [])][:20000]
+    pool = {i: state[i] for i in (ids or list(state)) if i in state}
+    use_meaning = semantic.ready()
+    qv = (semantic.embed_texts([q], DB_FILE.parent / 'model_cache') or [None])[0] if use_meaning else None
+    mode = 'both' if qv is not None else 'keywords'
+    sims = {}
+    if qv is not None:
+        for i, v in semantic.vectors(db_connect, list(pool)).items():
+            sims[i] = float(v @ qv)
+    docs = [(i, e.get('title', ''), e.get('summary', ''), e.get('source', '')) for i, e in pool.items()]
+    ranked = ask.rank_loose(q, docs, mode, sims)
+    per, articles = {}, []
+    for r in ranked:  # at most two articles per outlet, eight in all
+        e = pool[r['id']]
+        h = e.get('publisher') or e.get('source')
+        if per.get(h, 0) >= 2:
+            continue
+        per[h] = per.get(h, 0) + 1
+        prof = publishers.profile(e.get('publisher', '')) if e.get('publisher') else {}
+        articles.append({'id': e['id'], 'title': e.get('title', ''), 'summary': e.get('summary', ''), 'url': e.get('url', ''),
+                         'published': e.get('published') or e.get('retrieved'), 'source': e.get('source', ''),
+                         'outlet': prof.get('name') or e.get('source', ''), 'publisher': e.get('publisher', '')})
+        if len(articles) >= 8:
+            break
+    passages = []
+    title = str(data.get('wiki') or '').strip()
+    wiki_note = ''
+    if title:
+        try:
+            ps = wiki.passages(wiki.plain_text(title, wiki_get, db_connect))[:400]
+            pdocs = [(str(n), '', p['text'], p['section']) for n, p in enumerate(ps)]
+            psims = {}
+            if qv is not None and ps:
+                for n, v in enumerate(semantic.embed_texts([p['text'] for p in ps[:200]], DB_FILE.parent / 'model_cache') or []):
+                    psims[str(n)] = float(v @ qv)
+            order = [int(r['id']) for r in ask.rank_loose(q, pdocs, mode, psims)][:4]
+            if ps and 0 not in order:
+                order = [0] + order[:3]  # the lead is always offered
+            page_name = title.replace('_', ' ')
+            passages = [{'page': page_name, 'section': ps[n]['section'], 'text': ps[n]['text'],
+                         'url': f"{wiki.BASE}/wiki/{urllib.parse.quote(wiki.norm_title(title))}"} for n in order]
+        except Exception as exc:
+            wiki_note = f'Could not read the Wikipedia page ({type(exc).__name__}).'
+    with closing(db_connect()) as con:
+        cfg = semantic.settings(con)
+    url = cfg.get('ollama_url') or lm_labels.DEFAULT_URL
+    model = cfg.get('ask_model') or cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+    out = {'question': q, 'mode': mode, 'model': model, 'wiki_note': wiki_note,
+           'sources': {'atlas': articles, 'wikipedia': passages}, 'searched': len(pool)}
+    if not articles and not passages:
+        return {**out, 'status': 'no_sources'}
+    status = lm_labels.check(url, model)
+    if status['status'] != 'ready':
+        return {**out, 'status': 'no_model', 'error': status['detail'], 'models': status.get('models', [])}
+    job = ask.start(q, articles, passages, url, model)
+    return {**out, 'status': 'writing', 'job': job['id']}
+
+
 def find_articles(data):
     """Rank a panel's articles (or the reel's videos) for a query. See find.py for the query syntax."""
     groups = find.parse(data.get('q', ''))
@@ -881,7 +961,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def read_json(self):
         n = int(self.headers.get('Content-Length', '0'))
-        if n > (600_000 if self.path.split('?')[0] == '/api/find' else 30_000):
+        if n > (600_000 if self.path.split('?')[0] in ('/api/find', '/api/ask') else 30_000):
             raise ValueError('Request is too large.')
         return json.loads(self.rfile.read(n).decode('utf-8')) if n else {}
 
@@ -1125,6 +1205,23 @@ class Handler(BaseHTTPRequestHandler):
                 detail=params.get('detail',[''])[0]
                 return self.send_payload(atlas_v3.shakemap(detail,fetch_bytes))
             if parsed.path == '/api/live-channels': return self.send_payload({'channels':live_channels_state(),'time':utc_now()})
+            if parsed.path == '/api/wiki/search':
+                try:return self.send_payload(wiki.search(params.get('q',[''])[0],wiki_get,db_connect))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                except Exception as e:return self.send_payload({'error':f'Wikipedia could not be reached ({type(e).__name__}).'},502)
+            if parsed.path == '/api/wiki/page':
+                try:return self.send_payload(wiki.page(params.get('title',[''])[0],wiki_get,db_connect))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                except urllib.error.HTTPError as e:return self.send_payload({'error':'Wikipedia has no article with that title.' if e.code==404 else f'Wikipedia answered {e.code}.'},404 if e.code==404 else 502)
+                except Exception as e:return self.send_payload({'error':f'Wikipedia could not be reached ({type(e).__name__}).'},502)
+            if parsed.path.startswith('/api/ask/job/'):
+                j=ask.get(parsed.path.rsplit('/',1)[-1][:20])
+                return self.send_payload(j) if j else self.send_payload({'error':'No such answer.'},404)
+            if parsed.path == '/api/ask/models':
+                with closing(db_connect()) as con:cfg=semantic.settings(con)
+                url=cfg.get('ollama_url') or lm_labels.DEFAULT_URL;model=cfg.get('ask_model') or cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+                st=lm_labels.check(url,model)
+                return self.send_payload({'model':model,'status':st['status'],'detail':st['detail'],'models':st.get('models',[])})
             if parsed.path == '/api/geo-reel':
                 return self.send_payload(geo_reel(params.get('hours',['24'])[0],params.get('scope',['geo'])[0]))
             if parsed.path == '/api/brief':
@@ -1187,6 +1284,14 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/ask':
+                try:return self.send_payload(ask_question(data))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/ask/settings':
+                try:
+                    with closing(db_connect()) as con:semantic.set_setting(con,'ask_model',str(data.get('model','')))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                return self.send_payload({'ok':True})
             if path == '/api/find':
                 try:return self.send_payload(find_articles(data))
                 except ValueError as e:return self.send_payload({'error':str(e)},400)

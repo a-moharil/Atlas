@@ -30,7 +30,8 @@ window.ATLASFind = (() => {
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
       <input type="search" data-findq="${esc(key)}" value="${esc(s.q)}" placeholder="${esc(ph)}" aria-label="Search ${esc(opts.label || "this panel")}" autocomplete="off" spellcheck="false">
       <select data-findmode="${esc(key)}" aria-label="How to match" title="${lm() ? "How to match the query" : "The language model is off or loading: meaning search will fall back to keywords"}">
-        ${MODES.map(([k, t]) => `<option value="${k}" ${s.mode === k ? "selected" : ""}>${t}</option>`).join("")}</select></form>`;
+        ${MODES.map(([k, t]) => `<option value="${k}" ${s.mode === k ? "selected" : ""}>${t}</option>`).join("")}</select>
+      ${opts.source === "reel" ? "" : `<button type="button" class="findAsk" data-askpanel="${esc(key)}" title="Ask a question about ${esc(opts.label || "this panel")}">Ask</button>`}</form>`;
   }
 
   // ---------------------------------------------------------------- searching
@@ -171,5 +172,5 @@ window.ATLASFind = (() => {
     } else if (b.dataset.findmore != null) { st(b.dataset.findmore).shown += 20; paint(b.dataset.findmore); }
     else if (b.dataset.findweb != null) fetchWeb(b.dataset.findweb);
   });
-  return { register, bar, apply, run, entry: (id) => entryMap().get(id), _S: S };
+  return { register, bar, apply, run, entry: (id) => entryMap().get(id), panel: (k) => panels.get(k), _S: S };
 })();

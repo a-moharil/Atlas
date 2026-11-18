@@ -272,6 +272,24 @@ Every panel that lists articles or videos has its own search bar: Situation room
 - **Nothing held matches?** Atlas searches Google News for the query (one search per comma-separated topic, last 7 days), files the articles under that panel's desk as *Search further*, and searches again. Articles Google returned that are worded differently appear under *Also returned by Google News*. With only a few matches, *Fetch articles about this from the web* does the same on request. The video panels and *Academic research* can't fetch: videos only come from followed channels, and papers come through Research radar.
 - The search stays in place when the page refreshes. Esc or *Clear search* brings back the panel's own list.
 
+### 5.2b Wikipedia and the Ask drawer
+
+**Wikipedia** (Research → *Wikipedia*) searches English Wikipedia and opens articles inside Atlas.
+
+- Links between articles stay in Atlas; *Back* returns to the previous article. *Open on Wikipedia* opens the original.
+- Pages you've read are saved and stay readable offline.
+- **Held in Atlas**, beside the article, lists the news and research articles Atlas holds on the same topic. It searches for the title and any names the article's opening puts in bold, such as *IAEA*.
+- Articles are cleaned before display: no scripts, styles or tracking; Wikipedia's edit links and navigation boxes are removed. Text is under CC BY-SA 4.0.
+
+**Ask** (the *Ask* button in the top bar, or *Ask* inside any panel's search bar) opens a drawer that answers questions in plain English.
+
+- **What it uses:** articles Atlas holds, either the panel you're on (*This panel*) or *Everything in Atlas*, plus the Wikipedia page you're reading (shown as a chip; × leaves it out). Atlas finds up to eight articles (at most two per outlet) and up to five Wikipedia passages with the same meaning-and-keyword search as the panel bars.
+- **Who writes it:** your local Ollama model, the same one used for story labels (*Language model* page; you can pick another installed model in the drawer). Nothing leaves your computer.
+- **Citations:** sources are numbered A1… (Atlas) and W1… (Wikipedia). The model must cite every sentence. Atlas removes citations to sources that don't exist and underlines sentences that cite nothing. Click a citation to see its source.
+- **If Ollama isn't running,** the drawer still lists the sources it found.
+- **Open in Google AI Mode** sends the question to Google in a new tab (`google.com/search?udm=50`). The answer stays in Google. A built-in Google answer (the Gemini API with Google Search) can be added later; it would need a Google AI Studio key.
+- On wide screens the drawer sits beside the page; on narrow ones it covers it. Esc or *Close* closes it. Ctrl+Enter asks.
+
 ### 5.3a Geopolitics reel and the floating player
 
 The **Geopolitics reel** on *Live TV and video* plays recent news videos from international broadcasters one after another: Al Jazeera English, France 24, Sky News, AP, TRT World, CNA, Euronews, NHK World, ABC News (Australia), plus BBC News, DW, Reuters and WION.
@@ -566,6 +584,8 @@ atlas/
 ├─ coverage_graph.py       coverage graph: source network, diffusion, coverage gaps
 ├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
 ├─ find.py                 panel search: query syntax, BM25 keywords, meaning blend, web queries
+├─ wiki.py                 Wikipedia: search, cleaned article HTML, offline cache, passages
+├─ ask.py                  Ask drawer: retrieval, cited prompt, local Ollama answers, citation check
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
 ├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
 ├─ earth_watch.py          GDACS, EONET, USGS, Open-Meteo, Copernicus series

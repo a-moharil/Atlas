@@ -109,6 +109,7 @@ const pages = {
   mygov: ["MyGov policy", "Ministries, schemes and research funding"],
   sources: ["Sources", "Publishers, bias, paywalls and your preferences"],
   radar: ["Research radar", "New ML research ranked against your own papers"],
+  wiki: ["Wikipedia", "English Wikipedia, read inside Atlas"],
   lm: ["Language model", "Grouping by meaning and generated labels"],
   coverage: ["Coverage audit", "Retrieval health and history"],
   ccc: ["CCC archive", "Research archive"],
@@ -694,7 +695,7 @@ function mapLayout() {
     `<div class="two" style="grid-template-columns:minmax(0,2.2fr) minmax(290px,.7fr)"><div class="stack"><div class="panel" style="padding:12px"><div class="filterTabs" style="margin-bottom:10px"><button class="choice ${ROOT.mapMode === "satellite" ? "active" : ""}" data-mapmode="satellite">Satellite</button><button class="choice ${ROOT.mapMode === "street" ? "active" : ""}" data-mapmode="street">Street</button><button class="choice ${ROOT.mapMode === "nasa" ? "active" : ""}" data-mapmode="nasa">NASA composite</button><button class="choice ${ROOT.mapMode === "daily" ? "active" : ""}" data-mapmode="daily">NASA daily image</button></div><div class="mapFrame" style="height:620px"><canvas id="satCanvas" class="nativeTileCanvas" aria-label="Pan-and-zoom satellite map. Drag to pan, scroll to zoom."></canvas><div class="nativeMapTools"><button id="satZoomIn" title="Zoom in">+</button><button id="satZoomOut" title="Zoom out">−</button><button id="satTileRetry" title="Retry failed tiles">↻</button></div><div id="mapFallback" class="mapEmpty" hidden><div><strong>Map providers unreachable</strong><p>Tiles come from Esri, OpenStreetMap and NASA through the local server. Check the server's internet access.</p><a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" class="action">NASA Worldview ↗</a></div></div><div class="mapOverlayInfo" id="mapInfo">Provider-attributed imagery.</div></div></div>${panel("About these layers", `<p class="fine"><strong>Satellite:</strong> Esri World Imagery. <strong>Street:</strong> OpenStreetMap, whose borders follow on-the-ground control; Atlas overlays India's official boundary (Survey of India, via DataMeet) so the national outline is correct on every basemap.</p><p class="fine"><strong>Thermal anomalies:</strong> NASA GIBS VIIRS hotspots, not fire intensity. <strong>Shaking:</strong> USGS ShakeMap contours where published.</p><p class="fine">For wind, rain, temperature and ocean currents, use <button class="linkButton" data-page="earth">Earth watch</button>.</p>`)}</div><aside class="satControls">${panel("Focus", `<div class="mapPick">${[["world", "World"], ["india", "India"], ["europe", "Europe"], ["gulf", "Gulf"], ["indo", "Indo-Pacific"]].map((x) => `<button data-mapfocus="${x[0]}">${x[1]}</button>`).join("")}</div><label class="fine" style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="indiaBoundary" ${ROOT.indiaBoundary !== false ? "checked" : ""}> Official India boundary (Survey of India)</label>`)}${panel("Environmental layers", `<div class="layerBlock"><strong>Satellite measurements</strong><label><input type="checkbox" id="fireRaster" ${ROOT.fireLayer ? "checked" : ""}> NASA VIIRS thermal anomalies</label></div><div class="layerBlock"><strong>Event geometry</strong><label><input id="fireDanger" type="checkbox" ${ROOT.effisFwi ? "checked" : ""}> EFFIS fire-weather index (Europe)</label><label><input id="burnScar" type="checkbox" ${ROOT.effisBurn ? "checked" : ""}> EFFIS burned area (Europe)</label><label><input id="eventPolygon" type="checkbox" ${ROOT.eventsLayer ? "checked" : ""}> NASA EONET wildfire polygons</label><label><input id="quakePins" type="checkbox" ${ROOT.earthLayer ? "checked" : ""}> USGS earthquake epicentres</label></div><div class="layerBlock"><strong>Acquisition date</strong><select id="rasterDate" class="field" style="width:100%">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<option value="${i}" ${ROOT.dateOffset === i ? "selected" : ""}>${i === 0 ? "Today (may be incomplete)" : i + " day" + (i > 1 ? "s" : "") + " ago"}</option>`).join("")}</select></div><div class="smallStats" style="margin-top:12px"><button id="mapRefresh" class="action">Update hazards</button><button id="mapDiagnose" class="action">Test tiles</button></div><div id="mapHealth" class="fine">No tile requests yet.</div><pre id="mapDiagnostics" class="mapDiagnostics" aria-live="polite"></pre><p id="mapCatalogStatus" class="fine"></p>`)}${panel("USGS earthquakes", `<div id="quakeList">${empty("Loading", "USGS catalogue pending.")}</div><p id="shakemapState" class="fine"></p>`)}</aside></div>`
   );
 }
-const MODULES = { emergency: ["ATLASEmergency", "emergency.js"], earth: ["ATLASEarth", "earth_watch.js"], sources: ["ATLASSources", "sources.js"], lm: ["ATLASLM", "lm.js"], radar: ["ATLASRadar", "radar.js"], conflict: ["ATLASConflict", "conflict_watch.js"], mygov: ["ATLASMyGov", "mygov.js"], constellation: ["ATLASConstellation", "article_constellation.js"], investigate: ["IndiaInvestigation", "india_investigation.js"], geopolitics: ["ATLASResearch", "expert_panels.js"], macro: ["ATLASResearch", "expert_panels.js"] };
+const MODULES = { emergency: ["ATLASEmergency", "emergency.js"], earth: ["ATLASEarth", "earth_watch.js"], sources: ["ATLASSources", "sources.js"], lm: ["ATLASLM", "lm.js"], radar: ["ATLASRadar", "radar.js"], wiki: ["ATLASWiki", "wiki.js"], conflict: ["ATLASConflict", "conflict_watch.js"], mygov: ["ATLASMyGov", "mygov.js"], constellation: ["ATLASConstellation", "article_constellation.js"], investigate: ["IndiaInvestigation", "india_investigation.js"], geopolitics: ["ATLASResearch", "expert_panels.js"], macro: ["ATLASResearch", "expert_panels.js"] };
 function pageError(v, err) {
   const mod = MODULES[v];
   const missing = mod && !window[mod[0]];
@@ -734,7 +735,7 @@ function render() {
     content =
       v === "room" ? dashboard() : v === "news" ? newsDesk("all") : v === "india" ? newsDesk("india") : v === "technology" ? newsDesk("Technology") : v === "finance" ? newsDesk("Finance")
       : v === "map" ? mapLayout() : v === "investigate" ? IndiaInvestigation.layout(ROOT) : v === "constellation" ? ATLASConstellation.layout() : v === "media" ? media()
-      : v === "coverage" ? audit() : v === "research" ? research() : v === "earth" ? ATLASEarth.layout() : v === "sources" ? ATLASSources.layout() : v === "lm" ? ATLASLM.layout() : v === "radar" ? ATLASRadar.layout()
+      : v === "coverage" ? audit() : v === "research" ? research() : v === "earth" ? ATLASEarth.layout() : v === "sources" ? ATLASSources.layout() : v === "lm" ? ATLASLM.layout() : v === "radar" ? ATLASRadar.layout() : v === "wiki" ? ATLASWiki.layout()
       : ["geopolitics", "macro", "mygov", "emergency", "conflict"].includes(v) ? `<div class="pageLoading">Loading ${esc(pages[v][0])}…</div>` : ccc();
   } catch (e) {
     main.innerHTML = pageError(v, e);
@@ -752,6 +753,7 @@ function render() {
   if (v === "sources") safeMount(v, () => window.ATLASSources.mount(ROOT));
   if (v === "lm") safeMount(v, () => window.ATLASLM.mount());
   if (v === "radar") safeMount(v, () => window.ATLASRadar.mount());
+  if (v === "wiki") safeMount(v, () => window.ATLASWiki.mount());
   if (v === "constellation") setTimeout(() => window.ATLASConstellation?.attach(), 30);
   if (v === "investigate") setTimeout(() => IndiaInvestigation.mount(ROOT), 50);
   if (["geopolitics", "macro"].includes(v)) safeMount(v, () => window.ATLASResearch.mount(v));
@@ -826,6 +828,7 @@ async function hydrate(first = false) {
         "sources",
         "lm",
         "radar",
+        "wiki",
       ].includes(ROOT.view)
     )
       render();
