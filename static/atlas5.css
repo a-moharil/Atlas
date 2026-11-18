@@ -461,3 +461,30 @@ body.atlasDragging{user-select:none}
 .reelFoot{margin:10px 0 0}
 .reelWarn{color:var(--amber)}
 @media (max-width:900px){.reelBody{grid-template-columns:1fr}.reelSide{max-height:none}}
+
+/* v5.8 · Search bar on every article panel */
+.findBar{display:flex;align-items:center;gap:6px;margin:2px 0 12px;padding:4px 6px 4px 10px;border:1px solid var(--line-2);border-radius:var(--r-ctl);background:var(--well)}
+.findBar:focus-within{border-color:var(--glacier);box-shadow:0 0 0 3px rgba(143,217,232,.12)}
+.filters .findBar{margin:0}
+.findBar.wide{flex:1 1 380px;min-width:260px}
+.findBar svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.6}
+.findBar input{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font:inherit;font-size:.86rem;padding:5px 2px;outline:none}
+.findBar input::placeholder{color:var(--muted)}
+.findBar select{flex:none;background:transparent;border:0;border-left:1px solid var(--line);color:var(--ink-2);font:inherit;font-size:.76rem;padding:4px 4px 4px 8px;cursor:pointer}
+.findBar select option{background:#0b1f2a}
+.findHead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;margin:0 0 10px;font-size:.86rem}
+.findNote{margin:-4px 0 10px;color:var(--amber)}
+.findHit{display:grid;gap:4px}
+.findWhy{font-size:.72rem;color:var(--muted)}
+.findWhy b{color:var(--glacier);font-weight:600}
+.videoRail .findHit{align-content:start}
+.findMore{margin:10px 0 0}
+.findWeb{margin:10px 0 0}
+.findErr{color:var(--coral)}
+.findSpin{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:50%;border:2px solid rgba(143,217,232,.25);border-top-color:var(--glacier);vertical-align:-1px;animation:findSpin .8s linear infinite}
+@keyframes findSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.findSpin{animation:none}}
+.reelFind{margin:0 0 12px}
+.reelFind .findBody:not(.finding){display:none}
+.reelFindGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.findAlso{margin:16px 0 8px;font-size:.86rem;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}

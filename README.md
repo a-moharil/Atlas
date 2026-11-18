@@ -258,6 +258,20 @@ The **Coverage graph** panel on the Situation room, World, India, Technology and
 
 **Search further** sends one open Google News search for the story's key terms, plus one per gap outlet (up to three). New articles join the desk you started from and are processed by the language model in the background, after which the diffusion updates.
 
+### 5.2a Searching a panel
+
+Every panel that lists articles or videos has its own search bar: Situation room (*Most covered now*), World, India, Technology, Finance, *Recent broadcaster uploads*, the *Geopolitics reel*, and Research (*Analysis*, *Academic research*). A panel searches only its own articles, after its tabs and filters.
+
+- **Typing:** words (most must appear: both of two, two of three), `"a quoted phrase"`, and commas for either topic. `iran, north korea` finds both; articles about both rank first. Words match light variants, so *sanction* finds *sanctions*.
+- **How to match** (the menu beside the box):
+  - *Best available*: meaning and keywords when the language model is on, keywords otherwise.
+  - *Meaning + keywords*: keeps keyword matches and articles close in meaning, ranked on a blend (60% meaning, 40% keywords).
+  - *Meaning*: similarity in the local multilingual model's space. Finds articles worded differently or in other languages.
+  - *Keywords*: BM25 ranking over headline (counted twice), excerpt and outlet.
+- Each result says why it matched: the words it contains and how similar it is in meaning.
+- **Nothing held matches?** Atlas searches Google News for the query (one search per comma-separated topic, last 7 days), files the articles under that panel's desk as *Search further*, and searches again. Articles Google returned that are worded differently appear under *Also returned by Google News*. With only a few matches, *Fetch articles about this from the web* does the same on request. The video panels and *Academic research* can't fetch: videos only come from followed channels, and papers come through Research radar.
+- The search stays in place when the page refreshes. Esc or *Clear search* brings back the panel's own list.
+
 ### 5.3a Geopolitics reel and the floating player
 
 The **Geopolitics reel** on *Live TV and video* plays recent news videos from international broadcasters one after another: Al Jazeera English, France 24, Sky News, AP, TRT World, CNA, Euronews, NHK World, ABC News (Australia), plus BBC News, DW, Reuters and WION.
@@ -551,6 +565,7 @@ atlas/
 ├─ lm_labels.py            optional Ollama labels and summaries
 ├─ coverage_graph.py       coverage graph: source network, diffusion, coverage gaps
 ├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
+├─ find.py                 panel search: query syntax, BM25 keywords, meaning blend, web queries
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
 ├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
 ├─ earth_watch.py          GDACS, EONET, USGS, Open-Meteo, Copernicus series

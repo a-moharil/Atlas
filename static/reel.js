@@ -103,8 +103,26 @@ window.ATLASReel = (() => {
         <label class="reelAdv fine">Next video after <select id="reelAdv">${adv.map(([s, t]) => `<option value="${s}" ${R.advance === s ? "selected" : ""}>${t}</option>`).join("")}</select></label>
         <button class="linkButton" id="reelPop">Open in floating player</button>
       </div>
+      ${findBar()}
       <div class="reelBody"><div class="reelStageWrap"><div class="reelStage" id="reelStage"></div><div class="reelProg"><i id="reelProg"></i></div></div><aside class="reelSide" id="reelSide"></aside></div>
       <p class="fine reelFoot" id="reelFoot"></p>`;
+  }
+  // Search across every news video in the last 24 hours (not only the current filter).
+  function findBar() {
+    const F = window.ATLASFind;
+    if (!F) return "";
+    const opts = { label: "reel videos", source: "reel", web: false, webNote: "The reel only plays videos from the broadcasters it follows.",
+      item: (v) => `<button class="reelItem" data-reelvid="${esc(v.id)}"><span class="reelThumb" style="background-image:url('${esc(v.thumbnail)}')"></span><span><b>${esc(v.channel)}</b><span>${esc(v.title)}</span><small class="fine">${esc(A().ago(v.published))}</small></span></button>`,
+      wrap: (h) => `<div class="reelFindGrid">${h}</div>` };
+    F.register("reel", opts);
+    return `<div class="reelFind">${F.bar("reel", opts)}<div class="findBody" data-findbody="reel"></div></div>`;
+  }
+  function playVideo(v) {
+    if (!v) return;
+    let i = visible().findIndex((x) => x.video_id === v.video_id);
+    if (i < 0) { R.list.splice(R.idx + 1, 0, v); i = visible().findIndex((x) => x.video_id === v.video_id); }
+    play(i);
+    document.querySelector("#reelStage")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
   function drawSide() {
     const side = document.querySelector("#reelSide");
@@ -150,6 +168,7 @@ window.ATLASReel = (() => {
     const h = host();
     if (!h) return;
     h.innerHTML = shell();
+    window.ATLASFind?.apply();
     if (!R.tick) R.tick = setInterval(everySecond, 1000);
     if (!R.poll) R.poll = setInterval(() => { if (host()) load(); }, 10 * 60 * 1000);
     const resumeAt = R.watch?.time || 0;
@@ -183,7 +202,8 @@ window.ATLASReel = (() => {
     else if (b.id === "reelPrev") prev();
     else if (b.id === "reelPop" && R.cur) { R.watch?.command("pauseVideo"); setRunning(false); A().play(R.cur.video_id, `${R.cur.channel} · ${R.cur.title.slice(0, 60)}`, false); }
     else if (b.dataset.reelplay) play(Number(b.dataset.reelplay));
-    else if (b.dataset.reelscope && b.dataset.reelscope !== R.scope) { R.scope = b.dataset.reelscope; savePrefs(); R.cur = null; host().innerHTML = shell(); R.watch?.stop(); R.watch = null; load(); }
+    else if (b.dataset.reelvid) playVideo(window.ATLASFind?.entry(b.dataset.reelvid));
+    else if (b.dataset.reelscope && b.dataset.reelscope !== R.scope) { R.scope = b.dataset.reelscope; savePrefs(); R.cur = null; host().innerHTML = shell(); window.ATLASFind?.apply(); R.watch?.stop(); R.watch = null; load(); }
   });
   document.addEventListener("change", (e) => {
     if (e.target.id !== "reelAdv") return;

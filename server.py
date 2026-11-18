@@ -44,6 +44,7 @@ import lm_labels
 import research_radar
 import coverage_graph
 import geo_video
+import find
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -578,20 +579,101 @@ def search_further(terms, gaps, desk):
         raise ValueError('No search terms for this story.')
     gaps = [g for g in gaps if re.fullmatch(r'[a-z0-9.-]{3,80}', str(g))][:3]
     desk = desk if desk in GRAPH_DESKS else 'World'
+    r = fetch_google(coverage_graph.search_queries(terms, gaps), desk)
+    r.pop('ids', None)
+    return r
+
+
+def fetch_google(queries, desk):
+    """Run Google News RSS searches; new articles join the desk as 'Search further' records."""
     source = {'id': f'expand:{desk}', 'name': 'Search further', 'tier': 'reporting', 'region': 'Global', 'desk': desk}
-    added, fetched, notes = 0, 0, []
-    for q in coverage_graph.search_queries(terms, gaps):
+    added, fetched, notes, ids = 0, 0, [], []
+    for q in queries:
         url = 'https://news.google.com/rss/search?' + urllib.parse.urlencode({'q': q, 'hl': 'en-IN', 'gl': 'IN', 'ceid': 'IN:en'})
         try:
             rows = parse_feed(fetch_bytes(url), source, 'article')
+            for r in rows:  # Google News appends " - Publisher"; the publisher is kept separately
+                r['title'] = coverage_graph.clean_title(r.get('title', ''))
             fetched += len(rows)
             added += persist_records(rows) or 0
+            ids += [r['id'] for r in rows]
         except Exception as exc:
             notes.append(f'{q[:40]}…: {type(exc).__name__}')
     _GRAPH_STATE['entries'] = None
     if added:
         threading.Thread(target=lm_work, kwargs={'label': False}, daemon=True, name='lm-expand').start()
-    return {'queries': len(coverage_graph.search_queries(terms, gaps)), 'fetched': fetched, 'added': added, 'notes': notes}
+    return {'queries': len(queries), 'fetched': fetched, 'added': added, 'notes': notes, 'ids': list(dict.fromkeys(ids))}
+
+
+def _single(e):
+    """Publisher details for an article that isn't in the page's current state (no story group)."""
+    h = publishers.entry_host(e)
+    pr = publishers.profile(h, (e.get('source') or '').split(' · ')[0])
+    lean = pr.get('lean')
+    e['publisher'] = h
+    e['paywall'] = publishers.article_paywall(e, h)
+    e['story'] = {'id': e['id'], 'sources': 1, 'articles': 1, 'method': 'single', 'similarity': None,
+                  'dist': {'left': int(lean is not None and lean < 0), 'center': int(lean == 0), 'right': int(lean is not None and lean > 0), 'unrated': int(lean is None)}}
+    return pr
+
+
+def find_articles(data):
+    """Rank a panel's articles (or the reel's videos) for a query. See find.py for the query syntax."""
+    groups = find.parse(data.get('q', ''))
+    if not groups:
+        raise ValueError('Type one or more keywords.')
+    want = str(data.get('mode', 'auto'))
+    if want not in ('auto', 'keywords', 'meaning', 'both'):
+        want = 'auto'
+    limit = max(5, min(200, int(data.get('limit') or 60)))
+    extra_rows, directory = [], {}
+    if data.get('source') == 'reel':
+        vids = geo_reel(data.get('hours', 24), 'news')['videos']
+        pool = {v['id']: {**v, 'medium': 'video', 'summary': '', 'source': v['channel']} for v in vids}
+    else:
+        state = {e['id']: e for e in graph_entries()}
+        ids = [str(i)[:40] for i in (data.get('ids') or [])][:20000]
+        extra = [str(i)[:40] for i in (data.get('extra') or [])][:400]
+        pool = {i: state[i] for i in (ids or list(state)) if i in state}
+        missing = [i for i in extra if i not in state]
+        for i in extra:
+            if i in state:
+                pool[i] = state[i]
+        if missing:
+            with closing(db_connect()) as con:
+                condition, values = content_cleanup.where_visible(con)
+                for r in con.execute(f"SELECT * FROM entries WHERE {condition} AND id IN ({','.join('?' for _ in missing)})", (*values, *missing)):
+                    e = dict(r)
+                    directory[publishers.entry_host(e)] = _single(e)
+                    pool[e['id']] = e
+                    extra_rows.append(e)
+    docs = [(i, e.get('title', ''), e.get('summary', ''), e.get('source', '')) for i, e in pool.items()]
+    usable = semantic.ready() and want != 'keywords'
+    mode = ('both' if usable else 'keywords') if want == 'auto' else want
+    note = ''
+    if mode in ('meaning', 'both') and not usable:
+        note = 'The language model is off or still loading, so this search used keywords only.'
+        mode = 'keywords'
+    sims = {}
+    if mode in ('meaning', 'both'):
+        qv = semantic.embed_texts([' '.join(g) for g in groups], DB_FILE.parent / 'model_cache') or []
+        vecs = semantic.vectors(db_connect, [i for i in pool if not str(i).startswith('geo')]) if data.get('source') != 'reel' else {}
+        todo = [i for i in pool if i not in vecs][:600]
+        if todo and qv:
+            for i, v in zip(todo, semantic.embed_texts([semantic.clean(pool[i].get('title', ''), pool[i].get('summary', '')) for i in todo], DB_FILE.parent / 'model_cache') or []):
+                vecs[i] = v
+        if qv:
+            for i, v in vecs.items():
+                sims[i] = max(float(v @ q) for q in qv)
+        else:
+            note, mode = 'The language model could not embed the query, so this search used keywords only.', 'keywords'
+    results = find.rank(groups, docs, mode, sims, limit)
+    keep = {r['id'] for r in results}
+    if data.get('source') == 'reel':
+        extra_rows = list(pool.values())
+    return {'mode': mode, 'groups': groups, 'results': results, 'pool': len(pool), 'note': note,
+            'entries': extra_rows if data.get('source') != 'reel' else [e for e in extra_rows if e['id'] in keep], 'publishers': directory,
+            'semantic': semantic.ready()}
 
 
 def radar_tick(force=False):
@@ -799,7 +881,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def read_json(self):
         n = int(self.headers.get('Content-Length', '0'))
-        if n > 30_000:
+        if n > (600_000 if self.path.split('?')[0] == '/api/find' else 30_000):
             raise ValueError('Request is too large.')
         return json.loads(self.rfile.read(n).decode('utf-8')) if n else {}
 
@@ -1105,6 +1187,15 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/find':
+                try:return self.send_payload(find_articles(data))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/find/fetch':
+                groups = find.parse(data.get('q', ''))
+                if not groups:
+                    return self.send_payload({'error': 'Type one or more keywords.'}, 400)
+                desk = data.get('desk') if data.get('desk') in GRAPH_DESKS else 'World'
+                return self.send_payload(fetch_google(find.web_queries(groups, int(data.get('days') or 7)), desk))
             if path == '/api/graph/diffuse':
                 try:days=max(1,min(14,int(data.get('days',7))))
                 except (TypeError,ValueError):days=7

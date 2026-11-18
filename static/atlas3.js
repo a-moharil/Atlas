@@ -326,6 +326,21 @@ function graphPanel(ids, deskName) {
   ROOT.graphDesk = deskName;
   return panel("Coverage graph", `<div id="cgHost" class="cgHost"><p class="fine">Mapping sources…</p></div>`, `<button class="linkButton" data-cgexpand="1">Expand</button>`);
 }
+// v5.8: every article panel gets its own search bar (see find.js). Falls back to the plain list.
+function findWrap(key, html, opts) {
+  const F = window.ATLASFind;
+  if (!F) return html;
+  F.register(key, opts);
+  return F.bar(key, opts) + `<div class="findBody" data-findbody="${esc(key)}">${html}</div>`;
+}
+function videoCell(e) {
+  const W = window.ATLASWall;
+  return `<div class="videoCell">${W ? W.removeBtn(e.id, "Remove this video from the wall") : ""}<button class="videoTile" data-video="${esc(e.video_id)}" data-name="${esc(e.title)}"><div class="thumb" style="background-image:url('${esc(e.thumbnail || `https://i.ytimg.com/vi/${e.video_id}/hqdefault.jpg`)}')"></div><span class="over">${esc(e.channel || e.source)}</span><strong>${esc(e.title)}</strong><small class="fine">${esc(ago(e.published))}</small></button></div>`;
+}
+function paperRow(e) {
+  const W = window.ATLASWall;
+  return `<div class="paper"><strong>${esc(e.title)}</strong><p>${esc(e.summary)} · ${fmt(e.published)}</p><div class="paperFoot"><a target="_blank" rel="noopener noreferrer" href="${esc(url(e.url))}">Open paper metadata ↗</a>${W ? W.removeBtn(e.id) : ""}</div></div>`;
+}
 function panel(title, content, aside = "", id = "") {
   return `<section class="panel" ${id ? `id="${esc(id)}"` : ""}><div class="panelHeading"><h2>${esc(title)}</h2>${aside}</div>${content}</section>`;
 }
@@ -524,7 +539,8 @@ function dashboard() {
   ${primaryStrip(top, "top")}
   <div class="two"><div class="stack">
    ${lead ? `<section class="leadStory panel">${card(lead)}</section>` : ""}
-   ${panel(W?.shuffled("room") ? "A fresh deal" : "Most covered now", rest.length ? `<div class="newsList">${rest.map((e) => card(e, { short: true })).join("")}</div>` : empty("No headlines yet", "Press Refresh feeds. Atlas never invents headlines."), `<span class="panelTools">${roomAside}<button class="linkButton" data-page="news">Open World</button></span>`)}
+   ${panel(W?.shuffled("room") ? "A fresh deal" : "Most covered now", findWrap("room", rest.length ? `<div class="newsList">${rest.map((e) => card(e, { short: true })).join("")}</div>` : empty("No headlines yet", "Press Refresh feeds. Atlas never invents headlines."),
+     { label: "headlines", desk: "World", ids: () => stories("top", 1e6, { raw: true, ignorePub: true }).map((e) => e.id), item: (e) => card(e, { short: true }), wrap: (h) => `<div class="newsList">${h}</div>` }), `<span class="panelTools">${roomAside}<button class="linkButton" data-page="news">Open World</button></span>`)}
   </div><div class="stack">
    ${panel("Earth watch", `<div id="roomEarth" class="roomEarth"><p class="fine">Loading hazard catalogue…</p></div>`, `<button class="linkButton" data-page="earth">Open</button>`)}
    ${panel("Political spread of today's coverage", orientationMix(top))}
@@ -582,9 +598,11 @@ function newsDesk(filter) {
   const blocked = Object.values(ROOT.state?.source_prefs || {}).filter((v) => v === "blocked").length;
   return (
     heading(title, desc) + primaryStrip(current, filter) + tabs +
-    `<div class="filters"><input id="newsSearch" type="search" value="${esc(ROOT.search)}" placeholder="Search headlines, excerpts or publishers" aria-label="Search headlines">${locFilters}<select id="sourceBias" aria-label="Publisher lean"><option value="all">Any publisher lean</option>${[["left", "Left-leaning"], ["center", "Centre"], ["right", "Right-leaning"], ["unknown", "Not rated"], ["primary", "Official sources"]].map((x) => `<option value="${x[0]}" ${ROOT.bias === x[0] ? "selected" : ""}>${x[1]}</option>`).join("")}</select><select id="paywallFilter" aria-label="Paywall"><option value="all">Any access</option><option value="open" ${ROOT.paywallFilter === "open" ? "selected" : ""}>Hide paywalled</option></select></div>
+    `<div class="filters">${locFilters}<select id="sourceBias" aria-label="Publisher lean"><option value="all">Any publisher lean</option>${[["left", "Left-leaning"], ["center", "Centre"], ["right", "Right-leaning"], ["unknown", "Not rated"], ["primary", "Official sources"]].map((x) => `<option value="${x[0]}" ${ROOT.bias === x[0] ? "selected" : ""}>${x[1]}</option>`).join("")}</select><select id="paywallFilter" aria-label="Paywall"><option value="all">Any access</option><option value="open" ${ROOT.paywallFilter === "open" ? "selected" : ""}>Hide paywalled</option></select></div>
      <div class="deskLine"><p class="fine">${W?.shuffled(deskKey) ? `${num(current.length)} headlines dealt at random from ${num(deskPool.length)}` : `${num(current.length)} distinct headlines`}${blocked ? ` · ${blocked} blocked publisher${blocked === 1 ? "" : "s"} hidden` : ""}. The gauge shows which side of the spectrum is covering each story.</p><span class="panelTools">${W ? W.restoreLine() + W.dice(deskKey, deskPool.length) : ""}</span></div>
-     <div class="two"><div>${current.length ? `<div class="newsList">${current.map((e) => card(e)).join("")}</div>` : empty("No matching stories", "Try another tab or filter, or check Coverage audit for feed errors.")}</div>
+     <div class="two"><div>${findWrap(deskKey, current.length ? `<div class="newsList">${current.map((e) => card(e)).join("")}</div>` : empty("No matching stories", "Try another tab or filter, or check Coverage audit for feed errors."),
+       { label: `${title} articles`, desk: { all: "World", india: "India", Technology: "Technology", Finance: "Finance" }[filter] || "World", wide: true,
+         ids: () => stories(filter, 1e6, { raw: true }).map((e) => e.id), item: (e) => card(e), wrap: (h) => `<div class="newsList">${h}</div>` })}</div>
      <aside class="stack">${panel("Political spread of this view", orientationMix(current))}${graphPanel(stories(filter, 1e6, { raw: true, ignorePub: true }).map((e) => e.id), { all: "World", india: "India", Technology: "Technology", Finance: "Finance" }[filter] || "World")}${panel("Reading the gauge", `<div class="gaugeDemo">${gauge({ sources: 8, dist: { left: 3, center: 3, right: 2, unrated: 0 } }, -1)}<p class="fine">Arcs show the share of left-leaning, centre and right-leaning outlets covering the same story in Atlas. The needle is this publisher's own rating. Ratings come from Media Bias/Fact Check and AllSides and describe outlets, not articles.</p></div>`)}${panel("Source coverage", telemetryBars(), `<button data-page="coverage" class="linkButton">Audit</button>`)}</aside></div>`
   );
 }
@@ -623,7 +641,8 @@ function media() {
      ${on.length || recorded.length ? `<div class="liveWall">${on.map((c) => tile(c, true)).join("")}${recorded.map((c) => tile(c, false)).join("")}</div>` : `<div class="panel" style="margin-bottom:16px">${empty("No channel is verified live right now", "Atlas checks each broadcaster's official YouTube live page. Use Re-check, or open a channel's official page below.")}</div>`}
      ${quiet.length ? `<div class="panel" style="margin-bottom:16px"><div class="panelHeading"><h2>Not live right now</h2><span class="fine">No verified stream at last check</span></div><div class="offAir">${quiet.map((c) => `<button class="action" data-openlive="${esc(c.id)}">${esc(c.name)} ↗</button>`).join("")}</div></div>` : ""}
      <section class="panel reelPanel" id="reelHost" style="margin-bottom:16px"></section>
-     ${panel("Recent broadcaster uploads", videos.length ? `<div class="videoRail">${videos.map((e) => `<div class="videoCell">${W ? W.removeBtn(e.id, "Remove this video from the wall") : ""}<button class="videoTile" data-video="${esc(e.video_id)}" data-name="${esc(e.title)}"><div class="thumb" style="background-image:url('${esc(e.thumbnail || `https://i.ytimg.com/vi/${e.video_id}/hqdefault.jpg`)}')"></div><span class="over">${esc(e.channel || e.source)}</span><strong>${esc(e.title)}</strong><small class="fine">${esc(ago(e.published))}</small></button></div>`).join("")}</div>` : empty(hidden ? "Uploads are being verified" : "No uploads yet", hidden ? "Atlas only lists a video after YouTube confirms it can be played here. This runs after each collection." : "Video feeds need YouTube to be reachable from the server."), `<span class="panelTools"><span class="fine">Verified playable</span>${W ? W.dice("videos", allVideos.length) : ""}</span>`)}
+     ${panel("Recent broadcaster uploads", findWrap("videos", videos.length ? `<div class="videoRail">${videos.map(videoCell).join("")}</div>` : empty(hidden ? "Uploads are being verified" : "No uploads yet", hidden ? "Atlas only lists a video after YouTube confirms it can be played here. This runs after each collection." : "Video feeds need YouTube to be reachable from the server."),
+       { label: "uploads", web: false, webNote: "Atlas can only collect videos from the broadcaster channels it follows.", ids: () => allVideos.map((e) => e.id), item: videoCell, wrap: (h) => `<div class="videoRail">${h}</div>` }), `<span class="panelTools"><span class="fine">Verified playable</span>${W ? W.dice("videos", allVideos.length) : ""}</span>`)}
      <div class="twoEqual" style="margin-top:16px">${panel("Play a YouTube link", `<div class="filters"><input id="videoUrl" class="field" style="flex:1" placeholder="https://youtube.com/watch?v=…"><button id="playCustom" class="action">Play</button></div><p class="fine">Plays through YouTube's privacy-enhanced embed. Availability and ads remain with the broadcaster.</p>`)}${panel("Social monitor", `<p class="fine">Public Bluesky posts, or a link out to an X profile.</p><div class="filters"><input id="socialName" style="flex:1" placeholder="Bluesky handle or @X username"><button id="openSocial" class="action">Open</button></div><div id="socialOutput" class="fine"></div>`)}</div>`
   );
 }
@@ -634,8 +653,7 @@ function papers() {
   return ps.length
     ? ps
         .map(
-          (e) =>
-            `<div class="paper"><strong>${esc(e.title)}</strong><p>${esc(e.summary)} · ${fmt(e.published)}</p><div class="paperFoot"><a target="_blank" rel="noopener noreferrer" href="${esc(url(e.url))}">Open paper metadata ↗</a>${W ? W.removeBtn(e.id) : ""}</div></div>`,
+          paperRow,
         )
         .join("")
     : empty(
@@ -654,7 +672,9 @@ function research() {
       "Separate think-tank perspectives and scholarly metadata from high-frequency journalism.",
       "ORF · TAKSHASHILA · E-IR · OPENALEX",
     ) +
-    `<div class="two"><div class="stack">${panel("Analysis, policy and institutional sources", analysis.length ? `<div class="newsList">${analysis.map((e) => card(e)).join("")}</div>` : empty("Analysis feeds pending", "The configured think-tank RSS feeds have not yet returned entries."), W ? `<span class="panelTools">${W.restoreLine()}${W.dice("analysis", allAnalysis.length)}</span>` : "")}</div><aside class="stack">${panel("Academic research", papers(), W ? W.dice("papers", paperCount) : "")}${panel("How to interpret research", `<p class="fine">Academic credentials do not automatically establish neutrality. Evaluate assumptions, methods, evidence, funding and date. A paper's bibliographic metadata alone is not a full summary.</p>`)}</aside></div>`
+    `<div class="two"><div class="stack">${panel("Analysis, policy and institutional sources", findWrap("analysis", analysis.length ? `<div class="newsList">${analysis.map((e) => card(e)).join("")}</div>` : empty("Analysis feeds pending", "The configured think-tank RSS feeds have not yet returned entries."),
+       { label: "analysis articles", desk: "Policy", ids: () => allAnalysis.map((e) => e.id), item: (e) => card(e), wrap: (h) => `<div class="newsList">${h}</div>` }), W ? `<span class="panelTools">${W.restoreLine()}${W.dice("analysis", allAnalysis.length)}</span>` : "")}</div><aside class="stack">${panel("Academic research", findWrap("papers", papers(), { label: "papers", web: false, webNote: "For new papers, search in Research radar.",
+       ids: () => (ROOT.state?.entries || []).filter((e) => e.medium === "paper" && !W?.isHidden(e.id)).map((e) => e.id), item: paperRow, wrap: (h) => h }), W ? W.dice("papers", paperCount) : "")}${panel("How to interpret research", `<p class="fine">Academic credentials do not automatically establish neutrality. Evaluate assumptions, methods, evidence, funding and date. A paper's bibliographic metadata alone is not a full summary.</p>`)}</aside></div>`
   );
 }
 function ccc() {
@@ -735,6 +755,7 @@ function render() {
   if (v === "constellation") setTimeout(() => window.ATLASConstellation?.attach(), 30);
   if (v === "investigate") setTimeout(() => IndiaInvestigation.mount(ROOT), 50);
   if (["geopolitics", "macro"].includes(v)) safeMount(v, () => window.ATLASResearch.mount(v));
+  window.ATLASFind?.apply();
   if (v === "media") setTimeout(() => { try { window.ATLASReel?.mount(); } catch (e) { console.warn("[Atlas] reel", e); } }, 30);
   else window.ATLASReel?.unmount?.();
 }
