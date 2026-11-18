@@ -405,3 +405,59 @@ iframe{color-scheme:light}
 @media (max-width:900px){.cgBody.diff{grid-template-columns:1fr;grid-template-rows:auto auto}.cgDialog{overflow:auto}.cgSeed{grid-template-columns:1fr}}
 .cgMatrix tr.cgGroup th{position:sticky;left:0;text-align:left;font-size:.72rem;font-weight:600;color:var(--muted);padding:8px 6px 2px;background:transparent;display:table-cell}
 .cgMatrix tr.cgGroup th .cgLeanDot{margin-right:6px}
+
+/* v5.7 · Floating player: move, resize, maximise, full screen */
+.playerDock{resize:horizontal;min-width:300px;max-width:calc(100vw - 16px)}
+.playerDock.moved{right:auto;bottom:auto}
+.playerDock .playerBar{cursor:grab;user-select:none;gap:10px}
+.playerDock.dragging .playerBar{cursor:grabbing}
+body.atlasDragging iframe{pointer-events:none}
+body.atlasDragging{user-select:none}
+.playerBar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.playerBar>div{display:flex;flex:none}
+.playerBar button svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;vertical-align:middle}
+.playerBar:focus-visible{outline:2px solid var(--glacier);outline-offset:-2px}
+.playerDock.maxed{inset:20px!important;width:auto!important;max-width:none;resize:none;display:flex;flex-direction:column}
+.playerDock.maxed .playerContent{flex:1;aspect-ratio:auto;min-height:0}
+.playerDock.maxed .playerBar{cursor:default}
+.playerDock.full{border-radius:0;display:flex;flex-direction:column;resize:none;width:100%;max-width:none}
+.playerDock.full .playerContent{flex:1;aspect-ratio:auto}
+.playerCaption .pOpen{color:var(--glacier);white-space:nowrap}
+.pErr{height:100%;display:grid;align-content:center;gap:10px;padding:20px 24px;background:radial-gradient(circle at 70% 40%,rgba(143,217,232,.08),transparent 60%),#05121a;color:var(--ink)}
+.pErr p{margin:0;color:var(--ink-2);font-size:.84rem}
+.pErr>div{display:flex;flex-wrap:wrap;gap:8px}
+.pErr a.action{text-decoration:none}
+@media (prefers-reduced-motion:no-preference){.playerDock.maxed{transition:inset .18s ease}}
+
+/* v5.7 · Geopolitics reel */
+.reelPanel .panelHeading{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.reelBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:4px 0 12px}
+.reelAdv{display:inline-flex;align-items:center;gap:6px}
+.reelAdv select{background:var(--well);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-ctl);padding:4px 6px;font:inherit;font-size:.8rem}
+.reelBody{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:14px;align-items:start}
+.reelStageWrap{display:grid;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.reelStage{aspect-ratio:16/9;background:#000}
+.reelStage iframe{width:100%;height:100%;border:0;display:block}
+.reelProg{height:3px;background:rgba(190,228,240,.08)}
+.reelProg i{display:block;height:100%;width:0;background:var(--glacier);transition:width 1s linear}
+.reelEmpty{height:100%;display:grid;align-content:center;justify-items:start;gap:6px;padding:24px;background:#05121a}
+.reelSide{display:grid;gap:10px;align-content:start;max-height:min(70vh,640px);overflow:auto}
+.reelSide h3{margin:4px 0 0;font-size:.86rem;color:var(--ink-2)}
+.reelNow{display:grid;gap:6px;padding:10px 12px;border-radius:12px;background:var(--well);border:1px solid var(--line)}
+.reelNowTop{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.reelPos{margin-left:auto}
+.reelNow a{color:var(--ink);font-weight:600;line-height:1.35}
+.reelTerms{display:flex;flex-wrap:wrap;gap:4px}
+.reelTerms span{font-size:.7rem;padding:1px 7px;border-radius:999px;background:rgba(143,217,232,.1);color:var(--glacier)}
+.reelNote{color:var(--amber);margin:0}
+.reelNext{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.reelNext li{position:relative}
+.reelItem{display:grid;grid-template-columns:96px 1fr;gap:10px;width:100%;text-align:left;background:transparent;border:1px solid var(--line);border-radius:10px;padding:6px;color:var(--ink);font:inherit;font-size:.8rem;cursor:pointer}
+.reelItem:hover{border-color:var(--line-2)}
+.reelItem>span:last-child{display:grid;gap:2px;min-width:0;padding-right:64px}
+.reelItem>span:last-child>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.reelThumb{aspect-ratio:16/9;border-radius:6px;background:#000 center/cover}
+.reelNext .wallRemove{position:absolute;top:6px;right:6px}
+.reelFoot{margin:10px 0 0}
+.reelWarn{color:var(--amber)}
+@media (max-width:900px){.reelBody{grid-template-columns:1fr}.reelSide{max-height:none}}

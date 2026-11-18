@@ -51,7 +51,7 @@ It runs entirely on your own computer. There is no account, no cloud service and
 | **Situation room** | The day at a glance: the most widely covered story, a list of others, the political spread of today's coverage, Earth hazards and collection health. |
 | **World, India, Technology, Finance and energy** | News desks with filters for region, state and city, publisher lean and paywalls. Every card carries a half-donut *coverage gauge*. |
 | **Emergency newsroom** | Political and security developments ranked by a transparent rule set, grouped into stories, with a timeline and per-source controls. |
-| **Live TV and video** | Only streams YouTube confirms are live, and only uploads it confirms are public and embeddable. |
+| **Live TV and video** | Only streams YouTube confirms are live, and only uploads it confirms are public and embeddable. The **Geopolitics reel** plays the last 24 hours of news videos from international broadcasters, one after another. |
 | **Earth watch** | Earthquakes, cyclones, floods, wildfires and volcanoes from GDACS, NASA EONET and USGS. Also global temperature and sea-surface anomalies (Copernicus ERA5), and Windy's live wind, rain and temperature map for India. |
 | **Satellite atlas** | Esri, OpenStreetMap and NASA imagery with hazard layers and the official Survey of India boundary. |
 | **India regional map** | Where Indian coverage is concentrated, drawn on the Survey of India state map. |
@@ -257,6 +257,25 @@ The **Coverage graph** panel on the Situation room, World, India, Technology and
 - **Lists:** stories are numbered as on the map and in the table, most similar first, with eight shown and *Show more* for the rest. Each story shows a small lean gauge; each article shows the outlet's logo, lean label and paywall label. Titles drop the trailing " - Publisher" and prefer a primary or rated outlet's headline; the same headline from the same outlet appears once.
 
 **Search further** sends one open Google News search for the story's key terms, plus one per gap outlet (up to three). New articles join the desk you started from and are processed by the language model in the background, after which the diffusion updates.
+
+### 5.3a Geopolitics reel and the floating player
+
+The **Geopolitics reel** on *Live TV and video* plays recent news videos from international broadcasters one after another: Al Jazeera English, France 24, Sky News, AP, TRT World, CNA, Euronews, NHK World, ABC News (Australia), plus BBC News, DW, Reuters and WION.
+
+- **What it plays:** uploads from the last 24 hours, news only. Shorts, sport, entertainment and lifestyle are left out. *Geopolitics* (the default) keeps videos whose titles name conflicts, diplomacy, sanctions, summits, elections or the countries and leaders involved; *All news* keeps every news video. Channels take turns, so one broadcaster can't fill the reel.
+- **Playing:** videos start muted, because browsers block autoplay with sound. Unmute in the player and later videos stay unmuted. *Next video after* sets how long each video plays (1, 3 or 5 minutes, or until it ends).
+- **Stop circulating** holds the current video; *Resume circulating* carries on. *Previous*, *Next* and the *Up next* list move by hand; *Remove* takes a video out of the reel.
+- **Videos that won't play:** if YouTube refuses a video in your browser (removed, embedding switched off, or blocked in your region), the reel skips it and Atlas doesn't offer it again for a week.
+- **Checking the channels:** `python tools/check_geo_channels.py` prints the name YouTube reports for each channel and how many uploads it had in the last 24 hours. The list lives under `geo_reel` in `source_registry.json`.
+
+**The floating player** (any video or live stream you open) can be:
+
+- **moved** by dragging its title bar (or with the arrow keys when the bar has focus); the position is remembered;
+- **resized** from its bottom-right corner;
+- **maximised** with the square button or a double-click on the title bar (Esc restores it);
+- **put into full screen** with the corner button (Esc or the same button exits).
+
+When YouTube shows *This video is unavailable*, Atlas now notices. For a live stream it asks for a fresh live check and tries the channel's current live stream; if that fails too, it says why and offers *Watch on YouTube*.
 
 ### 5.4 Research radar
 
@@ -531,6 +550,7 @@ atlas/
 ├─ semantic.py             embeddings, grouping by meaning, related articles
 ├─ lm_labels.py            optional Ollama labels and summaries
 ├─ coverage_graph.py       coverage graph: source network, diffusion, coverage gaps
+├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
 ├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
 ├─ earth_watch.py          GDACS, EONET, USGS, Open-Meteo, Copernicus series
@@ -561,6 +581,7 @@ atlas/
 | Top bar says *Keyword mode* | The model pack isn't installed, is still loading, or is still processing. See **System → Language model** for the exact reason. |
 | *Check Ollama* fails | Make sure the Ollama app is running and `ollama list` shows the model you selected. |
 | A page looks broken after updating | Hard-refresh the browser (Ctrl+Shift+R, or Cmd+Shift+R on a Mac). |
+| Geopolitics reel is empty | Press *Refresh feeds*, wait a few minutes for YouTube's playability check, or switch to *All news*. Run `python tools/check_geo_channels.py` to see which channels answer. |
 | Research radar sources fail | Run `python tools/check_radar_sources.py`. A firewall or proxy may block arXiv, Hugging Face or OpenAlex. *OpenAlex: daily budget used up* means adding a free OpenAlex key. |
 | Map tiles fail | Use **Test tiles** on the Satellite atlas. Tile providers must be reachable from the server. |
 

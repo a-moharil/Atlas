@@ -622,6 +622,7 @@ function media() {
     `<div class="filters"><button id="liveCheck" class="action primary"><svg><use href="#i-refresh"/></svg>Re-check live streams</button><button id="videoCheck" class="action">Re-verify uploads</button><span class="fine">${on.length} live · ${num(audit.playable || 0)} playable uploads${hidden ? ` · ${num(hidden)} hidden (${num(audit.pending || 0)} awaiting check, ${num((audit.unavailable || 0) + (audit.blocked || 0))} removed or not embeddable)` : ""}</span></div>
      ${on.length || recorded.length ? `<div class="liveWall">${on.map((c) => tile(c, true)).join("")}${recorded.map((c) => tile(c, false)).join("")}</div>` : `<div class="panel" style="margin-bottom:16px">${empty("No channel is verified live right now", "Atlas checks each broadcaster's official YouTube live page. Use Re-check, or open a channel's official page below.")}</div>`}
      ${quiet.length ? `<div class="panel" style="margin-bottom:16px"><div class="panelHeading"><h2>Not live right now</h2><span class="fine">No verified stream at last check</span></div><div class="offAir">${quiet.map((c) => `<button class="action" data-openlive="${esc(c.id)}">${esc(c.name)} ↗</button>`).join("")}</div></div>` : ""}
+     <section class="panel reelPanel" id="reelHost" style="margin-bottom:16px"></section>
      ${panel("Recent broadcaster uploads", videos.length ? `<div class="videoRail">${videos.map((e) => `<div class="videoCell">${W ? W.removeBtn(e.id, "Remove this video from the wall") : ""}<button class="videoTile" data-video="${esc(e.video_id)}" data-name="${esc(e.title)}"><div class="thumb" style="background-image:url('${esc(e.thumbnail || `https://i.ytimg.com/vi/${e.video_id}/hqdefault.jpg`)}')"></div><span class="over">${esc(e.channel || e.source)}</span><strong>${esc(e.title)}</strong><small class="fine">${esc(ago(e.published))}</small></button></div>`).join("")}</div>` : empty(hidden ? "Uploads are being verified" : "No uploads yet", hidden ? "Atlas only lists a video after YouTube confirms it can be played here. This runs after each collection." : "Video feeds need YouTube to be reachable from the server."), `<span class="panelTools"><span class="fine">Verified playable</span>${W ? W.dice("videos", allVideos.length) : ""}</span>`)}
      <div class="twoEqual" style="margin-top:16px">${panel("Play a YouTube link", `<div class="filters"><input id="videoUrl" class="field" style="flex:1" placeholder="https://youtube.com/watch?v=…"><button id="playCustom" class="action">Play</button></div><p class="fine">Plays through YouTube's privacy-enhanced embed. Availability and ads remain with the broadcaster.</p>`)}${panel("Social monitor", `<p class="fine">Public Bluesky posts, or a link out to an X profile.</p><div class="filters"><input id="socialName" style="flex:1" placeholder="Bluesky handle or @X username"><button id="openSocial" class="action">Open</button></div><div id="socialOutput" class="fine"></div>`)}</div>`
   );
@@ -734,6 +735,8 @@ function render() {
   if (v === "constellation") setTimeout(() => window.ATLASConstellation?.attach(), 30);
   if (v === "investigate") setTimeout(() => IndiaInvestigation.mount(ROOT), 50);
   if (["geopolitics", "macro"].includes(v)) safeMount(v, () => window.ATLASResearch.mount(v));
+  if (v === "media") setTimeout(() => { try { window.ATLASReel?.mount(); } catch (e) { console.warn("[Atlas] reel", e); } }, 30);
+  else window.ATLASReel?.unmount?.();
 }
 function ensureRefreshControl() {
   const r = ROOT.metrics?.latest_run;
@@ -744,7 +747,7 @@ function ensureRefreshControl() {
 document.addEventListener("atlas:wall", () => {
   if (["room", "news", "india", "technology", "finance", "research", "media"].includes(ROOT.view)) render();
 });
-window.ATLAS = { state: ROOT, hydrate: () => hydrate(false), ensureRefreshControl, card, pubBadge, logoTag, gauge, paywallTag, api, esc, tip, desk, go: (v) => go(v) };
+window.ATLAS = { state: ROOT, hydrate: () => hydrate(false), ensureRefreshControl, card, pubBadge, logoTag, gauge, paywallTag, api, esc, tip, desk, ago, play: playYouTube, go: (v) => go(v) };
 function go(v) {
   if (!pages[v]) return;
   ROOT.view = v;
@@ -871,13 +874,15 @@ function parseVideo(s) {
     return "";
   }
 }
-function playYouTube(videoId, label, verified = false) {
+function playYouTube(videoId, label, verified = false, channel = null) {
   if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId || "")) {
     tip("Cannot verify playable YouTube ID; open publisher channel.");
     return;
   }
   const f = document.createElement("iframe");
-  f.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&controls=1&rel=0`;
+  f.src = window.ATLASPlayer
+    ? ATLASPlayer.embedUrl(videoId)
+    : `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&controls=1&rel=0`;
   f.title = label;
   f.allow =
     "autoplay; encrypted-media; fullscreen; picture-in-picture; web-share";
@@ -891,6 +896,7 @@ function playYouTube(videoId, label, verified = false) {
     : "Video playback, not verified live. Provider may end or block the stream.";
   dock.classList.remove("minimised");
   dock.hidden = false;
+  window.ATLASPlayer?.dock(f, { videoId, label, verified, channel });
 }
 async function brief(id) {
   if (storybusy) return;
@@ -1043,7 +1049,7 @@ document.addEventListener("click", async (ev) => {
       (c) => c.id === b.dataset.stream,
     );
     if (c?.state === "live")
-      playYouTube(c.video_id, c.name + " · Live verified", true);
+      playYouTube(c.video_id, c.name + " · Live verified", true, c);
     return;
   }
   if (b.dataset.openlive) {

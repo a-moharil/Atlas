@@ -19,6 +19,11 @@ from contextlib import closing
 LOCK = threading.Lock()
 RECHECK_OK_HOURS = 24
 RECHECK_BAD_HOURS = 6
+RECHECK_PLAYER_HOURS = 24 * 7
+PLAYER_PREFIX = 'Player error'
+# YouTube IFrame player error codes.
+PLAYER_CODES = {2: 'invalid request', 5: 'HTML5 player error', 100: 'removed or private',
+                101: 'not playable outside YouTube (owner setting or region)', 150: 'not playable outside YouTube (owner setting or region)'}
 VALID = re.compile(r'[A-Za-z0-9_-]{11}')
 
 
@@ -58,6 +63,8 @@ def _due(row, now) -> bool:
         age = (now - dt.datetime.fromisoformat(row['checked'].replace('Z', '+00:00'))).total_seconds() / 3600
     except Exception:
         return True
+    if str(row['detail'] if 'detail' in row.keys() else '').startswith(PLAYER_PREFIX):
+        return age > RECHECK_PLAYER_HOURS  # oEmbed can't see region blocks; trust the browser for a week
     return age > (RECHECK_OK_HOURS if row['state'] == 'playable' else RECHECK_BAD_HOURS)
 
 
@@ -86,6 +93,23 @@ def verify(ids, db_connect, fetch_bytes, utc_now, limit=60) -> int:
         return len(results)
     finally:
         LOCK.release()
+
+
+def report_player_error(con, video_id: str, code, now: str) -> bool:
+    """Record that YouTube's player refused a video in this browser, so lists stop offering it."""
+    if not VALID.fullmatch(video_id or ''):
+        return False
+    try:
+        code = int(code)
+    except Exception:
+        code = 0
+    init(con)
+    state = 'unavailable' if code == 100 else 'blocked'
+    detail = f"{PLAYER_PREFIX} {code}: {PLAYER_CODES.get(code, 'unknown')}"
+    con.execute('''INSERT INTO video_status(video_id,state,checked,detail) VALUES(?,?,?,?) ON CONFLICT(video_id) DO UPDATE SET
+        state=excluded.state,checked=excluded.checked,detail=excluded.detail''', (video_id, state, now, detail))
+    con.commit()
+    return True
 
 
 def states(con) -> dict:

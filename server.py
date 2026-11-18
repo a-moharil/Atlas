@@ -43,6 +43,7 @@ import semantic
 import lm_labels
 import research_radar
 import coverage_graph
+import geo_video
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -419,7 +420,7 @@ def refresh_cycle(force_local=False, claimed=False, scope="all"):
                     if elapsed<3600:continue
                 due.append(f)
             sources=due
-        if scope=='all':sources += [{**c, 'tier': 'video', 'url': 'https://www.youtube.com/feeds/videos.xml?channel_id=' + c['channel_id']} for c in REGISTRY['channels']]
+        if scope=='all':sources += [{**c, 'tier': 'video', 'url': 'https://www.youtube.com/feeds/videos.xml?channel_id=' + c['channel_id']} for c in REGISTRY['channels']+geo_reel_channels(extra_only=True)]
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
             pending = [pool.submit(fetch_source, f, 'video' if 'channel_id' in f else 'article', run_id) for f in sources]
             for future in concurrent.futures.as_completed(pending):
@@ -648,10 +649,24 @@ def emergency_payload(hours):
     return data
 
 
+def geo_reel_channels(extra_only=False):
+    """Channels for the geopolitics reel: its own list, plus included existing channels."""
+    cfg=REGISTRY.get('geo_reel',{})
+    extra=[{**c,'geo_reel':True} for c in cfg.get('channels',[])]
+    if extra_only:return extra
+    inc=set(cfg.get('include',[]))
+    return extra+[c for c in REGISTRY['channels'] if c['id'] in inc]
+
+
 def verify_videos(limit=60):
-    """oEmbed-check recent uploads and configured fallback streams (bounded, background)."""
+    """oEmbed-check recent uploads and configured fallback streams (bounded, background).
+    Reel videos from the last 30 hours go first, so the reel fills quickly after a refresh."""
+    reel=[c['id'] for c in geo_reel_channels()]
+    since=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(hours=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    marks=','.join('?' for _ in reel) or "''"
     with closing(db_connect()) as con:
-        ids=[r['video_id'] for r in con.execute("SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL ORDER BY COALESCE(published,retrieved) DESC LIMIT 120")]
+        first=[r['video_id'] for r in con.execute(f"SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL AND source_id IN ({marks}) AND COALESCE(published,retrieved)>=? ORDER BY COALESCE(published,retrieved) DESC LIMIT 200",(*reel,since))]
+        ids=first+[r['video_id'] for r in con.execute("SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL AND source_id NOT LIKE 'geo\\_%' ESCAPE '\\' ORDER BY COALESCE(published,retrieved) DESC LIMIT 120")]
     ids=[c.get('fallback_id') for c in REGISTRY.get('live_channels',[]) if c.get('fallback_id')]+ids
     try:return video_check.verify(ids,db_connect,fetch_bytes,utc_now,limit)
     except Exception as exc:
@@ -683,11 +698,31 @@ def live_channels_state():
     return out
 
 
+def geo_reel(hours='24',scope='geo'):
+    try:hours=max(1,min(72,int(hours)))
+    except Exception:hours=24
+    chans={c['id']:c for c in geo_reel_channels()}
+    since=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(hours=hours+1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    marks=','.join('?' for _ in chans) or "''"
+    with closing(db_connect()) as con:
+        rows=[dict(r) for r in con.execute(f'''SELECT id,source_id,source,title,summary,video_id,published,retrieved FROM entries
+            WHERE medium='video' AND video_id IS NOT NULL AND source_id IN ({marks})
+            AND COALESCE(published,retrieved)>=? ORDER BY COALESCE(published,retrieved) DESC LIMIT 1500''',(*chans,since))]
+        states=video_check.states(con)
+        hidden={r[0] for r in con.execute('SELECT entry_id FROM wall_hidden')}
+        status={r['id']:dict(r) for r in con.execute('SELECT * FROM feeds_status')}
+    videos,counts=geo_video.select(rows,states,chans,hours,scope!='news',hidden=hidden)
+    channels=[{'id':k,'name':c['name'],'region':c.get('region',''),'state':status.get(k,{}).get('state') or 'not fetched yet',
+               'error':status.get(k,{}).get('error') or '','videos':sum(1 for v in videos if v['source_id']==k)} for k,c in chans.items()]
+    return {'videos':videos[:120],'counts':counts,'channels':channels,'hours':hours,'scope':'news' if scope=='news' else 'geo','time':utc_now()}
+
+
 def read_state():
     live=live_channels_state()
     with closing(db_connect()) as con:
         condition,values=content_cleanup.where_visible(con)
-        entries = [dict(r) for r in con.execute(f'''SELECT * FROM entries WHERE {condition} ORDER BY
+        # Reel-only broadcaster uploads stay out of the desks, story groups and upload rail.
+        entries = [dict(r) for r in con.execute(f'''SELECT * FROM entries WHERE {condition} AND source_id NOT LIKE 'geo\\_%' ESCAPE '\\' ORDER BY
             CASE WHEN published IS NULL THEN 1 ELSE 0 END,
             COALESCE(published,retrieved) DESC LIMIT ?''',( *values,NEWS_LIMIT))]
         statuses = {r['id']: dict(r) for r in con.execute('SELECT * FROM feeds_status')}
@@ -1008,6 +1043,8 @@ class Handler(BaseHTTPRequestHandler):
                 detail=params.get('detail',[''])[0]
                 return self.send_payload(atlas_v3.shakemap(detail,fetch_bytes))
             if parsed.path == '/api/live-channels': return self.send_payload({'channels':live_channels_state(),'time':utc_now()})
+            if parsed.path == '/api/geo-reel':
+                return self.send_payload(geo_reel(params.get('hours',['24'])[0],params.get('scope',['geo'])[0]))
             if parsed.path == '/api/brief':
                 key=params.get('id',[''])[0][:100]
                 with closing(db_connect()) as con:
@@ -1064,6 +1101,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/graph':
                 ids=[str(x)[:40] for x in (data.get('ids') or [])][:coverage_graph.MAX_PAGE]
                 return self.send_payload(coverage_graph.overview(graph_entries(),ids,db_connect,publishers.profile,graph_pref()))
+            if path == '/api/video/player-error':
+                vid=str(data.get('video_id',''))[:11]
+                with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
+                return self.send_payload({'ok':ok})
             if path == '/api/graph/diffuse':
                 try:days=max(1,min(14,int(data.get('days',7))))
                 except (TypeError,ValueError):days=7
