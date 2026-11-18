@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
+import re
 from collections import Counter, defaultdict
 
 import semantic
@@ -28,6 +29,19 @@ MAX_SOURCES = 40     # nodes drawn in the overview
 MAX_POOL = 2500      # articles considered for diffusion (meaning mode)
 MAX_POOL_KW = 500    # articles considered for diffusion (keyword mode)
 KNN = 8
+
+
+SUFFIX = re.compile(r'\s+[-–—|]\s+[^-–—|]{2,50}$')
+
+
+def clean_title(t) -> str:
+    """Drop the trailing ' - Publisher' that Google News adds to headlines."""
+    t = re.sub(r'\s+', ' ', str(t or '')).strip()
+    return SUFFIX.sub('', t) if SUFFIX.search(t) and len(SUFFIX.sub('', t)) > 25 else t
+
+
+def _norm(t) -> str:
+    return re.sub(r'[^a-z0-9]+', ' ', clean_title(t).lower()).strip()
 
 
 def _story(e) -> str:
@@ -156,8 +170,9 @@ def overview(entries, page_ids, db_connect, profile, pref_of=lambda h: '') -> di
                       'stories': len(src_stories[h]), 'primary': pref_of(h) == 'primary'})
     stories = {}
     for s, idxs in story_arts.items():
-        lead = max(idxs, key=lambda i: arts[i].get('published') or '')
-        stories[s] = {'id': s, 'title': arts[lead].get('title', ''), 'articles': [arts[i]['id'] for i in idxs],
+        lead = max(idxs, key=lambda i: (pref_of(arts[i]['publisher']) == 'primary', profile(arts[i]['publisher']).get('lean') is not None,
+                                         arts[i].get('published') or ''))
+        stories[s] = {'id': s, 'title': clean_title(arts[lead].get('title', '')), 'articles': [arts[i]['id'] for i in idxs],
                       'sources': sorted(story_srcs.get(s, set()))}
     note = ('Topic overlap from the local language model.' if mode == 'meaning'
             else 'Topic overlap from shared keywords (language model pack not ready).')
@@ -174,7 +189,7 @@ def _pool(entries, seed, days):
     return arts
 
 
-def diffuse(entries, seed_id, db_connect, profile, days=7, alpha=0.2, steps=30) -> dict:
+def diffuse(entries, seed_id, db_connect, profile, days=7, alpha=0.2, steps=30, pref_of=lambda h: '') -> dict:
     allarts = _articles(entries)
     seed = next((e for e in allarts if e['id'] == seed_id), None)
     if seed is None:
@@ -253,18 +268,32 @@ def diffuse(entries, seed_id, db_connect, profile, days=7, alpha=0.2, steps=30) 
     for i, e in enumerate(arts):
         by_story[_story(e)].append(i)
 
+    def title_of(members):
+        # Name a story after a primary or rated outlet where possible, never after the newest aggregator.
+        def rank(i):
+            h = arts[i]['publisher']
+            pr = profile(h)
+            return (pref_of(h) == 'primary', pr.get('lean') is not None, pr.get('kind') != 'unclassified', arts[i].get('published') or '')
+        return clean_title(arts[max(members, key=rank)].get('title', ''))
+
     def story_card(s, score=None):
-        members = by_story[s]
-        lead = max(members, key=lambda i: arts[i].get('published') or '')
-        return {'id': s, 'title': arts[lead].get('title', ''), 'articles': [arts[i]['id'] for i in members],
+        members, seen = [], set()
+        for i in sorted(by_story[s], key=lambda i: arts[i].get('published') or ''):
+            k = (arts[i]['publisher'], _norm(arts[i].get('title')))
+            if k not in seen:  # the same headline from the same outlet only once
+                seen.add(k)
+                members.append(i)
+        return {'id': s, 'title': title_of(members), 'articles': [arts[i]['id'] for i in members],
                 'sources': sorted({arts[i]['publisher'] for i in members}),
+                'first': min(arts[i].get('published') or '' for i in members),
                 'score': round(score if score is not None else p[sidx[s]], 6),
-                'similarity': round(max(seed_sims[i] for i in members), 3)}
+                'similarity': round(max(seed_sims[i] for i in by_story[s]), 3)}
     ranked = sorted((s for s in stories if s != seed_story), key=lambda s: -p[sidx[s]])
     close = 0.35 if mode == 'meaning' else 0.08
-    cards = [story_card(s) for s in ranked[:40]]
-    # Related = close in meaning; the rest were reached only through the same outlets.
-    related = [c for c in cards if c['similarity'] >= close][:10]
+    cards = [story_card(s) for s in ranked[:60]]
+    # Related = close in meaning (the walk finds them, similarity orders them); the rest were
+    # reached only through the same outlets.
+    related = sorted([c for c in cards if c['similarity'] >= close], key=lambda c: -c['similarity'])[:16]
     via = [c for c in cards if c['similarity'] < close][:6]
     same = story_card(seed_story)
     covered = set(same['sources'])
@@ -294,7 +323,15 @@ def diffuse(entries, seed_id, db_connect, profile, days=7, alpha=0.2, steps=30) 
         return d
     background = Tfidf([e.get('title', '') for e in arts[:800]])  # rare-in-the-pool words make better queries
     terms = key_terms(' '.join(arts[i].get('title', '') for i in by_story[seed_story]), 5, background)
-    return {'mode': mode, 'seed': seed['id'], 'seed_story': same, 'related': related, 'via_sources': via,
+    shown = {h for st in [same, *related, *via] for h in st['sources']} | {h for _, h in gaps}
+    outlets = {}
+    for h in shown:
+        pr = profile(h)
+        outlets[h] = {'name': pr.get('name') or h, 'lean': pr.get('lean'), 'lean_label': pr.get('lean_label', ''),
+                      'logo': pr.get('logo', ''), 'masthead': pr.get('masthead', 'grotesk'),
+                      'known': pr.get('kind') != 'unclassified' or pr.get('lean') is not None,
+                      'paywall': pr.get('paywall', 'unknown'), 'primary': pref_of(h) == 'primary'}
+    return {'mode': mode, 'seed': seed['id'], 'seed_story': same, 'related': related, 'via_sources': via, 'outlets': outlets,
             'sources': [src(h) for h in reached], 'gaps': [src(h, {'affinity': round(a, 3)}) for a, h in gaps],
             'pool': n, 'days': days, 'terms': terms,
             'note': ('Spread over articles by meaning with the local language model.' if mode == 'meaning'

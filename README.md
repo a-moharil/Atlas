@@ -248,6 +248,14 @@ The **Coverage graph** panel on the Situation room, World, India, Technology and
 3. **Also from these outlets:** stories reached only through the same sources, kept separate because they aren't similar in meaning.
 4. **Not covering this yet:** outlets whose recent articles are close to this story but which haven't covered it.
 
+**Reading the diffusion view:**
+
+- **Header:** the story you started from, with its lean gauge, desks, outlet and article counts, and how many usual outlets haven't covered it.
+- **Map and coverage tab:** the starting story sits at the centre. Distance from the centre shows how different a story is in meaning (rings at 80%, 60% and 40% similar); the quarter shows its desk (World, Technology, Finance, India); dot size shows how many outlets carry it. Grey dots marked a–d share outlets but not meaning.
+- **Who covered what:** outlets grouped by lean (Left to Right, then not rated) against the starting story and the numbered related stories. A filled dot means the outlet covered it; a dashed ring means it usually covers this kind of story but hasn't covered this one. Unknown aggregators are folded into *Other outlets*. Click an outlet to select it, or a column number to open that story.
+- **Timeline tab:** one line per story, placed by similarity, with each article as a dot at its publication time, coloured by its outlet's lean.
+- **Lists:** stories are numbered as on the map and in the table, most similar first, with eight shown and *Show more* for the rest. Each story shows a small lean gauge; each article shows the outlet's logo, lean label and paywall label. Titles drop the trailing " - Publisher" and prefer a primary or rated outlet's headline; the same headline from the same outlet appears once.
+
 **Search further** sends one open Google News search for the story's key terms, plus one per gap outlet (up to three). New articles join the desk you started from and are processed by the language model in the background, after which the diffusion updates.
 
 ### 5.4 Research radar

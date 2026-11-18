@@ -1067,7 +1067,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/graph/diffuse':
                 try:days=max(1,min(14,int(data.get('days',7))))
                 except (TypeError,ValueError):days=7
-                try:return self.send_payload(coverage_graph.diffuse(graph_entries(),str(data.get('seed',''))[:40],db_connect,publishers.profile,days))
+                try:return self.send_payload(coverage_graph.diffuse(graph_entries(),str(data.get('seed',''))[:40],db_connect,publishers.profile,days,pref_of=graph_pref()))
                 except LookupError as e:return self.send_payload({'error':str(e)},404)
             if path == '/api/graph/search-further':
                 try:return self.send_payload(search_further(data.get('terms') or [],data.get('gaps') or [],str(data.get('desk','World'))))

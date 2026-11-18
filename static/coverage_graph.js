@@ -1,9 +1,11 @@
 "use strict";
-/* Atlas v5.5 · Coverage graph.
+/* Atlas v5.6 · Coverage graph.
    Overview: sources on this page as nodes. Solid lines = shared stories (co-coverage),
    dashed lines = similar topics (article-level matching by meaning). Click a source to see
    its stories and their articles. Diffuse spreads outward from one article: its story and
-   sources, then related stories on any desk, and outlets that have not covered it yet. */
+   sources, then related stories on any desk, and outlets that have not covered it yet.
+   v5.6: the diffusion view is a story map (distance = difference in meaning, quarter = desk),
+   a "who covered what" table grouped by lean, and a timeline tab. */
 window.ATLASGraph = (() => {
   const A = () => window.ATLAS;
   const esc = (s) => A().esc(s);
@@ -82,75 +84,191 @@ window.ATLASGraph = (() => {
         ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
       }
     }
-    const labelled = new Set([...d.nodes].sort((a, b) => b.articles - a.articles).slice(0, opts.labels || 8).map((n) => n.id));
-    if (sel) labelled.add(sel);
-    if (hov) labelled.add(hov);
+    const minor = (n) => n.lean == null && !n.primary && (n.kind === "unclassified" || !n.kind);
     ctx.font = "12px " + css("--font-sans", "system-ui");
+    const circles = [];
     for (const n of d.nodes) {
       const [x, y] = P(n.id), r = radius(n);
+      circles.push({ id: n.id, x, y, r });
       const near = !sel || n.id === sel || d.edges.some((e) => (e.a === sel && e.b === n.id) || (e.b === sel && e.a === n.id));
-      ctx.globalAlpha = near ? 1 : 0.3;
+      // Unrated aggregators stay in the graph but step back visually.
+      ctx.globalAlpha = (near ? 1 : 0.3) * (minor(n) && n.id !== sel ? 0.55 : 1);
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = leanCol(n.lean, c); ctx.fill();
       if (n.primary) { ctx.lineWidth = 2; ctx.strokeStyle = c.amber; ctx.stroke(); }
       if (n.id === sel || n.id === hov) { ctx.lineWidth = 2; ctx.strokeStyle = c.glacier; ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.stroke(); }
-      if (labelled.has(n.id)) {
-        ctx.fillStyle = c.ink; ctx.textAlign = "center";
-        ctx.fillText(n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name, x, y + r + 13);
-      }
       ctx.globalAlpha = 1;
+    }
+    // Labels: selected and hovered first, then rated outlets by size; skip any label that would overlap.
+    const order = [...d.nodes].sort((a, b) => (b.id === sel) - (a.id === sel) || (b.id === hov) - (a.id === hov) || minor(a) - minor(b) || b.articles - a.articles);
+    const boxes = [], max = opts.labels || 8;
+    const clash = (bx) => boxes.some((o) => bx.x < o.x + o.w && bx.x + bx.w > o.x && bx.y < o.y + o.h && bx.y + bx.h > o.y)
+      || circles.some((ci) => ci.x + ci.r > bx.x && ci.x - ci.r < bx.x + bx.w && ci.y + ci.r > bx.y && ci.y - ci.r < bx.y + bx.h && !bx.own.includes(ci.id));
+    let placed = 0;
+    for (const n of order) {
+      const forced = n.id === sel || n.id === hov;
+      if (!forced && placed >= max) continue;
+      const [x, y] = P(n.id), r = radius(n);
+      const t = n.name.length > 22 ? n.name.slice(0, 21) + "…" : n.name, tw = ctx.measureText(t).width;
+      const tries = [[x - tw / 2, y + r + 3], [x - tw / 2, y - r - 17], [x + r + 4, y - 7], [x - r - 4 - tw, y - 7]];
+      let spot = null;
+      for (const [bx, by] of tries) {
+        const box = { x: bx - 2, y: by, w: tw + 4, h: 15, own: [n.id] };
+        if (box.x < 2 || box.x + box.w > w - 2 || box.y < 2 || box.y + box.h > h - 2) continue;
+        if (!clash(box)) { spot = box; break; }
+      }
+      if (!spot && forced) spot = { x: tries[0][0] - 2, y: tries[0][1], w: tw + 4, h: 15, own: [] };
+      if (!spot) continue;
+      boxes.push(spot); placed++;
+      if (forced) { ctx.fillStyle = "rgba(4,14,21,.75)"; ctx.fillRect(spot.x, spot.y, spot.w, spot.h); }
+      ctx.fillStyle = minor(n) && !forced ? c.ink2 : c.ink; ctx.textAlign = "left";
+      ctx.lineWidth = 3; ctx.strokeStyle = "rgba(4,14,21,.85)"; ctx.lineJoin = "round"; ctx.strokeText(t, spot.x + 2, spot.y + 11);
+      ctx.fillText(t, spot.x + 2, spot.y + 11);
     }
     canvas._hit = (mx, my) => d.nodes.find((n) => { const [x, y] = P(n.id); return Math.hypot(mx - x, my - y) <= radius(n) + 3; });
   }
 
-  function drawDiffusion(canvas, v) {
-    const { ctx, w, h } = setup(canvas), c = COL(), d = v.data;
+  // ---------------------------------------------------------------- diffusion: shared bits
+  const SECTORS = [
+    { key: "World", desks: ["World", "Policy"], a0: -180, a1: -90 },
+    { key: "Technology", desks: ["Technology", "Research", "Video"], a0: -90, a1: 0 },
+    { key: "Finance", desks: ["Finance", "Energy"], a0: 0, a1: 90 },
+    { key: "India", desks: ["India"], a0: 90, a1: 180 },
+  ];
+  const plural = (n, w) => `${num(n)} ${w}${n === 1 ? "" : "s"}`;
+  const leanCls = (l) => (l == null ? "unrated" : l < 0 ? "left" : l > 0 ? "right" : "center");
+  const LEAN_NAME = { "-2": "Left", "-1": "Lean left", "0": "Centre", "1": "Lean right", "2": "Right" };
+  const leanName = (l) => (l == null ? "Not rated" : LEAN_NAME[String(l)] || "Rated");
+  function desksOf(st, E) {
+    const c = {};
+    for (const id of st.articles) { const e = E.get(id); if (e && A().desk) { const d = A().desk(e); c[d] = (c[d] || 0) + 1; } }
+    return Object.entries(c).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+  }
+  const sectorOf = (st, E) => { const d = desksOf(st, E)[0] || "World"; return SECTORS.find((s) => s.desks.includes(d)) || SECTORS[0]; };
+  // The stories numbered on the map, in the matrix and in the list.
+  function shownStories(v) {
+    const d = v.data;
+    return d.related.slice(0, v.showAll ? 16 : 8).map((st, i) => ({ ...st, n: String(i + 1), via: false }))
+      .concat((d.via_sources || []).slice(0, 4).map((st, i) => ({ ...st, n: "abcd"[i], via: true })));
+  }
+  const simR = (sim, R) => Math.max(0.16 * R, Math.min(R, (R * (1 - Math.max(0, sim))) / 0.75));
+
+  function drawMap(canvas, v) {
+    const { ctx, w, h } = setup(canvas), c = COL(), E = entries();
     ctx.clearRect(0, 0, w, h);
-    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 30;
-    const nodes = [], edges = [];
-    const seed = { id: "story:" + d.seed_story.id, kind: "seed", x: cx, y: cy, r: 30, label: d.seed_story.title, story: d.seed_story };
-    nodes.push(seed);
-    const ring1 = [...d.seed_story.sources.map((h) => ({ h, gap: false })), ...d.gaps.map((g) => ({ h: g.id, gap: true }))];
-    const srcInfo = new Map([...d.sources, ...d.gaps].map((s) => [s.id, s]));
-    ring1.forEach((s, i) => {
-      const a = (i / Math.max(1, ring1.length)) * Math.PI * 2 - Math.PI / 2;
-      const info = srcInfo.get(s.h) || { id: s.h, name: s.h };
-      const n = { id: "src:" + s.h, host: s.h, kind: s.gap ? "gap" : "source", x: cx + Math.cos(a) * R * 0.42, y: cy + Math.sin(a) * R * 0.42, r: 7, label: info.name, lean: info.lean };
-      nodes.push(n); edges.push([seed, n, s.gap ? 0 : 1, s.gap]);
-    });
-    const outer = [...d.related.map((st) => ({ st, via: false })), ...(d.via_sources || []).map((st) => ({ st, via: true }))];
-    const maxScore = Math.max(...outer.map((o) => o.st.score), 1e-9);
-    const placed = new Map(nodes.filter((n) => n.host).map((n) => [n.host, n]));
-    outer.forEach(({ st, via }, i) => {
-      const a = (i / Math.max(1, outer.length)) * Math.PI * 2 - Math.PI / 2 + Math.PI / Math.max(2, outer.length);
-      const n = { id: "story:" + st.id, kind: via ? "via" : "related", x: cx + Math.cos(a) * R * 0.86, y: cy + Math.sin(a) * R * 0.86, r: via ? 5 : 6 + 10 * (st.score / maxScore), label: st.title, story: st };
-      nodes.push(n); edges.push([seed, n, st.score / maxScore, false]);
-      for (const hst of st.sources) { const s = placed.get(hst); if (s) edges.push([n, s, 0.15, false]); }
-    });
-    for (const [a, b, wgt, dashed] of edges) {
-      ctx.setLineDash(dashed ? [3, 4] : []);
-      const story = a.kind === "seed" && b.kind === "related";
-      if (a.kind === "seed" && b.kind === "via") { ctx.setLineDash([2, 5]); ctx.strokeStyle = "rgba(125,151,163,.35)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]); continue; }
-      ctx.strokeStyle = story ? `rgba(240,180,90,${0.2 + 0.7 * wgt})` : dashed ? "rgba(125,151,163,.6)" : `rgba(190,228,240,${0.12 + 0.4 * wgt})`;
-      ctx.lineWidth = story ? 1 + 3 * wgt : 1;
-      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 46;
+    ctx.font = "11px " + css("--font-sans", "system-ui");
+    // Rings: distance from the centre is difference in meaning.
+    for (const sim of [0.8, 0.6, 0.4]) {
+      ctx.setLineDash([3, 5]); ctx.strokeStyle = "rgba(190,228,240,.16)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, simR(sim, R), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = c.none; ctx.textAlign = "left"; ctx.fillText(Math.round(sim * 100) + "% similar", cx + 4, cy - simR(sim, R) - 4);
     }
-    ctx.setLineDash([]);
+    // Sectors: the desk a story mostly comes from.
     ctx.font = "12px " + css("--font-sans", "system-ui");
-    for (const n of nodes) {
-      const active = v.openStory && n.story && n.story.id === v.openStory, selSrc = v.sel && n.host === v.sel;
-      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-      if (n.kind === "seed") { ctx.fillStyle = "rgba(240,180,90,.22)"; ctx.fill(); ctx.strokeStyle = c.amber; ctx.lineWidth = 2; ctx.stroke(); }
-      else if (n.kind === "related") { ctx.fillStyle = active ? "rgba(178,160,240,.55)" : "rgba(178,160,240,.28)"; ctx.fill(); ctx.strokeStyle = "rgba(178,160,240,.9)"; ctx.lineWidth = active ? 2 : 1; ctx.stroke(); }
-      else if (n.kind === "via") { ctx.fillStyle = "rgba(125,151,163,.25)"; ctx.fill(); ctx.strokeStyle = "rgba(125,151,163,.7)"; ctx.lineWidth = 1; ctx.stroke(); }
-      else if (n.kind === "gap") { ctx.setLineDash([3, 3]); ctx.strokeStyle = c.none; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); }
-      else { ctx.fillStyle = leanCol(n.lean, c); ctx.fill(); }
-      if (selSrc) { ctx.strokeStyle = c.glacier; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, 0, Math.PI * 2); ctx.stroke(); }
-      ctx.fillStyle = n.kind === "gap" ? c.none : c.ink; ctx.textAlign = "center";
-      if (n.kind === "seed") { wrap(ctx, n.label, 170).forEach((l, i) => ctx.fillText(l, n.x, n.y + n.r + 14 + i * 14)); }
-      else if (n.kind === "related" || n.kind === "via") { ctx.fillStyle = n.kind === "via" ? c.none : c.ink; const l = wrap(ctx, n.label, 130); l.slice(0, 2).forEach((t, i) => ctx.fillText(i === 1 && l.length > 2 ? t + "…" : t, n.x, n.y + n.r + 13 + i * 13)); }
-      else ctx.fillText(n.label.length > 18 ? n.label.slice(0, 17) + "…" : n.label, n.x, n.y + n.r + 12);
+    for (const s of SECTORS) {
+      const a = (s.a0 * Math.PI) / 180;
+      ctx.strokeStyle = "rgba(190,228,240,.10)"; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 20, cy + Math.sin(a) * 20); ctx.lineTo(cx + Math.cos(a) * (R + 26), cy + Math.sin(a) * (R + 26)); ctx.stroke();
+      const m = (((s.a0 + s.a1) / 2) * Math.PI) / 180;
+      ctx.fillStyle = c.ink2; ctx.textAlign = "center"; ctx.fillText(s.key, cx + Math.cos(m) * (R + 30), cy + Math.sin(m) * (R + 30) + 4);
     }
-    canvas._hit = (mx, my) => nodes.find((n) => Math.hypot(mx - n.x, my - n.y) <= n.r + 4);
+    // Place stories: radius from similarity, angle spread within the sector, then nudge apart.
+    const items = shownStories(v).map((st) => {
+      const sec = sectorOf(st, E);
+      return { st, sec, via: st.via, rad: st.via ? R * 0.98 : simR(st.similarity, R), size: st.via ? 5 : Math.min(18, 6 + 2.2 * Math.sqrt(st.sources.length)) };
+    });
+    for (const s of SECTORS) {
+      const mine = items.filter((it) => it.sec === s).sort((a, b) => a.rad - b.rad);
+      mine.forEach((it, i) => { it.ang = s.a0 + 12 + ((s.a1 - s.a0 - 24) * (i + 0.5)) / Math.max(1, mine.length); });
+    }
+    for (let k = 0; k < 40; k++) for (const a of items) for (const b of items) {
+      if (a === b) continue;
+      const ax = cx + Math.cos((a.ang * Math.PI) / 180) * a.rad, ay = cy + Math.sin((a.ang * Math.PI) / 180) * a.rad;
+      const bx = cx + Math.cos((b.ang * Math.PI) / 180) * b.rad, by = cy + Math.sin((b.ang * Math.PI) / 180) * b.rad;
+      if (Math.hypot(ax - bx, ay - by) < a.size + b.size + 6) { const push = a.ang < b.ang ? -1.5 : 1.5; a.ang = Math.max(a.sec.a0 + 4, Math.min(a.sec.a1 - 4, a.ang + push)); }
+    }
+    for (const it of items) { it.x = cx + Math.cos((it.ang * Math.PI) / 180) * it.rad; it.y = cy + Math.sin((it.ang * Math.PI) / 180) * it.rad; }
+    // Faint links from the centre carry no extra meaning; keep them very light.
+    for (const it of items) { ctx.strokeStyle = it.via ? "rgba(125,151,163,.12)" : "rgba(240,180,90,.16)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(it.x, it.y); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fillStyle = "rgba(240,180,90,.3)"; ctx.fill(); ctx.strokeStyle = c.amber; ctx.lineWidth = 2; ctx.stroke();
+    const boxes = [];
+    const hit = (b) => boxes.some((o) => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+    for (const it of items) boxes.push({ x: it.x - it.size, y: it.y - it.size, w: it.size * 2, h: it.size * 2 });
+    for (const it of items) {
+      const on = v.openStory === it.st.id;
+      ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2);
+      ctx.fillStyle = it.via ? "rgba(125,151,163,.3)" : on ? "rgba(178,160,240,.75)" : "rgba(178,160,240,.4)"; ctx.fill();
+      ctx.strokeStyle = it.via ? "rgba(125,151,163,.8)" : "rgba(178,160,240,.95)"; ctx.lineWidth = on ? 2.5 : 1; ctx.stroke();
+      if (on) { ctx.strokeStyle = c.glacier; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(it.x, it.y, it.size + 4, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.fillStyle = it.via ? c.none : c.ink; ctx.font = "600 11px " + css("--font-sans", "system-ui"); ctx.textAlign = "center";
+      ctx.fillText(it.st.n, it.x, it.y + 4);
+    }
+    // Short labels only for the closest stories, and only where they fit.
+    ctx.font = "12px " + css("--font-sans", "system-ui");
+    const labelled = items.filter((it) => !it.via).sort((a, b) => a.rad - b.rad).slice(0, 4);
+    if (v.openStory) { const o = items.find((it) => it.st.id === v.openStory); if (o && !labelled.includes(o)) labelled.push(o); }
+    for (const it of labelled) {
+      const t = it.st.title.length > 34 ? it.st.title.slice(0, 33) + "…" : it.st.title, tw = ctx.measureText(t).width;
+      const right = it.x >= cx;
+      const b = { x: right ? it.x + it.size + 6 : it.x - it.size - 6 - tw, y: it.y - 8, w: tw, h: 16 };
+      if (b.x < 4 || b.x + b.w > w - 4 || hit(b)) continue;
+      boxes.push(b); ctx.textAlign = "left"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(4,14,21,.85)"; ctx.lineJoin = "round"; ctx.strokeText(t, b.x, it.y + 4);
+      ctx.fillStyle = c.ink2; ctx.fillText(t, b.x, it.y + 4);
+    }
+    canvas._hit = (mx, my) => { const it = items.find((i) => Math.hypot(mx - i.x, my - i.y) <= i.size + 4); return it ? { story: it.st, label: `${it.st.n}. ${it.st.title}` } : Math.hypot(mx - cx, my - cy) < 15 ? { story: v.data.seed_story, label: v.data.seed_story.title } : null; };
+  }
+
+  function drawTimeline(canvas, v) {
+    const { ctx, w, h } = setup(canvas), c = COL(), E = entries(), d = v.data;
+    ctx.clearRect(0, 0, w, h);
+    const rows = [{ ...d.seed_story, n: "", seed: true, similarity: 1 }, ...shownStories(v).filter((s) => !s.via)];
+    const pts = [];
+    for (const st of rows) for (const id of st.articles) { const e = E.get(id); if (e?.published) pts.push({ st, e, t: Date.parse(e.published) }); }
+    if (!pts.length) { ctx.fillStyle = c.none; ctx.fillText("No dated articles.", 20, 30); canvas._hit = () => null; return; }
+    const L = 56, Rt = 24, T = 26, B = 40;
+    let t0 = Math.min(...pts.map((p) => p.t)), t1 = Math.max(Date.now(), ...pts.map((p) => p.t));
+    if (t1 - t0 < 36e5 * 6) t0 = t1 - 36e5 * 6;
+    const X = (t) => L + ((t - t0) / (t1 - t0)) * (w - L - Rt);
+    const lo = Math.max(0, Math.min(...rows.map((r) => r.similarity)) - 0.05);
+    const Y = (s) => T + ((1 - s) / (1 - lo || 1)) * (h - T - B);
+    ctx.font = "11px " + css("--font-sans", "system-ui");
+    // Axes: similarity up, time across.
+    for (const s of [1, 0.8, 0.6, 0.4, 0.2].filter((s) => s >= lo)) {
+      ctx.strokeStyle = "rgba(190,228,240,.08)"; ctx.beginPath(); ctx.moveTo(L, Y(s)); ctx.lineTo(w - Rt, Y(s)); ctx.stroke();
+      ctx.fillStyle = c.none; ctx.textAlign = "right"; ctx.fillText(Math.round(s * 100) + "%", L - 8, Y(s) + 4);
+    }
+    const day = 864e5, start = new Date(t0); start.setHours(0, 0, 0, 0);
+    const stepDays = Math.max(1, Math.ceil((t1 - t0) / day / 8));
+    for (let t = start.getTime() + day; t <= t1; t += day * stepDays) {
+      ctx.strokeStyle = "rgba(190,228,240,.08)"; ctx.beginPath(); ctx.moveTo(X(t), T); ctx.lineTo(X(t), h - B); ctx.stroke();
+      ctx.fillStyle = c.none; ctx.textAlign = "center"; ctx.fillText(new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short" }), X(t), h - B + 16);
+    }
+    ctx.textAlign = "left"; ctx.fillStyle = c.none; ctx.fillText("Similarity to this story", 6, 14);
+    ctx.textAlign = "right"; ctx.fillText("Published", w - Rt, h - 6);
+    const outlets = d.outlets || {};
+    // Stories with near-equal similarity would sit on top of each other: nudge them apart.
+    const ys = new Map();
+    let last = -Infinity;
+    for (const st of [...rows].sort((a, b) => b.similarity - a.similarity)) { const y = Math.max(Y(st.similarity), last + 15); ys.set(st, y); last = y; }
+    if (last > h - B) { const k = (h - B - T) / (last - T); for (const [st, y] of ys) ys.set(st, T + (y - T) * k); }
+    for (const st of rows) {
+      const mine = pts.filter((p) => p.st === st).sort((a, b) => a.t - b.t);
+      if (!mine.length) continue;
+      const y = ys.get(st), on = v.openStory === st.id;
+      ctx.strokeStyle = st.seed ? "rgba(240,180,90,.55)" : on ? "rgba(178,160,240,.8)" : "rgba(178,160,240,.35)"; ctx.lineWidth = on || st.seed ? 3 : 2;
+      ctx.beginPath(); ctx.moveTo(X(mine[0].t), y); ctx.lineTo(X(mine[mine.length - 1].t), y); ctx.stroke();
+      for (const p of mine) {
+        p.x = X(p.t); p.y = y;
+        ctx.beginPath(); ctx.arc(p.x, y, 4.5, 0, Math.PI * 2); ctx.fillStyle = leanCol(outlets[p.e.publisher]?.lean, c); ctx.fill();
+        ctx.strokeStyle = "rgba(4,14,21,.8)"; ctx.lineWidth = 1; ctx.stroke();
+      }
+      ctx.fillStyle = st.seed ? c.amber : c.ink; ctx.font = "600 11px " + css("--font-sans", "system-ui"); ctx.textAlign = "right";
+      ctx.fillText(st.seed ? "This" : st.n, X(mine[0].t) - 9, y + 4);
+      ctx.font = "11px " + css("--font-sans", "system-ui");
+    }
+    canvas._hit = (mx, my) => {
+      const p = pts.find((q) => q.x != null && Math.hypot(mx - q.x, my - q.y) < 7);
+      return p ? { story: p.st.seed ? d.seed_story : p.st, label: `${outlets[p.e.publisher]?.name || p.e.source}: ${p.e.title}` } : null;
+    };
   }
 
   // ---------------------------------------------------------------- panel (on the page)
@@ -167,7 +285,7 @@ window.ATLASGraph = (() => {
     return `<ul class="cgStories">${stories.slice(0, max).map((st) => {
       const open = openStory === st.id;
       const arts = (st.articles || []).map((id) => E.get(id)).filter(Boolean);
-      return `<li class="${open ? "open" : ""}"><button class="cgStory" data-cgstory="${esc(st.id)}" aria-expanded="${open}"><span>${esc(st.title)}</span><small>${num(st.sources?.length || 0)} sources · ${num(arts.length || st.articles?.length || 0)} articles</small></button>
+      return `<li class="${open ? "open" : ""}"><button class="cgStory" data-cgstory="${esc(st.id)}" aria-expanded="${open}"><span>${esc(st.title)}</span><small>${plural(st.sources?.length || 0, "source")} · ${plural(arts.length || st.articles?.length || 0, "article")}</small></button>
         ${open ? `<ul class="cgArts">${arts.map((e) => `<li><a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a><span class="fine">${esc((A().state.state?.publishers?.[e.publisher] || {}).name || e.source)}</span><button class="linkButton" data-diffuse="${esc(e.id)}">Diffuse</button></li>`).join("")}</ul>` : ""}</li>`;
     }).join("")}</ul>`;
   }
@@ -180,7 +298,7 @@ window.ATLASGraph = (() => {
     const mine = Object.values(d.stories).filter((st) => st.sources.includes(n.id)).sort((a, b) => b.sources.length - a.sources.length);
     const partners = d.edges.filter((e) => e.a === n.id || e.b === n.id).map((e) => ({ id: e.a === n.id ? e.b : e.a, e }))
       .sort((a, b) => b.e.co + b.e.topic - (a.e.co + a.e.topic)).slice(0, 4).map((p) => d.nodes.find((x) => x.id === p.id)?.name).filter(Boolean);
-    return `<div class="cgSel"><div class="cgSelHead"><b>${esc(n.name)}</b><span class="fine">${num(n.articles)} articles · ${num(n.stories)} stories${partners.length ? ` · closest: ${esc(partners.join(", "))}` : ""}</span></div>
+    return `<div class="cgSel"><div class="cgSelHead"><b>${esc(n.name)}</b><span class="fine">${plural(n.articles, "article")} · ${n.stories === 1 ? "1 story" : num(n.stories) + " stories"}${partners.length ? ` · closest: ${esc(partners.join(", "))}` : ""}</span></div>
       <div class="cgSelActions"><button class="linkButton" data-pubonly="${esc(n.id)}">Show only this source</button><button class="linkButton" data-pubtoggle="${esc(n.id)}">${A().state.pubFilters.includes(n.id) ? "Remove from selection" : "Add to selection"}</button><button class="linkButton" data-cgsel="">Clear</button></div>
       ${storyList(mine, n.id, S.openStory)}</div>`;
   }
@@ -265,44 +383,127 @@ window.ATLASGraph = (() => {
   function drawOverlayCanvas() {
     const cv = document.querySelector("#cgBig");
     if (!cv || !S.view) return;
-    if (S.view.mode === "diffuse" && S.view.data) drawDiffusion(cv, S.view);
+    if (S.view.mode === "diffuse" && S.view.data) (S.view.tab === "time" ? drawTimeline : drawMap)(cv, S.view);
     else if (S.view.mode === "overview" && S.data) drawOverview(cv, S.data, S.pos, { sel: S.sel, hover: S.hover, labels: 18 });
   }
-  function diffusionSide() {
-    const v = S.view, d = v.data, E = entries();
+
+  // ---------------------------------------------------------------- diffusion: lists and matrix
+  const outletOf = (d, h) => d.outlets?.[h] || { name: A().state.state?.publishers?.[h]?.name || h, lean: null, known: false };
+  const leanTag = (o) => `<span class="cgLean ${leanCls(o?.lean)}">${esc(leanName(o?.lean))}</span>`;
+  function distOf(st, d) {
+    const r = { left: 0, center: 0, right: 0, unrated: 0 };
+    for (const h of st.sources) { const l = outletOf(d, h).lean; l == null ? r.unrated++ : l < 0 ? r.left++ : l > 0 ? r.right++ : r.center++; }
+    return r;
+  }
+  const miniGauge = (st, d) => `<span class="cgMini" aria-hidden="true">${A().gauge({ dist: distOf(st, d), sources: st.sources.length }, null)}</span>`;
+  function articleRows(st, d) {
+    const E = entries();
+    return `<ul class="cgArts">${st.articles.map((id) => E.get(id)).filter(Boolean).map((e) => {
+      const o = outletOf(d, e.publisher);
+      return `<li><div class="cgArtMeta">${A().logoTag(o, "xs")}<b>${esc(o.name)}</b>${leanTag(o)}${A().paywallTag(e.paywall === "premium" ? "premium" : o.paywall)}</div>
+        <a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a><button class="linkButton" data-diffuse="${esc(e.id)}">Diffuse from here</button></li>`;
+    }).join("")}</ul>`;
+  }
+  function storyRow(st, d, v, opts = {}) {
+    const open = v.openStory === st.id, E = entries();
+    const desks = [...new Set(st.articles.map((id) => E.get(id)).filter(Boolean).map((e) => A().desk(e)))];
+    const meta = [plural(st.sources.length, "outlet"), plural(st.articles.length, "article")];
+    if (!opts.seed && !st.via) meta.push(`${Math.round(100 * Math.max(0, st.similarity))}% similar`);
+    return `<li class="${open ? "open" : ""} ${st.via ? "via" : ""}"><button class="cgStory rich" data-cgstory="${esc(st.id)}" aria-expanded="${open}">
+        ${st.n ? `<span class="cgNum ${st.via ? "via" : ""}">${esc(st.n)}</span>` : `<span class="cgNum seed">This</span>`}
+        <span class="cgStoryText"><span>${esc(st.title)}</span><small>${desks.map((x) => `<em class="cgDesk">${esc(x)}</em>`).join("")}${meta.join(" · ")}</small></span>${miniGauge(st, d)}</button>
+      ${open ? articleRows(st, d) : ""}</li>`;
+  }
+  function matrix(v) {
+    const d = v.data, cols = [{ ...d.seed_story, n: "This" }, ...shownStories(v).filter((s) => !s.via)];
+    const gaps = new Set(d.gaps.map((g) => g.id));
+    const hosts = [...new Set([...cols.flatMap((c) => c.sources), ...gaps])];
+    const main = [], other = [];
+    for (const h of hosts) { const o = outletOf(d, h); (o.known || o.primary ? main : other).push(h); }
+    const rank = (h) => { const l = outletOf(d, h).lean; return l == null ? 9 : l; };
+    const covers = (h) => cols.filter((c) => c.sources.includes(h)).length;
+    main.sort((a, b) => rank(a) - rank(b) || covers(b) - covers(a) || outletOf(d, a).name.localeCompare(outletOf(d, b).name));
+    other.sort((a, b) => covers(b) - covers(a));
+    const cell = (h, c, i) => {
+      const o = outletOf(d, h), cls = `${i === 0 ? "seedCol" : ""} ${v.openStory === c.id ? "on" : ""}`;
+      if (c.sources.includes(h)) return `<td class="${cls}"><i class="cgCell ${leanCls(o.lean)}" title="${esc(o.name)} covered ${i ? "story " + c.n : "this story"}"></i></td>`;
+      if (i === 0 && gaps.has(h)) return `<td class="${cls}"><i class="cgCell gap" title="${esc(o.name)} usually covers this kind of story but has not covered this one"></i></td>`;
+      return `<td class="${cls}"></td>`;
+    };
+    const row = (h) => {
+      const o = outletOf(d, h);
+      return `<tr class="${v.sel === h ? "on" : ""}"><th scope="row"><button class="cgRowBtn" data-cgdsel="${esc(h)}" title="${esc(o.name)}: ${esc(leanName(o.lean))}">${A().logoTag(o, "xs")}<span>${esc(o.name)}</span></button></th>${cols.map((c, i) => cell(h, c, i)).join("")}</tr>`;
+    };
+    const otherSummary = other.length ? `<tr class="cgOther"><th scope="row"><button class="cgRowBtn" data-cgother="1" aria-expanded="${!!v.showOther}"><span>${v.showOther ? "Hide" : "Other outlets"} (${other.length})</span></button></th>${cols.map((c, i) => {
+      const k = other.filter((h) => c.sources.includes(h)).length;
+      return `<td class="${i === 0 ? "seedCol" : ""} ${v.openStory === c.id ? "on" : ""}">${k ? `<span class="cgCount">${k}</span>` : ""}</td>`;
+    }).join("")}</tr>` : "";
+    const groupRows = (list) => { let prev; return list.map((h) => { const l = outletOf(d, h).lean, g = l == null ? "Not rated" : leanName(l);
+      const head = g !== prev ? `<tr class="cgGroup"><th scope="rowgroup" colspan="${cols.length + 1}"><i class="cgLeanDot ${leanCls(l)}"></i>${esc(g)}</th></tr>` : ""; prev = g; return head + row(h); }).join(""); };
+    return `<section class="cgMatrixWrap"><h3>Who covered what <span class="fine">outlets grouped by lean; a dashed ring means the outlet usually covers this kind of story but has not covered this one</span></h3>
+      <div class="cgMatrixScroll"><table class="cgMatrix"><thead><tr><th></th>${cols.map((c, i) => `<th scope="col" class="${i === 0 ? "seedCol" : ""} ${v.openStory === c.id ? "on" : ""}"><button data-cgstory="${esc(c.id)}" title="${esc(c.title)}">${esc(c.n)}</button></th>`).join("")}</tr></thead>
+      <tbody>${groupRows(main)}${otherSummary}${v.showOther ? other.map(row).join("") : ""}</tbody></table></div></section>`;
+  }
+  function seedCard(v) {
+    const d = v.data, st = d.seed_story, E = entries();
+    const desks = [...new Set(st.articles.map((id) => E.get(id)).filter(Boolean).map((e) => A().desk(e)))];
+    const firstTs = st.first || st.articles.map((id) => E.get(id)?.published).filter(Boolean).sort()[0];
+    const dist = distOf(st, d);
+    return `<div class="cgSeed">${A().gauge({ dist, sources: st.sources.length }, null)}
+      <div class="cgSeedText"><span class="fine">Spreading out from</span><h3>${esc(st.title)}</h3>
+        <p class="fine">${desks.map((x) => `<em class="cgDesk">${esc(x)}</em>`).join("")}${plural(st.sources.length, "outlet")} · ${plural(st.articles.length, "article")}${firstTs ? ` · first seen ${esc(new Date(firstTs).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}` : ""}${d.gaps.length ? ` · ${plural(d.gaps.length, "outlet")} not covering it yet` : ""}</p></div>
+      <button class="linkButton" data-cgstory="${esc(st.id)}">Show its articles</button></div>`;
+  }
+  function diffusionMain(v) {
+    const d = v.data;
     if (v.busy && !d) return `<div class="pageLoading">Spreading out from this article…</div>`;
-    if (v.error) return `<div class="empty"><b>Could not diffuse</b><span class="fine">${esc(v.error)}</span></div>`;
-    const deskOf = (id) => { const e = E.get(id); return e && A().desk ? A().desk(e) : ""; };
-    const desks = (st) => [...new Set(st.articles.map(deskOf).filter(Boolean))];
-    const srcName = (h) => [...d.sources, ...d.gaps].find((s) => s.id === h)?.name || A().state.state?.publishers?.[h]?.name || h;
-    const sel = v.sel ? `<div class="cgSel"><div class="cgSelHead"><b>${esc(srcName(v.sel))}</b><span class="fine">${d.gaps.some((g) => g.id === v.sel) ? "Has not covered this story yet" : "In this neighbourhood"}</span></div>
-        <div class="cgSelActions"><button class="linkButton" data-pubonly="${esc(v.sel)}">Show only this source on the page</button><button class="linkButton" data-cgdsel="">Clear</button></div>
-        ${storyList([d.seed_story, ...d.related, ...(d.via_sources || [])].filter((st) => st.sources.includes(v.sel)), v.sel, v.openStory)}</div>` : "";
+    if (v.error || !d) return `<div class="empty"><b>Could not diffuse</b><span class="fine">${esc(v.error || "")}</span></div>`;
+    const tab = v.tab || "map";
+    const caption = tab === "map"
+      ? `Centre: this story. Distance from the centre shows how different a story is in meaning; the quarter shows its desk; size shows how many outlets carry it. Grey dots (a–d) share outlets but not meaning. Numbers match the list and the table.`
+      : `Each line is one story, placed by how similar it is to this one. Dots are articles, coloured by the outlet's lean, placed by when they were published. Lines with nearly the same similarity are nudged apart.`;
+    return `${seedCard(v)}<div class="cgTabs" role="tablist">${[["map", "Map and coverage"], ["time", "Timeline"]].map(([k, t]) => `<button role="tab" aria-selected="${tab === k}" class="${tab === k ? "on" : ""}" data-cgtab="${k}">${t}</button>`).join("")}</div>
+      <canvas id="cgBig" class="cgBig diff" role="img" aria-label="${tab === "map" ? "Map of related stories" : "Timeline of related stories"}"></canvas>
+      <div class="cgKey"><p class="fine">${caption}</p>${tab === "map" ? `<div class="cgLegend"><span><i class="cgDot seed"></i>This story</span><span><i class="cgDot rel"></i>Related in meaning</span><span><i class="cgDot via"></i>Shares outlets only</span></div>` : `<div class="cgLegend"><span><i class="cgDot l"></i>Left</span><span><i class="cgDot c"></i>Centre</span><span><i class="cgDot r"></i>Right</span><span><i class="cgDot n"></i>Not rated</span></div>`}</div>
+      ${matrix(v)}`;
+  }
+  function diffusionSide() {
+    const v = S.view, d = v.data;
+    if (!d) return "";
+    const shown = shownStories(v), rel = shown.filter((s) => !s.via), via = shown.filter((s) => s.via);
+    const sel = v.sel ? (() => {
+      const o = outletOf(d, v.sel), gap = d.gaps.some((g) => g.id === v.sel);
+      const theirs = [{ ...d.seed_story }, ...shown].filter((st) => st.sources.includes(v.sel));
+      return `<div class="cgSel"><div class="cgSelHead">${A().logoTag(o, "xs")}<b>${esc(o.name)}</b>${leanTag(o)}${A().paywallTag(o.paywall)}<span class="fine">${gap ? "Has not covered this story yet" : (theirs.length === 1 ? "1 story" : theirs.length + " stories") + " on this map"}</span></div>
+        <div class="cgSelActions"><button class="linkButton" data-pubonly="${esc(v.sel)}">Show only this outlet on the page</button><button class="linkButton" data-cgdsel="">Clear</button></div></div>`;
+    })() : "";
+    const more = d.related.length > 8 ? `<button class="linkButton cgMore" data-cgmore="1">${v.showAll ? "Show fewer" : `Show ${d.related.length - 8} more`}</button>` : "";
     return `${sel}
-      <section><h3>This story <span class="fine">${num(d.seed_story.articles.length)} articles from ${num(d.seed_story.sources.length)} sources</span></h3>${storyList([d.seed_story], "", v.openStory)}</section>
-      <section><h3>Related stories <span class="fine">across desks, closest first</span></h3>${d.related.length ? `<ul class="cgStories">${d.related.map((st) => {
-        const open = v.openStory === st.id, arts = st.articles.map((id) => E.get(id)).filter(Boolean);
-        return `<li class="${open ? "open" : ""}"><button class="cgStory" data-cgstory="${esc(st.id)}" aria-expanded="${open}"><span>${esc(st.title)}</span><small>${desks(st).map((x) => `<em class="cgDesk">${esc(x)}</em>`).join("")} ${num(st.sources.length)} sources · ${Math.round(100 * Math.max(0, st.similarity))}% similar</small></button>
-          ${open ? `<ul class="cgArts">${arts.map((e) => `<li><a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a><span class="fine">${esc(srcName(e.publisher))}</span><button class="linkButton" data-diffuse="${esc(e.id)}">Diffuse from here</button></li>`).join("")}</ul>` : ""}</li>`;
-      }).join("")}</ul>` : `<p class="fine">No closely related stories in the last ${d.days} days.</p>`}</section>
-      ${(d.via_sources || []).length ? `<section><h3>Also from these outlets <span class="fine">reached through shared sources, not similar in meaning</span></h3>${storyList(d.via_sources, "", v.openStory, 6)}</section>` : ""}
-      <section><h3>Not covering this yet</h3>${d.gaps.length ? `<p class="fine">Outlets that usually cover this kind of story but have not covered this one in Atlas.</p><div class="cgGaps">${d.gaps.map((g) => `<button class="cgGap" data-cgdsel="${esc(g.id)}">${esc(g.name)}</button>`).join("")}</div>` : `<p class="fine">Every outlet that usually covers this kind of story already has it.</p>`}
-        <div class="cgFurther"><button class="action primary" id="cgFurther" ${v.busy ? "disabled" : ""}>${v.busy ? "Searching…" : "Search further"}</button><span class="fine">Searches Google News for <b>${esc(d.terms.join(", "))}</b>${d.gaps.length ? `, including ${esc(d.gaps.slice(0, 3).map((g) => g.name).join(", "))}` : ""}. New articles join the ${esc(v.desk)} desk.</span></div>
+      <section><h3>This story</h3><ul class="cgStories">${storyRow(d.seed_story, d, v, { seed: true })}</ul></section>
+      <section><h3>Related stories <span class="fine">most similar first</span></h3>${rel.length ? `<ul class="cgStories">${rel.map((st) => storyRow(st, d, v)).join("")}</ul>${more}` : `<p class="fine">No closely related stories in the last ${d.days} days.</p>`}</section>
+      ${via.length ? `<section><h3>Also from these outlets <span class="fine">share outlets, not meaning</span></h3><ul class="cgStories">${via.map((st) => storyRow(st, d, v)).join("")}</ul></section>` : ""}
+      <section><h3>Not covering this yet</h3>${d.gaps.length ? `<p class="fine">Outlets that usually cover this kind of story but have not covered this one in Atlas.</p><div class="cgGaps">${d.gaps.map((g) => { const o = outletOf(d, g.id); return `<button class="cgGap ${v.sel === g.id ? "on" : ""}" data-cgdsel="${esc(g.id)}">${A().logoTag(o, "xs")}${esc(o.name)}<i class="cgLeanDot ${leanCls(o.lean)}"></i></button>`; }).join("")}</div>` : `<p class="fine">Every outlet that usually covers this kind of story already has it.</p>`}
+        <div class="cgFurther"><button class="action primary" id="cgFurther" ${v.busy ? "disabled" : ""}>${v.busy ? "Searching…" : "Search further"}</button><span class="fine">Searches Google News for <b>${esc(d.terms.join(", "))}</b>${d.gaps.length ? `, including ${esc(d.gaps.slice(0, 3).map((g) => outletOf(d, g.id).name).join(", "))}` : ""}. New articles join the ${esc(v.desk)} desk.</span></div>
         ${v.msg ? `<p class="fine cgMsg">${esc(v.msg)}</p>` : ""}</section>`;
   }
   function drawOverlay() {
     const v = S.view;
     if (!v) return;
     const el = overlayEl();
-    const title = v.mode === "diffuse" ? "Diffusion from one article" : "Coverage graph";
-    const sub = v.mode === "diffuse" ? (v.data ? `${esc(v.data.note)} Searched ${num(v.data.pool)} articles from the last ${v.data.days} days.` : "") : esc(S.data?.note || "");
+    const diff = v.mode === "diffuse";
+    const keep = [...el.querySelectorAll(".cgSide, .cgMain")].map((x) => x.scrollTop);
+    const title = diff ? "Diffusion from one article" : "Coverage graph";
+    const sub = diff ? (v.data ? `${esc(v.data.note)} Searched ${num(v.data.pool)} articles from the last ${v.data.days} days.` : "") : esc(S.data?.note || "");
     el.innerHTML = `<div class="cgDialog"><header class="cgHead"><div><h2>${title}</h2><p class="fine">${sub}</p></div>
-        ${v.mode === "overview" ? edgeSwitch() : `<div class="cgLegend"><span><i class="cgDot seed"></i>This story</span><span><i class="cgDot rel"></i>Related story</span><span><i class="cgDot via"></i>Same outlets only</span><span><i class="cgDot c"></i>Source covering it</span><span><i class="cgRing gap"></i>Not covering it</span></div>`}
+        ${diff ? "" : edgeSwitch()}
         <button class="action" data-cgclose="1" aria-label="Close">Close</button></header>
-      <div class="cgBody"><canvas id="cgBig" class="cgBig" role="img" aria-label="${title}"></canvas><aside class="cgSide">${v.mode === "diffuse" ? diffusionSide() : `${legend()}${info()}`}</aside></div></div>`;
+      ${diff ? `<div class="cgBody diff"><div class="cgMain">${diffusionMain(v)}</div><aside class="cgSide">${diffusionSide()}</aside></div>`
+        : `<div class="cgBody"><canvas id="cgBig" class="cgBig" role="img" aria-label="${title}"></canvas><aside class="cgSide">${legend()}${info()}</aside></div>`}</div>`;
+    [...el.querySelectorAll(".cgSide, .cgMain")].forEach((x, i) => { if (keep[i]) x.scrollTop = keep[i]; });
     const cv = el.querySelector("#cgBig");
+    if (!cv) return;
     drawOverlayCanvas();
-    bindCanvas(cv, v.mode === "diffuse" ? "diffuse" : "overlay");
+    bindCanvas(cv, diff ? "diffuse" : "overlay");
   }
   function expand() {
     S.view = { mode: "overview" };
@@ -310,10 +511,10 @@ window.ATLASGraph = (() => {
     document.addEventListener("keydown", onKey, true);
   }
   async function diffuse(id, desk) {
-    S.view = { mode: "diffuse", seed: id, data: null, busy: true, desk: desk || A().state.graphDesk || "World", openStory: "", sel: "" };
+    S.view = { mode: "diffuse", seed: id, data: null, busy: true, tab: (S.view?.tab) || "map", desk: desk || A().state.graphDesk || "World", openStory: "", sel: "" };
     drawOverlay();
     document.addEventListener("keydown", onKey, true);
-    try { S.view.data = await A().api("/api/graph/diffuse", "POST", { seed: id, days: 7 }); S.view.openStory = S.view.data.seed_story.id; }
+    try { S.view.data = await A().api("/api/graph/diffuse", "POST", { seed: id, days: 7 });  }
     catch (e) { S.view.error = e.message; }
     S.view.busy = false;
     drawOverlay();
@@ -345,6 +546,9 @@ window.ATLASGraph = (() => {
     if (b.dataset.cgexpand !== undefined) { expand(); return true; }
     if (b.dataset.cgclose !== undefined) { close(); return true; }
     if (b.dataset.cgsel !== undefined) { S.sel = b.dataset.cgsel; S.openStory = ""; drawPanel(); if (S.view?.mode === "overview") drawOverlay(); return true; }
+    if (b.dataset.cgtab && S.view) { S.view.tab = b.dataset.cgtab; drawOverlay(); return true; }
+    if (b.dataset.cgmore && S.view) { S.view.showAll = !S.view.showAll; drawOverlay(); return true; }
+    if (b.dataset.cgother && S.view) { S.view.showOther = !S.view.showOther; drawOverlay(); return true; }
     if (b.dataset.cgdsel !== undefined && S.view) { S.view.sel = S.view.sel === b.dataset.cgdsel ? "" : b.dataset.cgdsel; drawOverlay(); return true; }
     if (b.dataset.cgstory !== undefined) {
       if (S.view && b.closest("#cgOverlay")) {
