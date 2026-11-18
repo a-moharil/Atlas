@@ -66,7 +66,8 @@ Across the app:
 
 - **Every headline panel has a dice button.** It deals a different set of stories from everything Atlas holds.
 - **Every article can be removed from the wall.** You can undo a removal, and a removed article still counts in coverage statistics.
-- **Primary sources** you choose appear as logo chips at the top of each desk.
+- **Primary sources** you choose appear in a compact bar at the top of each desk. Click chips to show several outlets at once, use *Only* for one, or open the searchable list.
+- **Coverage graph** on the Situation room and every desk: the outlets on the page as a network, linked by the stories they share and by how similar their coverage is. **Diffuse** on any article spreads outward from it: its story and sources, related stories on any desk, and outlets that haven't covered it yet. **Search further** fetches more.
 - **Blocked publishers** disappear from every page, including the emergency newsroom and the language model's input.
 
 ---
@@ -147,7 +148,7 @@ sudo apt update && sudo apt install python3 python3-venv python3-pip
 There are two ways:
 
 - **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Atlas`.
-- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.5](#55-updating).
+- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
 
 ### 3.4 Start Atlas
 
@@ -231,7 +232,25 @@ The default (0.72) is a starting point. Check it against a day or two of your ow
   - **Block** an outlet: hidden everywhere, and its feeds are not even fetched.
 - **Coverage audit:** feed health, failures and collection history.
 
-### 5.3 Research radar
+### 5.3 Coverage graph and diffusion
+
+The **Coverage graph** panel on the Situation room, World, India, Technology and Finance maps the outlets behind the articles on that page.
+
+- **Nodes:** one per outlet, sized by its articles on the page and coloured by its lean. An amber ring marks a primary source.
+- **Solid lines:** shared stories. Two outlets that covered the same events are linked, and the line thickens with the share of their stories they have in common.
+- **Dashed lines:** similar topics. Each article from one outlet is matched to the closest article from the other, using the local language model (or keywords without it). This works even for outlets that cover many different subjects.
+- **Clicking an outlet:** shows its stories. Open a story to see every article in it (the article level), or use *Show only this source* or *Add to selection* to filter the page. **Expand** opens the graph full screen.
+
+**Diffuse** (on every story card, and on every article inside the graph) starts from one article:
+
+1. **This story:** its meaning group and every outlet that covered it.
+2. **Related stories:** close in meaning, on any desk, found by a random walk with restart over articles, stories and outlets, using each article's nearest neighbours by meaning.
+3. **Also from these outlets:** stories reached only through the same sources, kept separate because they aren't similar in meaning.
+4. **Not covering this yet:** outlets whose recent articles are close to this story but which haven't covered it.
+
+**Search further** sends one open Google News search for the story's key terms, plus one per gap outlet (up to three). New articles join the desk you started from and are processed by the language model in the background, after which the diffusion updates.
+
+### 5.4 Research radar
 
 The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Atlas looks each one up on arXiv, Crossref or OpenAlex.
 
@@ -262,7 +281,7 @@ Lanes, arXiv categories, the traced lab, the conferences and query sizes are set
 
 **Checking the sources.** **Your papers → Sources → Test sources** sends one small request to each source. Outside Atlas, `python tools/check_radar_sources.py` does the same and prints which sources answer from your network.
 
-### 5.4 Keeping your data
+### 5.5 Keeping your data
 
 Your data lives in **`observatory.sqlite3`**, plus `model_cache/` if you installed the model. Neither is uploaded to GitHub (they're in `.gitignore`). To move to a new computer or a new version, copy both into the new folder. Older databases can also be migrated explicitly:
 
@@ -270,7 +289,7 @@ Your data lives in **`observatory.sqlite3`**, plus `model_cache/` if you install
 python migrate_database.py "path/to/old/observatory.sqlite3"
 ```
 
-### 5.5 Updating
+### 5.6 Updating
 
 - **If you used `git clone`:** stop Atlas, run `git pull`, and start it again.
 - **If you downloaded a ZIP:** download the new ZIP, extract it to a new folder, then copy `observatory.sqlite3` (and `model_cache/`) from the old folder into it.
@@ -474,7 +493,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # ~112 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # ~129 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -503,6 +522,7 @@ atlas/
 ├─ emergency.py            newsroom triage, grouping and source controls
 ├─ semantic.py             embeddings, grouping by meaning, related articles
 ├─ lm_labels.py            optional Ollama labels and summaries
+├─ coverage_graph.py       coverage graph: source network, diffusion, coverage gaps
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
 ├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
 ├─ earth_watch.py          GDACS, EONET, USGS, Open-Meteo, Copernicus series

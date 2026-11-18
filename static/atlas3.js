@@ -84,7 +84,8 @@ const ROOT = {
   indiaGeoBusy: false,
   indiaStateFilter: "all",
   indiaCityFilter: "all",
-  pubFilter: "",
+  pubFilters: [],
+  pbOpen: false,
   primaryFirst: true,
   paywallFilter: "all",
   indiaBoundary: true,
@@ -129,6 +130,8 @@ function tip(t) {
   setTimeout(() => $("#notify").classList.remove("show"), 3600);
 }
 function sourceConfig(id) {
+  // Articles found by the coverage graph's "Search further" belong to the desk they were searched from.
+  if (String(id || "").startsWith("expand:")) return { id, name: "Search further", desk: String(id).slice(7), region: "Global", tier: "reporting" };
   return (
     ROOT.state?.registry?.feeds?.find((f) => f.id === id) ||
     ROOT.state?.registry?.channels?.find((f) => f.id === id) || {
@@ -264,7 +267,7 @@ function uniqueStories(items) {
   }
   return res;
 }
-function stories(filter = "all", max = 25) {
+function stories(filter = "all", max = 25, opts = {}) {
   let l = (ROOT.state?.entries || []).filter((x) => x.medium === "article");
   if (filter === "india") {
     l = l.filter((x) => ["India", "World", "Policy"].includes(desk(x)) && indiaRelevant(x));
@@ -300,9 +303,13 @@ function stories(filter = "all", max = 25) {
     l = l.filter((x) => (x.title + " " + x.summary + " " + x.source + " " + (pubOf(x)?.name || "")).toLowerCase().includes(q));
   }
   if (ROOT.bias !== "all") l = l.filter((x) => orientation(x)[1] === ROOT.bias);
-  if (ROOT.pubFilter) l = l.filter((x) => x.publisher === ROOT.pubFilter);
+  if (ROOT.pubFilters.length && !opts.ignorePub) {
+    const keep = new Set(ROOT.pubFilters);
+    l = l.filter((x) => keep.has(x.publisher));
+  }
   if (ROOT.paywallFilter === "open") l = l.filter((x) => ["free", "registration", "unknown", "freemium"].includes(x.paywall));
   if (window.ATLASWall) l = ATLASWall.visible(l);
+  if (opts.raw) return l; // every article (no syndication collapse), for counts and the coverage graph
   l = uniqueStories(l);
   if (ROOT.primaryFirst) {
     const isP = (x) => (prefOf(x.publisher) === "primary" ? 0 : 1);
@@ -313,6 +320,11 @@ function stories(filter = "all", max = 25) {
 function excerpts(s, n = 155) {
   let v = (s || "").replace(/\s+/g, " ").trim();
   return v.length > n ? v.slice(0, n).replace(/\s+\S*$/, "") + "…" : v;
+}
+function graphPanel(ids, deskName) {
+  ROOT.graphIds = ids;
+  ROOT.graphDesk = deskName;
+  return panel("Coverage graph", `<div id="cgHost" class="cgHost"><p class="fine">Mapping sources…</p></div>`, `<button class="linkButton" data-cgexpand="1">Expand</button>`);
 }
 function panel(title, content, aside = "", id = "") {
   return `<section class="panel" ${id ? `id="${esc(id)}"` : ""}><div class="panelHeading"><h2>${esc(title)}</h2>${aside}</div>${content}</section>`;
@@ -335,22 +347,46 @@ function card(e, opts = {}) {
  <h3><a href="${esc(url(e.url))}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a></h3>
  <div class="storyBrief"><p>${esc(brief ? excerpts(brief, opts.short ? 150 : 255) : "The feed supplied no excerpt. Open the publisher's article for details.")}</p></div>
  <div class="storyAside">${opts.noGauge ? "" : gauge(e.story, p?.lean)}${paywall}</div>
- <div class="storyFoot"><button class="linkButton" data-story="${esc(e.id)}">Compare coverage</button><span class="tag">${esc(desk(e))}</span><a target="_blank" rel="noopener noreferrer" class="fine" href="${esc(url(e.url))}">Read at ${esc(p?.name || e.source)} ↗</a>${window.ATLASWall ? ATLASWall.removeBtn(headlineCopies(e)) : ""}</div>
+ <div class="storyFoot"><button class="linkButton" data-story="${esc(e.id)}">Compare coverage</button><button class="linkButton" data-diffuse="${esc(e.id)}" title="Spread outward from this article: its story, related stories on any desk, and outlets that have not covered it">Diffuse</button><span class="tag">${esc(desk(e))}</span><a target="_blank" rel="noopener noreferrer" class="fine" href="${esc(url(e.url))}">Read at ${esc(p?.name || e.source)} ↗</a>${window.ATLASWall ? ATLASWall.removeBtn(headlineCopies(e)) : ""}</div>
 </article>`;
 }
-function primaryStrip(items) {
+const KIND_GROUP = (p) => (["government", "institution", "multilateral"].includes(p.kind) ? "Government and institutions"
+  : ["research", "think tank", "analysis", "academic"].includes(p.kind) ? "Research and analysis"
+  : p.country === "IN" ? "Indian outlets" : "International outlets");
+function primaryStrip(items, filter = "top") {
   const prefs = ROOT.state?.source_prefs || {};
   const hosts = Object.keys(prefs).filter((h) => prefs[h] === "primary");
   if (!hosts.length)
-    return `<div class="primaryStrip"><span class="lbl">Primary sources</span><span class="fine">None chosen yet.</span><button class="action" data-page="sources">Choose primary sources</button></div>`;
+    return `<div class="primaryBar"><div class="pbHead"><span class="lbl">Primary sources</span><span class="fine">None chosen yet.</span><button class="action" data-page="sources">Choose primary sources</button></div></div>`;
   const counts = {};
-  for (const e of items || []) counts[e.publisher] = (counts[e.publisher] || 0) + 1;
-  return `<div class="primaryStrip"><span class="lbl">Primary sources</span>${hosts
-    .map((h) => {
-      const p = ROOT.state?.publishers?.[h] || { name: h, masthead: "grotesk", logo: "/api/publisher-logo?host=" + encodeURIComponent(h) };
-      return `<button class="primaryChip ${ROOT.pubFilter === h ? "active" : ""}" data-pubfilter="${esc(h)}" title="Show only ${esc(p.name)}">${logoTag(p)}<span class="pubName mast-${esc(p.masthead)}">${esc(p.name)}</span><span class="count">${num(counts[h] || 0)}</span></button>`;
-    })
-    .join("")}<button class="choice ${ROOT.primaryFirst ? "active" : ""}" data-primaryfirst="1">Primary first</button>${ROOT.pubFilter ? `<button class="choice" data-pubfilter="">Show all</button>` : ""}<span class="spacer"></span><button class="linkButton" data-page="sources">Manage</button></div>`;
+  for (const e of stories(filter, 1e6, { ignorePub: true, raw: true })) counts[e.publisher] = (counts[e.publisher] || 0) + 1;
+  const pub = (h) => ROOT.state?.publishers?.[h] || { name: h, masthead: "grotesk", logo: "/api/publisher-logo?host=" + encodeURIComponent(h) };
+  const sel = new Set(ROOT.pubFilters);
+  const present = hosts.filter((h) => counts[h]).sort((a, b) => counts[b] - counts[a]);
+  // At most eight chips, plus any selected source, so the bar stays on one or two lines.
+  const shown = [...new Set([...present.slice(0, 8), ...hosts.filter((h) => sel.has(h))])];
+  const more = hosts.length - shown.length;
+  const chip = (h) => {
+    const p = pub(h);
+    return `<span class="primaryChip ${sel.has(h) ? "active" : ""} ${counts[h] ? "" : "none"}"><button class="pcMain" data-pubtoggle="${esc(h)}" aria-pressed="${sel.has(h)}" title="${sel.has(h) ? "Remove" : "Add"} ${esc(p.name)} ${sel.has(h) ? "from" : "to"} the selection">${logoTag(p)}<span class="pubName mast-${esc(p.masthead)}">${esc(p.name)}</span><span class="count">${num(counts[h] || 0)}</span></button><button class="pcOnly" data-pubonly="${esc(h)}" title="Show only ${esc(p.name)}">Only</button></span>`;
+  };
+  const selNames = [...sel].map((h) => pub(h).name);
+  let panelHtml = "";
+  if (ROOT.pbOpen) {
+    const groups = {};
+    for (const h of hosts) (groups[KIND_GROUP(pub(h))] ||= []).push(h);
+    panelHtml = `<div class="pbPanel" id="pbPanel"><div class="pbPanelHead"><input id="pbSearch" type="search" placeholder="Find a primary source" aria-label="Find a primary source"><button class="linkButton" data-page="sources">Manage primary sources</button></div>
+      ${Object.entries(groups).sort().map(([g, hs]) => `<div class="pbGroup"><h4>${esc(g)}</h4>${hs.sort((a, b) => (counts[b] || 0) - (counts[a] || 0) || pub(a).name.localeCompare(pub(b).name)).map((h) => {
+        const p = pub(h);
+        return `<div class="pbRow ${counts[h] ? "" : "none"}" data-pbname="${esc(p.name.toLowerCase())}"><label><input type="checkbox" data-pubtoggle="${esc(h)}" ${sel.has(h) ? "checked" : ""}>${logoTag(p)}<span>${esc(p.name)}</span></label><span class="fine">${counts[h] ? `${num(counts[h])} here` : "none on this page"}</span><button class="linkButton" data-pubonly="${esc(h)}">Only</button></div>`;
+      }).join("")}</div>`).join("")}</div>`;
+  }
+  return `<div class="primaryBar"><div class="pbHead"><span class="lbl">Primary sources</span><span class="fine">${present.length} of ${hosts.length} on this page</span>
+      <button class="choice ${ROOT.primaryFirst ? "active" : ""}" data-primaryfirst="1">Primary first</button>
+      <button class="choice ${sel.size ? "" : "active"}" data-pubclear="1">All sources</button>
+      ${sel.size ? `<span class="pbSel">Showing only ${esc(selNames.length > 2 ? selNames.length + " sources" : selNames.join(" and "))}</span>` : ""}
+      <button class="pbMore" data-pbmore="1" aria-expanded="${ROOT.pbOpen}">${ROOT.pbOpen ? "Close list" : more ? `+${more} more` : "All primary sources"}</button></div>
+    <div class="pbChips">${shown.map(chip).join("")}</div>${panelHtml}</div>`;
 }
 function kpi(label, val, desc) {
   return `<div class="kpi"><b class="mono">${esc(val)}</b><strong>${esc(label)}</strong><small>${esc(desc)}</small></div>`;
@@ -485,13 +521,14 @@ function dashboard() {
    <div><b>${num(m.stored_entries)}</b><span>records held</span></div>
    <div><b>${num(healthy)}<em>/${num(m.configured_sources)}</em></b><span>feeds healthy</span></div>
    <div><b>${lastRun ? esc(ago(lastRun)) : "never"}</b><span>last collection</span></div></div></div>
-  ${primaryStrip(top)}
+  ${primaryStrip(top, "top")}
   <div class="two"><div class="stack">
    ${lead ? `<section class="leadStory panel">${card(lead)}</section>` : ""}
    ${panel(W?.shuffled("room") ? "A fresh deal" : "Most covered now", rest.length ? `<div class="newsList">${rest.map((e) => card(e, { short: true })).join("")}</div>` : empty("No headlines yet", "Press Refresh feeds. Atlas never invents headlines."), `<span class="panelTools">${roomAside}<button class="linkButton" data-page="news">Open World</button></span>`)}
   </div><div class="stack">
    ${panel("Earth watch", `<div id="roomEarth" class="roomEarth"><p class="fine">Loading hazard catalogue…</p></div>`, `<button class="linkButton" data-page="earth">Open</button>`)}
    ${panel("Political spread of today's coverage", orientationMix(top))}
+   ${graphPanel(stories("top", 1e6, { raw: true, ignorePub: true }).map((e) => e.id), "World")}
    ${panel("Collection health", `<div class="smallStats"><span><b>${num(run.succeeded || 0)}</b> passed</span><span><b>${num(run.failed || 0)}</b> failed</span><span><b>${num(run.inserted || 0)}</b> new</span></div>${svgPlot()}`, `<button class="linkButton" data-page="coverage">Audit</button>`)}
    ${panel("Live TV", `<p class="fine">${(ROOT.state?.live_channels || []).filter((c) => c.state === "live").length} verified live streams · ${num(ROOT.state?.video_audit?.playable || 0)} playable uploads</p><button class="action" data-page="media">Open live wall</button>`)}
   </div></div>`;
@@ -544,11 +581,11 @@ function newsDesk(filter) {
   }
   const blocked = Object.values(ROOT.state?.source_prefs || {}).filter((v) => v === "blocked").length;
   return (
-    heading(title, desc) + primaryStrip(current) + tabs +
+    heading(title, desc) + primaryStrip(current, filter) + tabs +
     `<div class="filters"><input id="newsSearch" type="search" value="${esc(ROOT.search)}" placeholder="Search headlines, excerpts or publishers" aria-label="Search headlines">${locFilters}<select id="sourceBias" aria-label="Publisher lean"><option value="all">Any publisher lean</option>${[["left", "Left-leaning"], ["center", "Centre"], ["right", "Right-leaning"], ["unknown", "Not rated"], ["primary", "Official sources"]].map((x) => `<option value="${x[0]}" ${ROOT.bias === x[0] ? "selected" : ""}>${x[1]}</option>`).join("")}</select><select id="paywallFilter" aria-label="Paywall"><option value="all">Any access</option><option value="open" ${ROOT.paywallFilter === "open" ? "selected" : ""}>Hide paywalled</option></select></div>
      <div class="deskLine"><p class="fine">${W?.shuffled(deskKey) ? `${num(current.length)} headlines dealt at random from ${num(deskPool.length)}` : `${num(current.length)} distinct headlines`}${blocked ? ` · ${blocked} blocked publisher${blocked === 1 ? "" : "s"} hidden` : ""}. The gauge shows which side of the spectrum is covering each story.</p><span class="panelTools">${W ? W.restoreLine() + W.dice(deskKey, deskPool.length) : ""}</span></div>
      <div class="two"><div>${current.length ? `<div class="newsList">${current.map((e) => card(e)).join("")}</div>` : empty("No matching stories", "Try another tab or filter, or check Coverage audit for feed errors.")}</div>
-     <aside class="stack">${panel("Political spread of this view", orientationMix(current))}${panel("Reading the gauge", `<div class="gaugeDemo">${gauge({ sources: 8, dist: { left: 3, center: 3, right: 2, unrated: 0 } }, -1)}<p class="fine">Arcs show the share of left-leaning, centre and right-leaning outlets covering the same story in Atlas. The needle is this publisher's own rating. Ratings come from Media Bias/Fact Check and AllSides and describe outlets, not articles.</p></div>`)}${panel("Source coverage", telemetryBars(), `<button data-page="coverage" class="linkButton">Audit</button>`)}</aside></div>`
+     <aside class="stack">${panel("Political spread of this view", orientationMix(current))}${graphPanel(stories(filter, 1e6, { raw: true, ignorePub: true }).map((e) => e.id), { all: "World", india: "India", Technology: "Technology", Finance: "Finance" }[filter] || "World")}${panel("Reading the gauge", `<div class="gaugeDemo">${gauge({ sources: 8, dist: { left: 3, center: 3, right: 2, unrated: 0 } }, -1)}<p class="fine">Arcs show the share of left-leaning, centre and right-leaning outlets covering the same story in Atlas. The needle is this publisher's own rating. Ratings come from Media Bias/Fact Check and AllSides and describe outlets, not articles.</p></div>`)}${panel("Source coverage", telemetryBars(), `<button data-page="coverage" class="linkButton">Audit</button>`)}</aside></div>`
   );
 }
 function sourceTable() {
@@ -685,6 +722,7 @@ function render() {
   main.innerHTML = content;
   ensureRefreshControl();
   if (v === "room") setTimeout(roomEarth, 30);
+  if (["room", "news", "india", "technology", "finance"].includes(v)) setTimeout(() => window.ATLASGraph?.attach(ROOT), 40);
   if (v === "emergency") safeMount(v, () => window.ATLASEmergency.mount());
   if (v === "conflict") safeMount(v, () => window.ATLASConflict.mount());
   if (v === "mygov") safeMount(v, () => window.ATLASMyGov.mount());
@@ -706,13 +744,14 @@ function ensureRefreshControl() {
 document.addEventListener("atlas:wall", () => {
   if (["room", "news", "india", "technology", "finance", "research", "media"].includes(ROOT.view)) render();
 });
-window.ATLAS = { state: ROOT, hydrate: () => hydrate(false), ensureRefreshControl, card, pubBadge, logoTag, gauge, paywallTag, api, esc, tip, go: (v) => go(v) };
+window.ATLAS = { state: ROOT, hydrate: () => hydrate(false), ensureRefreshControl, card, pubBadge, logoTag, gauge, paywallTag, api, esc, tip, desk, go: (v) => go(v) };
 function go(v) {
   if (!pages[v]) return;
   ROOT.view = v;
   ROOT.search = "";
   ROOT.bias = "all";
-  ROOT.pubFilter = "";
+  ROOT.pubFilters = [];
+  ROOT.pbOpen = false;
   $("#storyPanel").hidden = true;
   $("#navSide").classList.remove("open");
   window.location.hash = v;
@@ -915,13 +954,31 @@ window.addEventListener("hashchange", () => {
 document.addEventListener("click", async (ev) => {
   let b = ev.target.closest("button,[data-close]");
   if (!b) return;
+  if (window.ATLASGraph?.onClick(b)) return;
   if (b.dataset.page) {
     go(b.dataset.page);
     return;
   }
-  if (b.dataset.pubfilter !== undefined) {
-    ROOT.pubFilter = ROOT.pubFilter === b.dataset.pubfilter ? "" : b.dataset.pubfilter;
+  if (b.dataset.pubtoggle !== undefined) {
+    const h = b.dataset.pubtoggle;
+    ROOT.pubFilters = ROOT.pubFilters.includes(h) ? ROOT.pubFilters.filter((x) => x !== h) : [...ROOT.pubFilters, h];
     render();
+    return;
+  }
+  if (b.dataset.pubonly !== undefined) {
+    ROOT.pubFilters = [b.dataset.pubonly];
+    render();
+    return;
+  }
+  if (b.dataset.pubclear !== undefined) {
+    ROOT.pubFilters = [];
+    render();
+    return;
+  }
+  if (b.dataset.pbmore !== undefined) {
+    ROOT.pbOpen = !ROOT.pbOpen;
+    render();
+    if (ROOT.pbOpen) $("#pbSearch")?.focus();
     return;
   }
   if (b.dataset.primaryfirst) {
@@ -1108,6 +1165,12 @@ document.addEventListener("change", (e) => {
   if (ROOT.view === "sources" && window.ATLASSources?.onChange?.(e)) return;
   if (ROOT.view === "lm" && window.ATLASLM?.onChange?.(e)) return;
   if (ROOT.view === "radar" && window.ATLASRadar?.onChange?.(e)) return;
+  if (a.dataset?.pubtoggle !== undefined && a.type === "checkbox") {
+    const h = a.dataset.pubtoggle;
+    ROOT.pubFilters = a.checked ? [...new Set([...ROOT.pubFilters, h])] : ROOT.pubFilters.filter((x) => x !== h);
+    render();
+    return;
+  }
   if (a.id === "worldArea") {
     ROOT.worldArea = a.value;
     render();
@@ -1148,6 +1211,12 @@ document.addEventListener("change", (e) => {
 });
 let typing;
 document.addEventListener("input", (e) => {
+  if (e.target.id === "pbSearch") {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll(".pbRow").forEach((r) => (r.hidden = !!q && !r.dataset.pbname.includes(q)));
+    document.querySelectorAll(".pbGroup").forEach((g) => (g.hidden = ![...g.querySelectorAll(".pbRow")].some((r) => !r.hidden)));
+    return;
+  }
   if (ROOT.view === "sources" && window.ATLASSources?.onInput?.(e)) return;
   if (ROOT.view === "lm" && e.target.id === "lmThr") return window.ATLASLM?.onChange?.(e);
   if (e.target.id === "newsSearch") {

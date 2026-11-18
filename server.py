@@ -42,6 +42,7 @@ import logos
 import semantic
 import lm_labels
 import research_radar
+import coverage_graph
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -551,6 +552,47 @@ def refresh_live_channels(force=False):
 
 
 LM_BUSY=threading.Lock()
+_GRAPH_STATE = {'t': 0.0, 'entries': None}
+GRAPH_DESKS = {'World', 'India', 'Policy', 'Technology', 'Finance', 'Energy'}
+
+
+def graph_entries():
+    """Entries exactly as the page sees them (same story groups and publishers), cached for 30 s."""
+    if _GRAPH_STATE['entries'] is None or time.time() - _GRAPH_STATE['t'] > 30:
+        _GRAPH_STATE.update(t=time.time(), entries=read_state()['entries'])
+    return _GRAPH_STATE['entries']
+
+
+def graph_pref():
+    with closing(db_connect()) as con:
+        prefs = publishers.prefs(con)
+    return lambda h: prefs.get(h, '')
+
+
+def search_further(terms, gaps, desk):
+    """Fetch new articles for a diffused story through Google News: one open query, then one per
+    outlet that has not covered it. New articles join the seed's desk and are embedded in the background."""
+    terms = [re.sub(r'[^\w\s\-.]', ' ', str(t))[:60].strip() for t in terms if str(t).strip()][:5]
+    if not terms:
+        raise ValueError('No search terms for this story.')
+    gaps = [g for g in gaps if re.fullmatch(r'[a-z0-9.-]{3,80}', str(g))][:3]
+    desk = desk if desk in GRAPH_DESKS else 'World'
+    source = {'id': f'expand:{desk}', 'name': 'Search further', 'tier': 'reporting', 'region': 'Global', 'desk': desk}
+    added, fetched, notes = 0, 0, []
+    for q in coverage_graph.search_queries(terms, gaps):
+        url = 'https://news.google.com/rss/search?' + urllib.parse.urlencode({'q': q, 'hl': 'en-IN', 'gl': 'IN', 'ceid': 'IN:en'})
+        try:
+            rows = parse_feed(fetch_bytes(url), source, 'article')
+            fetched += len(rows)
+            added += persist_records(rows) or 0
+        except Exception as exc:
+            notes.append(f'{q[:40]}…: {type(exc).__name__}')
+    _GRAPH_STATE['entries'] = None
+    if added:
+        threading.Thread(target=lm_work, kwargs={'label': False}, daemon=True, name='lm-expand').start()
+    return {'queries': len(coverage_graph.search_queries(terms, gaps)), 'fetched': fetched, 'added': added, 'notes': notes}
+
+
 def radar_tick(force=False):
     """Keep the research radar fresh in the background. Each source has its own schedule
     (retrieval_jobs skips any that are not due), so calling this often is cheap."""
@@ -1019,6 +1061,17 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/lm/run':
                 threading.Thread(target=lm_work,kwargs={'label':bool(data.get('labels',True))},daemon=True,name='lm-work').start()
                 return self.send_payload({'started':True})
+            if path == '/api/graph':
+                ids=[str(x)[:40] for x in (data.get('ids') or [])][:coverage_graph.MAX_PAGE]
+                return self.send_payload(coverage_graph.overview(graph_entries(),ids,db_connect,publishers.profile,graph_pref()))
+            if path == '/api/graph/diffuse':
+                try:days=max(1,min(14,int(data.get('days',7))))
+                except (TypeError,ValueError):days=7
+                try:return self.send_payload(coverage_graph.diffuse(graph_entries(),str(data.get('seed',''))[:40],db_connect,publishers.profile,days))
+                except LookupError as e:return self.send_payload({'error':str(e)},404)
+            if path == '/api/graph/search-further':
+                try:return self.send_payload(search_further(data.get('terms') or [],data.get('gaps') or [],str(data.get('desk','World'))))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
             if path == '/api/radar/related':
                 try:
                     return self.send_payload(research_radar.related_work(data.get('text',''),db_connect,research_fetch,DB_FILE.parent/'model_cache'))
