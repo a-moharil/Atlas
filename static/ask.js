@@ -10,7 +10,7 @@ window.ATLASAsk = (() => {
   const el = (s) => document.querySelector(s);
   // The panel each page asks about by default (keys of its search bar).
   const VIEW_PANEL = { room: "room", news: "desk:all", india: "desk:india", technology: "desk:Technology", finance: "desk:Finance", research: "analysis", media: "videos" };
-  const S = { open: false, scope: "panel", panelKey: null, wiki: "", items: [], models: null, busy: false, timer: 0 };
+  const S = { open: false, scope: "panel", panelKey: null, wiki: "", items: [], models: null, busy: false, timer: 0, seq: 0, live: null };
 
   function context() {
     const view = A().state.view;
@@ -43,7 +43,7 @@ window.ATLASAsk = (() => {
         <div class="askActions"><button class="action primary" id="askGo" ${S.busy ? "disabled" : ""}>${S.busy ? "Writing…" : "Ask"}</button>
           <a class="linkButton" id="askGoogle" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?udm=50">Open in Google AI Mode ↗</a></div>
         <p class="fine askModel" id="askModel">${modelLine()}</p></form>
-      <div class="askList" id="askList">${S.items.map(item).join("")}</div>`;
+      ${S.items.length ? `<div class="askListHead"><span class="fine">${S.items.length} answer${S.items.length === 1 ? "" : "s"}</span><button class="linkButton" data-askclearall="1">Clear all answers</button></div>` : ""}<div class="askList" id="askList">${S.items.map(item).join("")}</div>`;
     syncGoogle();
   }
   function modelLine() {
@@ -79,13 +79,13 @@ window.ATLASAsk = (() => {
     const src = a.length || w.length ? `<details class="askSources" ${it.status === "no_model" ? "open" : ""}><summary>Sources: ${a.length} from Atlas${w.length ? `, ${w.length} from Wikipedia` : ""}</summary><ol>
         ${a.map((s, i) => `<li id="ask-${it.n}-A${i + 1}"><b>A${i + 1}</b> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a><small class="fine">${esc(s.outlet)} · ${esc(A().ago(s.published))}</small></li>`).join("")}
         ${w.map((s, i) => `<li id="ask-${it.n}-W${i + 1}"><b>W${i + 1}</b> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.page)}</a><small class="fine">Wikipedia · ${esc(s.section)}</small><span class="askPassage">${esc(s.text.slice(0, 260))}…</span></li>`).join("")}</ol></details>` : "";
-    return `<article class="askItem"><h3>${esc(it.question)}</h3><p class="fine askMeta">${esc(it.model || "")}${it.mode ? ` · sources found by ${it.mode === "both" ? "meaning and keywords" : "keywords"}` : ""}${it.searched ? ` in ${it.searched.toLocaleString()} articles` : ""}</p>${body}${src}</article>`;
+    return `<article class="askItem" data-askn="${it.n}"><div class="askItemHead"><h3>${esc(it.question)}</h3><button class="askRemove" data-askremove="${it.n}" title="Remove this answer" aria-label="Remove this answer: ${esc(it.question)}">×</button></div><p class="fine askMeta">${esc(it.model || "")}${it.mode ? ` · sources found by ${it.mode === "both" ? "meaning and keywords" : "keywords"}` : ""}${it.searched ? ` in ${it.searched.toLocaleString()} articles` : ""}</p>${body}${src}</article>`;
   }
   async function ask() {
     const q = el("#askQ")?.value.trim();
     if (!q || S.busy) return;
     const c = context();
-    const it = { n: S.items.length + 1, question: q, status: "starting", text: "", scopeLabel: S.scope === "panel" && c.p ? c.label : "" };
+    const it = { n: ++S.seq, question: q, status: "starting", text: "", scopeLabel: S.scope === "panel" && c.p ? c.label : "" };
     S.items.unshift(it); S.busy = true; draw();
     try {
       const body = { question: q, wiki: c.wikiTitle || "" };
@@ -94,7 +94,8 @@ window.ATLASAsk = (() => {
       const d = await res.json();
       if (!res.ok) throw Error(d.error || `HTTP ${res.status}`);
       Object.assign(it, { status: d.status, sources: d.sources, mode: d.mode, model: d.model, searched: d.searched, error: d.error || d.wiki_note || "" });
-      if (d.status === "writing") poll(it, d.job);
+      if (!S.items.includes(it)) { S.busy = false; return; } // removed while waiting
+      if (d.status === "writing") { S.live = it; poll(it, d.job); }
       else S.busy = false;
     } catch (e) { it.status = "error"; it.error = e.message; S.busy = false; }
     draw();
@@ -105,16 +106,39 @@ window.ATLASAsk = (() => {
       try {
         const j = await A().api(`/api/ask/job/${job}`);
         it.text = j.text; it.status = j.status === "error" ? "error" : j.status; it.error = j.error; it.sentences = j.sentences;
-        if (j.status === "writing") poll(it, job); else S.busy = false;
+        if (!S.items.includes(it)) return; // removed while writing
+        if (j.status === "writing") poll(it, job); else { S.busy = false; S.live = null; }
       } catch (e) { it.status = "error"; it.error = e.message; S.busy = false; }
       const list = el("#askList");
-      if (list) { list.innerHTML = S.items.map(item).join(""); const b = el("#askGo"); if (b) { b.disabled = S.busy; b.textContent = S.busy ? "Writing…" : "Ask"; } }
+      if (list && S.items.includes(it)) { list.innerHTML = S.items.map(item).join(""); const b = el("#askGo"); if (b) { b.disabled = S.busy; b.textContent = S.busy ? "Writing…" : "Ask"; } }
     }, 450);
   }
   async function loadModels() {
     try { S.models = await A().api("/api/ask/models"); } catch (e) { S.models = { status: "offline", detail: e.message }; }
     const m = el("#askModel");
     if (m) m.innerHTML = modelLine();
+  }
+
+  // Removing an answer that is still being written stops following it (the local model
+  // finishes in the background; its text is simply not shown).
+  function stopLive(it) {
+    if (S.live && (!it || S.live === it)) { clearTimeout(S.timer); S.live = null; S.busy = false; }
+  }
+  function remove(n) {
+    const it = S.items.find((x) => x.n === n);
+    if (!it) return;
+    stopLive(it);
+    if (S.busy && it.status === "starting") S.busy = false;
+    S.items = S.items.filter((x) => x !== it);
+    draw();
+    el("#askQ")?.focus();
+  }
+  function clearAll() {
+    stopLive();
+    S.busy = false;
+    S.items = [];
+    draw();
+    el("#askQ")?.focus();
   }
 
   // ---------------------------------------------------------------- open/close and events
@@ -139,7 +163,7 @@ window.ATLASAsk = (() => {
     el("#askOpen")?.focus();
   }
   document.addEventListener("click", (e) => {
-    const b = e.target.closest("#askOpen,[data-askpanel],[data-askclose],[data-askscope],[data-askclearwiki],#askGo,[data-askcite]");
+    const b = e.target.closest("#askOpen,[data-askpanel],[data-askclose],[data-askscope],[data-askclearwiki],#askGo,[data-askcite],[data-askremove],[data-askclearall]");
     if (!b) return;
     if (b.id === "askOpen") return S.open ? close() : open();
     if (b.dataset.askpanel) return open({ panel: b.dataset.askpanel });
@@ -147,6 +171,8 @@ window.ATLASAsk = (() => {
     if (b.dataset.askscope) { S.scope = b.dataset.askscope; return draw(); }
     if (b.dataset.askclearwiki) { S.wiki = ""; S.noWiki = true; return draw(); }
     if (b.id === "askGo") return ask();
+    if (b.dataset.askremove) return remove(Number(b.dataset.askremove));
+    if (b.dataset.askclearall) return clearAll();
     if (b.dataset.askcite) {
       const [n, id] = b.dataset.askcite.split(":");
       const li = el(`#ask-${n}-${id}`);

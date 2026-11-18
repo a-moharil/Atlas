@@ -288,6 +288,7 @@ Every panel that lists articles or videos has its own search bar: Situation room
 - **Citations:** sources are numbered A1… (Atlas) and W1… (Wikipedia). The model must cite every sentence. Atlas removes citations to sources that don't exist and underlines sentences that cite nothing. Click a citation to see its source.
 - **If Ollama isn't running,** the drawer still lists the sources it found.
 - **Open in Google AI Mode** sends the question to Google in a new tab (`google.com/search?udm=50`). The answer stays in Google. A built-in Google answer (the Gemini API with Google Search) can be added later; it would need a Google AI Studio key.
+- **Clearing answers:** × on an answer removes just that one; *Clear all answers* empties the drawer. Removing an answer that is still being written stops it from being shown. Answers are kept only until the page is reloaded.
 - On wide screens the drawer sits beside the page; on narrow ones it covers it. Esc or *Close* closes it. Ctrl+Enter asks.
 
 ### 5.3a Geopolitics reel and the floating player

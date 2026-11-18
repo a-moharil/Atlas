@@ -580,3 +580,9 @@ body.askIsOpen .wkBody{grid-template-columns:1fr}
 body.askIsOpen .wkSide{position:static;max-height:none}
 body.askIsOpen #pageKicker,body.askIsOpen .topStatus .subitem{display:none}
 @media (max-width:1760px){body.askIsOpen .titleBox,body.askIsOpen #syncLabel{display:none}}
+
+/* v5.9.1 · Ask: remove answers */
+.askListHead{display:flex;justify-content:space-between;align-items:baseline;margin:-2px 0 -4px}
+.askItemHead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.askRemove{flex:none;width:26px;height:26px;margin:-4px -6px 0 0;display:grid;place-items:center;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:1.05rem;line-height:1;cursor:pointer}
+.askRemove:hover,.askRemove:focus-visible{color:var(--ink);border-color:var(--line-2);background:rgba(190,228,240,.06)}
