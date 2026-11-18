@@ -2,7 +2,7 @@
 
 **A local-first news and geopolitics dashboard for India and the world.**
 
-*To gather, distinguish and present honest accounts of the world.* By Samhitha Bhagavatula.
+*To gather, distinguish and present honest accounts of the world.* By Ambarish Moharil.
 
 In the Mahabharata, Sanjaya is charioteer to the blind king Dhritarashtra. Given divine sight by the sage Vyasa, he tells the king everything that happens at Kurukshetra, without bending the account to please him, and that honest telling moves the king to reflect on what has been done. This app is named in tribute to him and to the epic. *Why Sanjaya* in the app tells the story in full.
 

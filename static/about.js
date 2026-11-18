@@ -2,7 +2,7 @@
 /* Sanjaya v6.0 · Why Sanjaya: the motivation behind the app, and its author's signature.
    The text lives here so it can be edited without touching the rest of the app. */
 window.ATLASAbout = (() => {
-  const AUTHOR = "Samhitha Bhagavatula";
+  const AUTHOR = "Ambarish Moharil";
   const YEAR = "2026";
   function layout() {
     return `<article class="abPage">

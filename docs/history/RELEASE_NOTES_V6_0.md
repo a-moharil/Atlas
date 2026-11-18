@@ -3,7 +3,7 @@
 ## Atlas is now Sanjaya
 
 - Everything you see in the app is now called Sanjaya: browser title, sidebar, page text, messages, the README. The repository, folder, file names and code identifiers keep the name Atlas (`github.com/a-moharil/Atlas`, `atlas3.js`, `window.ATLAS`), so existing installs, branches and saved settings carry over unchanged.
-- **Signature:** the sidebar is signed "Sanjaya · by Samhitha Bhagavatula" and links to *Why Sanjaya*. The page footer carries the same credit.
+- **Signature:** the sidebar is signed "Sanjaya · by Ambarish Moharil" and links to *Why Sanjaya*. The page footer carries the same credit.
 
 ## Why Sanjaya (new page, System → Why Sanjaya)
 

@@ -104,7 +104,7 @@ class Name(unittest.TestCase):
         self.assertIn('/about.js', html)
         self.assertIn('/calibrate.js', html)
         about = (ROOT / 'static' / 'about.js').read_text(encoding='utf-8')
-        self.assertIn('Samhitha Bhagavatula', about)
+        self.assertIn('Ambarish Moharil', about)
         self.assertIn('kim akurvata sañjaya', about)
 
 
