@@ -7,6 +7,7 @@ window.ATLASAbout = (() => {
   function layout() {
     return `<article class="abPage">
       <header class="abHero">
+        <img class="abEmblem" src="/brand/sanjaya-emblem.png" alt="The Sanjaya emblem: an eye with a fine brushed brow, its reins drawn as circuit traces and its pupil as a network">
         <p class="abDeva" lang="sa">सञ्जय</p>
         <h1>Sanjaya</h1>
         <p class="abLine">To gather, distinguish and present honest accounts of the world.</p>
@@ -31,6 +32,15 @@ window.ATLASAbout = (() => {
 
         <h2>A note on our own blindness</h2>
         <p>Every reader is a little like Dhritarashtra. What we are attached to shapes what we want to hear. An app can't take that away. What it can do is show the whole field, say plainly where each account comes from, and leave the reflection to us. That is why you can recalibrate the left–right gauge yourself: your reading is yours to make, and Sanjaya will always mark it as yours and keep the published rating in view.</p>
+
+        <h2>The emblem</h2>
+        <p>The emblem joins the two things Sanjaya was: the charioteer who held the reins, and the one given the sight to see for someone else.</p>
+        <dl class="abParts">
+          <div><dt>The eye</dt><dd>Drawn in the manner of Indian painting, with a fine brushed brow and a long kohl line. It is a human eye, not a camera or a watchful symbol. It looks a little past you, out at the world, because its job is to see on your behalf, as Sanjaya saw for the king.</dd></div>
+          <div><dt>The reins</dt><dd>Drawn as circuit traces. They come in from the edge, from beyond the frame, the way accounts arrive from many places. They run taut and parallel; a charioteer's skill is restraint, keeping many lines steady without letting any pull the chariot off course. Some feed the eye. Others carry on past it, because an account is meant to be passed on.</dd></div>
+          <div><dt>The pupil</dt><dd>A network: many nodes, every one connected, all converging on a single amber centre. Many sources, held together, become one sight. The centre is the honest account; the nodes around it keep it honest. Read another way, the network is also a chariot wheel, turning in the charioteer's eye.</dd></div>
+          <div><dt>The balance</dt><dd>Heritage and the present in one figure: an ancient way of drawing the eye, built from today's means of gathering. The amber is the colour of lamplight on a manuscript; the deep blue-green is the night in which the account is told. Amber is also the colour Sanjaya uses for your own judgements, such as the lean ratings you set yourself.</dd></div>
+        </dl>
 
         <h2>Why the name</h2>
         <p>This app began as Atlas, and its code still carries that name. I renamed it Sanjaya as a tribute to the Mahabharata, which has taught me so much in my life, and to the idea at its heart that the person who tells you about the world owes you the truth, especially the parts you would rather not hear.</p>

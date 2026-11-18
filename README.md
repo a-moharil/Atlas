@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/sanjaya-emblem-transparent.png">
+    <img src="docs/brand/sanjaya-emblem-navy.png" width="520" alt="The Sanjaya emblem: an eye with a fine brushed brow, its reins drawn as circuit traces and its pupil as a network">
+  </picture>
+</p>
+
 # Sanjaya
 
 **A grounded news and geopolitics dashboard for India and the world.**
@@ -5,6 +12,8 @@
 *To gather, distinguish and present honest accounts of the world.* By Ambarish Moharil.
 
 In the Mahabharata, Sanjaya is charioteer to the blind king Dhritarashtra. Given divine sight by the sage Vyasa, he tells the king everything that happens at Kurukshetra, without bending the account to please him, and that honest telling moves the king to reflect on what has been done. This app is named in tribute to him and to the epic. *Why Sanjaya* in the app tells the story in full.
+
+**The emblem** joins the two things Sanjaya was: the charioteer who held the reins, and the one given sight to see for someone else. The eye is drawn in the manner of Indian painting, with a fine brushed brow, and looks a little past you, out at the world. The reins are circuit traces that come in from beyond the frame, as accounts arrive from many places, held taut and steady. The pupil is a network: many connected sources converging on one amber centre, the honest account. Read another way, it is also a chariot wheel. The logo files are in `docs/brand/` and `static/brand/`.
 
 > The app was first called Atlas. The repository, the folder and the code keep that name (`github.com/a-moharil/Atlas`, `atlas3.js`, `window.ATLAS`); only what you see in the app is called Sanjaya.
 
