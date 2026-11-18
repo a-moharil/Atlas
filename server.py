@@ -619,7 +619,7 @@ def _single(e):
     return pr
 
 
-WIKI_UA = 'Atlas/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
+WIKI_UA = 'Sanjaya/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
 
 
 def wiki_get(url, max_bytes=2_000_000):
@@ -909,10 +909,12 @@ def read_state():
     with closing(db_connect()) as con:lm_cfg=semantic.settings(con)
     meaning,grouping_mode,grouping_note=semantic.story_groups(entries,db_connect,lm_cfg)
     directory=publishers.enrich(entries,meaning)
+    for host in publishers.OVERRIDES:  # outlets you've calibrated, for the list of your ratings
+        if host not in directory:directory[host]=publishers.profile(host)
     for host in prefs:  # primary/blocked publishers always resolve to a full identity
         if host not in directory:directory[host]=publishers.profile(host)
     return dict(entries=entries, status=statuses, notes=notes, watch_terms=terms, video_audit=audit,
-                publishers=directory, source_prefs=prefs, wall_hidden=wall_hidden, publisher_method=publishers.DATA['method'],
+                publishers=directory, source_prefs=prefs, wall_hidden=wall_hidden, lean_overrides=publishers.OVERRIDES, publisher_method=publishers.DATA['method'],
                 grouping={'mode':grouping_mode,'note':grouping_note or ('Stories grouped by meaning with '+semantic.MODEL if grouping_mode=='meaning' else ''),'status':semantic.status().get('status')},
                 registry=dict(feeds=all_feed_configs(),channels=REGISTRY['channels'],research=REGISTRY['research']),
                 publisher_profiles=PROFILES, geo=atlas_plus.geo_state(db_connect),
@@ -1366,6 +1368,15 @@ class Handler(BaseHTTPRequestHandler):
                     con.commit()
                     hidden=[r[0] for r in con.execute('SELECT entry_id FROM wall_hidden ORDER BY created DESC LIMIT 20000')]
                 return self.send_payload({'ok':True,'wall_hidden':hidden})
+            if path == '/api/lean':
+                lean=data.get('lean')
+                lean='reset' if lean=='reset' else None if lean in (None,'none','') else lean
+                try:
+                    with closing(db_connect()) as con:
+                        overrides=publishers.set_lean(con,str(data.get('host',''))[:130],lean,str(data.get('note','')),utc_now())
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                _GRAPH_STATE['entries']=None
+                return self.send_payload({'ok':True,'lean_overrides':overrides})
             if path == '/api/source-pref':
                 with closing(db_connect()) as con:
                     publishers.set_pref(con,str(data.get('host',''))[:130],str(data.get('state','')),utc_now())

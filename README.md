@@ -1,12 +1,18 @@
-# Atlas
+# Sanjaya
 
 **A local-first news and geopolitics dashboard for India and the world.**
 
-Atlas collects reporting from around 290 feeds, including wires, broadcasters, Indian national and regional papers, ministries, think tanks and scholarly indexes. It shows who is covering a story, which side of the spectrum they lean, whether you can read them without a subscription, and what is happening on the planet: hazards, weather and climate anomalies.
+*To gather, distinguish and present honest accounts of the world.* By Samhitha Bhagavatula.
+
+In the Mahabharata, Sanjaya is charioteer to the blind king Dhritarashtra. Given divine sight by the sage Vyasa, he tells the king everything that happens at Kurukshetra, without bending the account to please him, and that honest telling moves the king to reflect on what has been done. This app is named in tribute to him and to the epic. *Why Sanjaya* in the app tells the story in full.
+
+> The app was first called Atlas. The repository, the folder and the code keep that name (`github.com/a-moharil/Atlas`, `atlas3.js`, `window.ATLAS`); only what you see in the app is called Sanjaya.
+
+Sanjaya collects reporting from around 290 feeds, including wires, broadcasters, Indian national and regional papers, ministries, think tanks and scholarly indexes. It shows who is covering a story, which side of the spectrum they lean, whether you can read them without a subscription, and what is happening on the planet: hazards, weather and climate anomalies.
 
 It runs entirely on your own computer. There is no account, no cloud service and no tracking. The core app needs nothing but Python. An optional small language model, which also runs locally, groups stories by meaning across English and Indian languages.
 
-> Atlas is a research and reading tool, not a news-verification or warning service. Bias and paywall labels describe publishers, not individual articles. Read the originals before drawing conclusions.
+> Sanjaya is a research and reading tool, not a news-verification or warning service. Bias and paywall labels describe publishers, not individual articles. Read the originals before drawing conclusions.
 
 ## Preview
 
@@ -25,12 +31,12 @@ It runs entirely on your own computer. There is no account, no cloud service and
 
 ## Contents
 
-1. [What Atlas does](#1-what-atlas-does)
+1. [What Sanjaya does](#1-what-atlas-does)
 2. [Quick start for experienced Python users](#2-quick-start-for-experienced-python-users)
 3. [Step-by-step install for people new to Python](#3-step-by-step-install-for-people-new-to-python)
 4. [Optional: grouping by meaning and generated labels](#4-optional-grouping-by-meaning-and-generated-labels)
-5. [Using Atlas day to day](#5-using-atlas-day-to-day)
-6. [How Atlas is built](#6-how-atlas-is-built)
+5. [Using Sanjaya day to day](#5-using-atlas-day-to-day)
+6. [How Sanjaya is built](#6-how-atlas-is-built)
 7. [The models, and why these ones](#7-the-models-and-why-these-ones)
 8. [How the judgements are made](#8-how-the-judgements-are-made)
 9. [Configuration reference](#9-configuration-reference)
@@ -44,7 +50,7 @@ It runs entirely on your own computer. There is no account, no cloud service and
 
 ---
 
-## 1. What Atlas does
+## 1. What Sanjaya does
 
 | Page | What you get |
 |---|---|
@@ -64,7 +70,7 @@ It runs entirely on your own computer. There is no account, no cloud service and
 
 Across the app:
 
-- **Every headline panel has a dice button.** It deals a different set of stories from everything Atlas holds.
+- **Every headline panel has a dice button.** It deals a different set of stories from everything Sanjaya holds.
 - **Every article can be removed from the wall.** You can undo a removal, and a removed article still counts in coverage statistics.
 - **Primary sources** you choose appear in a compact bar at the top of each desk. Click chips to show several outlets at once, use *Only* for one, or open the searchable list.
 - **Coverage graph** on the Situation room and every desk: the outlets on the page as a network, linked by the stories they share and by how similar their coverage is. **Diffuse** on any article spreads outward from it: its story and sources, related stories on any desk, and outlets that haven't covered it yet. **Search further** fetches more.
@@ -107,11 +113,11 @@ Useful environment variables: `OBS_DB` (database path), `OBS_REFRESH_SECONDS` (m
 
 ## 3. Step-by-step install for people new to Python
 
-You don't need to know how to program. You'll install one free program (Python), download Atlas, and double-click a file.
+You don't need to know how to program. You'll install one free program (Python), download Sanjaya, and double-click a file.
 
 ### 3.1 What is Python, and why do I need it?
 
-Python is a programming language. Atlas is written in it, so your computer needs the Python *interpreter*, the program that reads Atlas's code and runs it. Installing Python is like installing a PDF reader so your computer can open PDFs. Atlas then runs as a small web server **on your own computer**, and you use it in your normal browser at a local address that only your computer can see.
+Python is a programming language. Sanjaya is written in it, so your computer needs the Python *interpreter*, the program that reads Sanjaya's code and runs it. Installing Python is like installing a PDF reader so your computer can open PDFs. Sanjaya then runs as a small web server **on your own computer**, and you use it in your normal browser at a local address that only your computer can see.
 
 ### 3.2 Install Python
 
@@ -119,7 +125,7 @@ Python is a programming language. Atlas is written in it, so your computer needs
 
 1. Go to <https://www.python.org/downloads/> and click the yellow **Download Python 3.x** button.
 2. Open the downloaded installer.
-3. **Important:** on the first screen, tick **"Add python.exe to PATH"** at the bottom. This lets Atlas find Python.
+3. **Important:** on the first screen, tick **"Add python.exe to PATH"** at the bottom. This lets Sanjaya find Python.
 4. Click **Install Now** and wait for it to finish.
 5. Check it worked:
    1. Press the Windows key, type `PowerShell`, and press Enter.
@@ -143,16 +149,16 @@ Python is usually already installed. Check with `python3 --version`. If it's mis
 sudo apt update && sudo apt install python3 python3-venv python3-pip
 ```
 
-### 3.3 Download Atlas
+### 3.3 Download Sanjaya
 
 There are two ways:
 
-- **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Atlas`.
+- **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Sanjaya`.
 - **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
 
-### 3.4 Start Atlas
+### 3.4 Start Sanjaya
 
-- **Windows:** open the Atlas folder and double-click **`start_windows.bat`**. A black window opens and shows the browser address. **Leave that window open**, because it *is* Atlas. Closing it stops Atlas.
+- **Windows:** open the Atlas folder (the repository keeps its original name) and double-click **`start_windows.bat`**. A black window opens and shows the browser address. **Leave that window open**, because it *is* Sanjaya. Closing it stops Sanjaya.
 - **macOS or Linux:** in Terminal, go into the folder and start it:
 
   ```bash
@@ -167,15 +173,15 @@ Now open your browser at **<http://127.0.0.1:8765/>**. `127.0.0.1` means "this c
 ### 3.5 What to expect the first time
 
 - The first collection takes **a few minutes**. Desks fill in as feeds respond, and the left sidebar shows *Server connected* and the collection progress.
-- Atlas creates a file called `observatory.sqlite3` in its folder. This is **your database**: every article collected, your source choices and your settings. Keep it. Copy it into a new version of Atlas to carry your history over.
-- To **stop** Atlas, close the black window (Windows) or press **Ctrl+C** in the Terminal.
+- Sanjaya creates a file called `observatory.sqlite3` in its folder. This is **your database**: every article collected, your source choices and your settings. Keep it. Copy it into a new version of Sanjaya to carry your history over.
+- To **stop** Sanjaya, close the black window (Windows) or press **Ctrl+C** in the Terminal.
 - To **start** it again, repeat 3.4. Everything you collected is still there.
 
 ---
 
 ## 4. Optional: grouping by meaning and generated labels
 
-Without these, Atlas groups stories by **shared headline keywords**, and that works. With them, it groups by **meaning**: "RBI holds repo rate" and "Reserve Bank keeps policy rate unchanged" become one story even though they share almost no words. This also works across English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Urdu and 40+ other languages.
+Without these, Sanjaya groups stories by **shared headline keywords**, and that works. With them, it groups by **meaning**: "RBI holds repo rate" and "Reserve Bank keeps policy rate unchanged" become one story even though they share almost no words. This also works across English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Urdu and 40+ other languages.
 
 ### 4.1 Grouping by meaning (recommended)
 
@@ -188,9 +194,9 @@ The installer:
 2. downloads a ~220 MB multilingual model into the `model_cache` folder;
 3. prints `Model ready: 384 dimensions`.
 
-After that it works **offline**. Restart Atlas. The top bar switches from **Keyword mode** to **Grouped by meaning** once most recent articles have been processed. That takes a minute or two the first time, and then happens quietly after each collection.
+After that it works **offline**. Restart Sanjaya. The top bar switches from **Keyword mode** to **Grouped by meaning** once most recent articles have been processed. That takes a minute or two the first time, and then happens quietly after each collection.
 
-> *Experienced users:* install into a virtual environment if you prefer: `python -m venv .venv`, activate it, then `pip install -r requirements-lm.txt`. Start Atlas with the same interpreter.
+> *Experienced users:* install into a virtual environment if you prefer: `python -m venv .venv`, activate it, then `pip install -r requirements-lm.txt`. Start Sanjaya with the same interpreter.
 
 ### 4.2 Generated labels and summaries (optional, off by default)
 
@@ -198,7 +204,7 @@ A second, slightly larger model can write a short neutral label, a one-to-two-se
 
 1. Install **Ollama** from <https://ollama.com/download> and leave it running. It is a small background app that runs language models locally.
 2. In PowerShell or Terminal, run `ollama pull qwen2.5:1.5b`. The download is about 1 GB.
-3. In Atlas, open **System → Language model**, tick **Write labels and summaries**, click **Check Ollama**, then click **Write labels now**.
+3. In Sanjaya, open **System → Language model**, tick **Write labels and summaries**, click **Check Ollama**, then click **Write labels now**.
 
 Everything written this way is tagged **Generated** and names the model that wrote it.
 
@@ -213,19 +219,29 @@ The default (0.72) is a starting point. Check it against a day or two of your ow
 
 ---
 
-## 5. Using Atlas day to day
+## 5. Using Sanjaya day to day
 
 ### 5.1 Reading a story card
 
 - **Masthead:** the publisher's logo and name in a typeface close to their own.
 - **Tags:** age, bias rating, and factual rating where a rater covers the outlet.
-- **Coverage gauge:** a half donut showing the share of **left, centre and right-leaning outlets** covering the same story in Atlas. The needle is this publisher's own rating. "by meaning" or "by keywords" says how the story was grouped.
+- **Coverage gauge:** a half donut showing the share of **left, centre and right-leaning outlets** covering the same story in Sanjaya. The needle is this publisher's own rating. "by meaning" or "by keywords" says how the story was grouped.
 - **Access tag:** *Free*, *Free with registration*, *Metered*, *Mostly free* or *Subscription*. Articles the publisher marks as premium are flagged individually.
 - **Compare coverage:** opens a drawer with the same story from other outlets. With the language model installed, each match shows a "% match".
 
+### 5.1a Calibrating the left–right gauge
+
+The lean labels come from Media Bias/Fact Check and AllSides and describe outlets, not articles. If you read an outlet differently, you can place it yourself.
+
+- **Click the lean label on any card**, for example *Lean Left*, or *Not rated* on outlets the raters don't cover. Choose Left, Lean left, Centre, Lean right or Right, or *Not rated* to keep the outlet off both sides. You can add a note for yourself.
+- **Your rating replaces the published one everywhere** in Sanjaya on this computer: card labels, the gauges' arcs and needles, *Political spread*, the coverage graph and the diffusion view.
+- **It is always marked.** Cards show the label with *yours* and a dashed outline; hovering shows the published rating. The calibration dialog always shows the published rating and the raters.
+- **Undo:** *Use the published rating* in the dialog. *Reading the gauge* (on every desk) lists *Your lean ratings*, where each can be changed or reset, or all reset at once.
+- Ratings are stored in your database (table `lean_overrides`), so they survive updates and stay on your computer.
+
 ### 5.2 Shaping the walls
 
-- **Dice:** deals a different set of headlines in that panel, drawn from everything Atlas holds that matches your filters. The order holds through background refreshes. *Usual order* restores the normal ranking.
+- **Dice:** deals a different set of headlines in that panel, drawn from everything Sanjaya holds that matches your filters. The order holds through background refreshes. *Usual order* restores the normal ranking.
 - **Remove (×):** removes an article from the walls. Syndicated copies of the same headline go with it, and in the newsroom the whole story card goes. *Undo* appears for 7 seconds, and *N removed · Restore all* brings everything back.
 - **Sources page:**
   - Mark outlets as **Primary**: logo chips at the top of each desk, plus a *Primary first* toggle.
@@ -269,23 +285,23 @@ Every panel that lists articles or videos has its own search bar: Situation room
   - *Meaning*: similarity in the local multilingual model's space. Finds articles worded differently or in other languages.
   - *Keywords*: BM25 ranking over headline (counted twice), excerpt and outlet.
 - Each result says why it matched: the words it contains and how similar it is in meaning.
-- **Nothing held matches?** Atlas searches Google News for the query (one search per comma-separated topic, last 7 days), files the articles under that panel's desk as *Search further*, and searches again. Articles Google returned that are worded differently appear under *Also returned by Google News*. With only a few matches, *Fetch articles about this from the web* does the same on request. The video panels and *Academic research* can't fetch: videos only come from followed channels, and papers come through Research radar.
+- **Nothing held matches?** Sanjaya searches Google News for the query (one search per comma-separated topic, last 7 days), files the articles under that panel's desk as *Search further*, and searches again. Articles Google returned that are worded differently appear under *Also returned by Google News*. With only a few matches, *Fetch articles about this from the web* does the same on request. The video panels and *Academic research* can't fetch: videos only come from followed channels, and papers come through Research radar.
 - The search stays in place when the page refreshes. Esc or *Clear search* brings back the panel's own list.
 
 ### 5.2b Wikipedia and the Ask drawer
 
-**Wikipedia** (Research → *Wikipedia*) searches English Wikipedia and opens articles inside Atlas.
+**Wikipedia** (Research → *Wikipedia*) searches English Wikipedia and opens articles inside Sanjaya.
 
-- Links between articles stay in Atlas; *Back* returns to the previous article. *Open on Wikipedia* opens the original.
+- Links between articles stay in Sanjaya; *Back* returns to the previous article. *Open on Wikipedia* opens the original.
 - Pages you've read are saved and stay readable offline.
-- **Held in Atlas**, beside the article, lists the news and research articles Atlas holds on the same topic. It searches for the title and any names the article's opening puts in bold, such as *IAEA*.
+- **Held in Sanjaya**, beside the article, lists the news and research articles Sanjaya holds on the same topic. It searches for the title and any names the article's opening puts in bold, such as *IAEA*.
 - Articles are cleaned before display: no scripts, styles or tracking; Wikipedia's edit links and navigation boxes are removed. Text is under CC BY-SA 4.0.
 
 **Ask** (the *Ask* button in the top bar, or *Ask* inside any panel's search bar) opens a drawer that answers questions in plain English.
 
-- **What it uses:** articles Atlas holds, either the panel you're on (*This panel*) or *Everything in Atlas*, plus the Wikipedia page you're reading (shown as a chip; × leaves it out). Atlas finds up to eight articles (at most two per outlet) and up to five Wikipedia passages with the same meaning-and-keyword search as the panel bars.
+- **What it uses:** articles Sanjaya holds, either the panel you're on (*This panel*) or *Everything in Sanjaya*, plus the Wikipedia page you're reading (shown as a chip; × leaves it out). Sanjaya finds up to eight articles (at most two per outlet) and up to five Wikipedia passages with the same meaning-and-keyword search as the panel bars.
 - **Who writes it:** your local Ollama model, the same one used for story labels (*Language model* page; you can pick another installed model in the drawer). Nothing leaves your computer.
-- **Citations:** sources are numbered A1… (Atlas) and W1… (Wikipedia). The model must cite every sentence. Atlas removes citations to sources that don't exist and underlines sentences that cite nothing. Click a citation to see its source.
+- **Citations:** sources are numbered A1… (Sanjaya) and W1… (Wikipedia). The model must cite every sentence. Sanjaya removes citations to sources that don't exist and underlines sentences that cite nothing. Click a citation to see its source.
 - **If Ollama isn't running,** the drawer still lists the sources it found.
 - **Open in Google AI Mode** sends the question to Google in a new tab (`google.com/search?udm=50`). The answer stays in Google. A built-in Google answer (the Gemini API with Google Search) can be added later; it would need a Google AI Studio key.
 - **Clearing answers:** × on an answer removes just that one; *Clear all answers* empties the drawer. Removing an answer that is still being written stops it from being shown. Answers are kept only until the page is reloaded.
@@ -298,7 +314,7 @@ The **Geopolitics reel** on *Live TV and video* plays recent news videos from in
 - **What it plays:** uploads from the last 24 hours, news only. Shorts, sport, entertainment and lifestyle are left out. *Geopolitics* (the default) keeps videos whose titles name conflicts, diplomacy, sanctions, summits, elections or the countries and leaders involved; *All news* keeps every news video. Channels take turns, so one broadcaster can't fill the reel.
 - **Playing:** videos start muted, because browsers block autoplay with sound. Unmute in the player and later videos stay unmuted. *Next video after* sets how long each video plays (1, 3 or 5 minutes, or until it ends).
 - **Stop circulating** holds the current video; *Resume circulating* carries on. *Previous*, *Next* and the *Up next* list move by hand; *Remove* takes a video out of the reel.
-- **Videos that won't play:** if YouTube refuses a video in your browser (removed, embedding switched off, or blocked in your region), the reel skips it and Atlas doesn't offer it again for a week.
+- **Videos that won't play:** if YouTube refuses a video in your browser (removed, embedding switched off, or blocked in your region), the reel skips it and Sanjaya doesn't offer it again for a week.
 - **Checking the channels:** `python tools/check_geo_channels.py` prints the name YouTube reports for each channel and how many uploads it had in the last 24 hours. The list lives under `geo_reel` in `source_registry.json`.
 
 **The floating player** (any video or live stream you open) can be:
@@ -308,11 +324,11 @@ The **Geopolitics reel** on *Live TV and video* plays recent news videos from in
 - **maximised** with the square button or a double-click on the title bar (Esc restores it);
 - **put into full screen** with the corner button (Esc or the same button exits).
 
-When YouTube shows *This video is unavailable*, Atlas now notices. For a live stream it asks for a fresh live check and tries the channel's current live stream; if that fails too, it says why and offers *Watch on YouTube*.
+When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live stream it asks for a fresh live check and tries the channel's current live stream; if that fails too, it says why and offers *Watch on YouTube*.
 
 ### 5.4 Research radar
 
-The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Atlas looks each one up on arXiv, Crossref or OpenAlex.
+The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Sanjaya looks each one up on arXiv, Crossref or OpenAlex.
 
 - **Where papers come from** (all open, no account needed):
   - **Watch phrases:** extracted automatically from your papers, such as *pipeline synthesis*, *training dynamics* or *issue trackers*. You can add or remove phrases under **Your papers**.
@@ -320,7 +336,7 @@ The radar ranks new research against **your papers**, a list you control under *
   - **arXiv daily listings:** each category's daily RSS feed, the broad view behind Themes.
   - **Hugging Face:** the daily papers list (with upvotes) and paper search for your phrases.
   - **OpenAlex:** journals and proceedings for your phrases. It works without a key on a small daily allowance; a free key from openalex.org raises it tenfold and can be pasted under **Your papers → Sources**.
-  - **Refreshing:** papers appear as each query returns, and the sources keep refreshing in the background while Atlas runs. arXiv publishes once a day (Sunday to Thursday evenings, US Eastern time), so new arXiv papers arrive once a day however often Atlas checks.
+  - **Refreshing:** papers appear as each query returns, and the sources keep refreshing in the background while Sanjaya runs. arXiv publishes once a day (Sunday to Thursday evenings, US Eastern time), so new arXiv papers arrive once a day however often Sanjaya checks.
 - **For you:** the papers sorted into five lanes: AutoML and pipeline synthesis, training dynamics and diagnostics, transformers and representations, software engineering for ML, and data-centric ML.
   - Each paper shows a "% match" to your closest paper and names it.
   - The dice and Remove work as on the news walls.
@@ -331,7 +347,7 @@ The radar ranks new research against **your papers**, a list you control under *
   - **Filters:** lane, category, source, minimum match, saved or not, and on Hugging Face daily papers.
 - **Vanschoren and AMOR/e:** papers with Joaquin Vanschoren as an author, from arXiv and OpenAlex. Names of current AMOR/e members are highlighted.
 - **Themes:** the period's papers grouped by meaning into topics, labelled with phrases the papers share.
-- **Related-work check:** paste an abstract or a draft paragraph. Atlas returns the closest papers it holds, plus older work from an OpenAlex search re-ranked on your computer. Only the search phrases are sent to OpenAlex.
+- **Related-work check:** paste an abstract or a draft paragraph. Sanjaya returns the closest papers it holds, plus older work from an OpenAlex search re-ranked on your computer. Only the search phrases are sent to OpenAlex.
 - **Benchmarks and datasets:** the newest OpenML datasets and tasks, and trending Hugging Face models. Radar papers that are on Hugging Face's daily papers list show their upvotes.
 - **Deadlines:** upcoming paper deadlines, rebuttals and decisions for NeurIPS, ICML, ICLR, KDD, ICSE and MSR, converted to your time zone. The AutoML Conference isn't in the open dataset, so it links to its official site.
 - **Reading queue:** save papers, mark them *to read*, *reading* or *read*, keep notes, and export all or selected papers as BibTeX.
@@ -339,7 +355,7 @@ The radar ranks new research against **your papers**, a list you control under *
 
 Lanes, arXiv categories, the traced lab, the conferences and query sizes are set in `radar_config.json`.
 
-**Checking the sources.** **Your papers → Sources → Test sources** sends one small request to each source. Outside Atlas, `python tools/check_radar_sources.py` does the same and prints which sources answer from your network.
+**Checking the sources.** **Your papers → Sources → Test sources** sends one small request to each source. Outside Sanjaya, `python tools/check_radar_sources.py` does the same and prints which sources answer from your network.
 
 ### 5.5 Keeping your data
 
@@ -351,12 +367,12 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
 
 ### 5.6 Updating
 
-- **If you used `git clone`:** stop Atlas, run `git pull`, and start it again.
+- **If you used `git clone`:** stop Sanjaya, run `git pull`, and start it again.
 - **If you downloaded a ZIP:** download the new ZIP, extract it to a new folder, then copy `observatory.sqlite3` (and `model_cache/`) from the old folder into it.
 
 ---
 
-## 6. How Atlas is built
+## 6. How Sanjaya is built
 
 ### 6.1 Design principles
 
@@ -364,7 +380,7 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
 2. **Standard library only for the core.** The server, the feed parser, the scheduler and the database layer use only Python's standard library, so installation is "install Python, run a file". Optional features (the language model) are optional dependencies that degrade cleanly when they're missing.
 3. **Say where everything comes from.** Every rating, map layer and hazard names its provider. Nothing is presented as more certain than its source.
 4. **Fail visibly, never silently.** A missing model shows *Keyword mode*. A failed feed shows in the coverage audit. A page that cannot draw shows an explanation instead of going blank.
-5. **No invented content.** Atlas never writes headlines. Generated labels are opt-in, marked, and built only from text Atlas already holds.
+5. **No invented content.** Sanjaya never writes headlines. Generated labels are opt-in, marked, and built only from text Sanjaya already holds.
 
 ### 6.2 Architecture
 
@@ -407,7 +423,7 @@ The goal is something a non-programmer can run by double-clicking, and a program
 
 ## 7. The models, and why these ones
 
-Atlas uses two optional local models for different jobs. **Neither is required, and neither sends data anywhere.**
+Sanjaya uses two optional local models for different jobs. **Neither is required, and neither sends data anywhere.**
 
 ### 7.1 Embedding model: grouping by meaning
 
@@ -419,7 +435,7 @@ Atlas uses two optional local models for different jobs. **Neither is required, 
 | Languages | 50+, including Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati and Urdu |
 | Licence | Apache-2.0 |
 
-**What it does.** It turns each headline (minus the trailing "– Publisher") plus the start of its excerpt into a vector, a list of 384 numbers. Headlines with similar meaning get vectors pointing in similar directions, and Atlas compares them with cosine similarity. Vectors are computed **once per article** and stored in SQLite, so the work is incremental.
+**What it does.** It turns each headline (minus the trailing "– Publisher") plus the start of its excerpt into a vector, a list of 384 numbers. Headlines with similar meaning get vectors pointing in similar directions, and Sanjaya compares them with cosine similarity. Vectors are computed **once per article** and stored in SQLite, so the work is incremental.
 
 **Why this model:**
 
@@ -441,7 +457,7 @@ Where it's used:
 - **Emergency newsroom:** each new item is matched to the nearest existing story.
 - **Compare coverage:** nearest articles within 7 days, above a similarity floor.
 
-**Fallback.** If the package is missing, the model is loading, or fewer than 60% of recent articles have vectors, Atlas uses keyword overlap and **says so** ("Keyword mode"). Mixed cases are labelled per story.
+**Fallback.** If the package is missing, the model is loading, or fewer than 60% of recent articles have vectors, Sanjaya uses keyword overlap and **says so** ("Keyword mode"). Mixed cases are labelled per story.
 
 ### 7.2 Generative model: labels and summaries
 
@@ -451,12 +467,12 @@ Where it's used:
 | Alternatives in the menu | `qwen2.5:3b`, `llama3.2:3b`, `gemma2:2b` |
 | Settings | temperature 0.2, at most ~220 output tokens, 2,048-token context, JSON output |
 
-**What it does.** For the top multi-outlet newsroom stories, it reads **only the headlines and excerpts Atlas already holds** for that story and returns JSON with a neutral `label`, a one-to-two-sentence `summary`, and a `differences` note on how outlets frame it. Results are cached per story (keyed by a hash of the member articles), so a story is only re-labelled when its membership changes.
+**What it does.** For the top multi-outlet newsroom stories, it reads **only the headlines and excerpts Sanjaya already holds** for that story and returns JSON with a neutral `label`, a one-to-two-sentence `summary`, and a `differences` note on how outlets frame it. Results are cached per story (keyed by a hash of the member articles), so a story is only re-labelled when its membership changes.
 
 **Why this model and setup:**
 
 - **Size:** a 1.5B-parameter model is about 1 GB and writes a label in a few seconds on a laptop processor. It is good at short, constrained summarisation. The 3B models write better, at roughly twice the time.
-- **Why Ollama:** it's one installer on every OS, it manages model downloads, and it exposes a simple local HTTP API. Atlas talks to it with `urllib` from the standard library, so no extra Python dependency is needed.
+- **Why Ollama:** it's one installer on every OS, it manages model downloads, and it exposes a simple local HTTP API. Sanjaya talks to it with `urllib` from the standard library, so no extra Python dependency is needed.
 - **Guardrails:**
   - Low temperature and forced JSON output.
   - A prompt that forbids adding facts.
@@ -527,7 +543,7 @@ A YouTube video is listed only after YouTube confirms it is public and embeddabl
 
 ### 8.5 Maps
 
-India's boundary and states come from the **Survey of India** maps distributed by the DataMeet community, so India's outline is the officially recognised one on every basemap. Basemap tiles from other providers keep their own conventions; Atlas overlays the official boundary on them.
+India's boundary and states come from the **Survey of India** maps distributed by the DataMeet community, so India's outline is the officially recognised one on every basemap. Basemap tiles from other providers keep their own conventions; Sanjaya overlays the official boundary on them.
 
 ---
 
@@ -546,7 +562,7 @@ India's boundary and states come from the **Survey of India** maps distributed b
 
 Language model settings (strictness, time window, labels on/off, Ollama model) are set in the app and stored in the database.
 
-**Adding or changing feeds:** edit `source_registry.json`. Each feed has an `id`, `name`, `url`, `desk`, `tier`, `region` and optional `local_state` or `local_city`. Restart Atlas afterwards.
+**Adding or changing feeds:** edit `source_registry.json`. Each feed has an `id`, `name`, `url`, `desk`, `tier`, `region` and optional `local_state` or `local_city`. Restart Sanjaya afterwards.
 
 ---
 
@@ -567,7 +583,7 @@ pip install playwright && python -m playwright install chromium
 
 The language model tests use a stand-in for Ollama. They don't need the real model.
 
-**Updating the screenshots.** With Atlas running and some news collected, run `pip install playwright` then `python tools/take_screenshots.py`. It uses Microsoft Edge or Google Chrome, captures every page into `docs/screenshots/`, and rewrites `docs/SCREENSHOTS.md`.
+**Updating the screenshots.** With Sanjaya running and some news collected, run `pip install playwright` then `python tools/take_screenshots.py`. It uses Microsoft Edge or Google Chrome, captures every page into `docs/screenshots/`, and rewrites `docs/SCREENSHOTS.md`.
 
 ---
 
@@ -586,6 +602,7 @@ atlas/
 ├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
 ├─ find.py                 panel search: query syntax, BM25 keywords, meaning blend, web queries
 ├─ wiki.py                 Wikipedia: search, cleaned article HTML, offline cache, passages
+├─ (static/calibrate.js)  your lean calibration; (static/about.js) the Why Sanjaya page
 ├─ ask.py                  Ask drawer: retrieval, cited prompt, local Ollama answers, citation check
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
 ├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
@@ -594,7 +611,7 @@ atlas/
 ├─ retrieval_jobs.py       cached background jobs for slow providers
 ├─ video_check.py, logos.py, mygov.py, conflict_watch.py, expert_research.py,
 │  india_intel.py, article_clusters.py, atlas_plus.py, atlas_v3.py, analysis_api.py
-├─ migrate_database.py     copy history from an older Atlas database
+├─ migrate_database.py     copy history from an older Sanjaya database
 ├─ install_language_model.(bat|sh), requirements-lm.txt
 ├─ start_windows.bat, start_linux_macos.sh, Dockerfile, compose.yaml
 ├─ static/                 front end (HTML, CSS, JS modules, fonts, map data)
@@ -611,8 +628,8 @@ atlas/
 | Symptom | What to do |
 |---|---|
 | `python` is not recognised (Windows) | Reinstall Python with **Add python.exe to PATH** ticked, or turn off the Store aliases (3.2). |
-| The browser says it can't connect | Is the black window (or Terminal) still open? Atlas only runs while it is. Check the port in the window. |
-| `Address already in use` | Atlas is already running, or another app uses 8765. Close it, or run `python server.py --port 8800`. |
+| The browser says it can't connect | Is the black window (or Terminal) still open? Sanjaya only runs while it is. Check the port in the window. |
+| `Address already in use` | Sanjaya is already running, or another app uses 8765. Close it, or run `python server.py --port 8800`. |
 | Desks stay empty | Wait for the first collection. Then check **Coverage audit** for failing feeds, and check that your network allows RSS and Google News. |
 | Top bar says *Keyword mode* | The model pack isn't installed, is still loading, or is still processing. See **System → Language model** for the exact reason. |
 | *Check Ollama* fails | Make sure the Ollama app is running and `ollama list` shows the model you selected. |
@@ -625,7 +642,7 @@ atlas/
 
 ## 13. Privacy and security
 
-- Atlas binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
+- Sanjaya binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
 - Outbound requests go only to the feeds and data providers listed in this README and in `source_registry.json`, plus Ollama on your own machine if you enable labels.
 - No analytics or telemetry. Your reading, removals, blocks and settings stay in `observatory.sqlite3`, which is excluded from Git.
 - The optional cloud analysis (7.5) is the only feature that can send text off your machine. It is inactive without an API key you provide.
@@ -640,13 +657,13 @@ atlas/
 - **Grouping:** grouping by meaning can still occasionally join separate events or split one. The borderline-pairs view exists to help you calibrate.
 - **Generated labels:** small local models can make mistakes. Labels are aids for scanning, not summaries to cite.
 - **Earth watch:** hazard and climate data depend on provider uptime and update schedules.
-- **Single user:** Atlas is designed for one reader on one machine.
+- **Single user:** Sanjaya is designed for one reader on one machine.
 
 ---
 
 ## 15. Data sources and credits
 
-- **News:** content belongs to the respective publishers. Atlas stores headlines, links and the short excerpts that feeds publish, and always links to the original.
+- **News:** content belongs to the respective publishers. Sanjaya stores headlines, links and the short excerpts that feeds publish, and always links to the original.
 - **Bias ratings:** [Media Bias/Fact Check](https://mediabiasfactcheck.com) and [AllSides](https://www.allsides.com), credited per outlet in the Sources page.
 - **Hazards and climate:**
   - [GDACS](https://www.gdacs.org)
@@ -678,10 +695,10 @@ atlas/
 - **Models:** `paraphrase-multilingual-MiniLM-L12-v2` by the sentence-transformers authors (Apache-2.0), run through Qdrant's fastembed. Optional Qwen2.5 by Alibaba Cloud, served by Ollama, under the model's own licence.
 - **Research archive:** `static/CCC_June_2025.pdf` is the original Continental Convergence Charter manuscript, kept as a static archive.
 
-Provider terms apply to their data. If you redistribute Atlas or run it for others, check each provider's terms for your use.
+Provider terms apply to their data. If you redistribute Sanjaya or run it for others, check each provider's terms for your use.
 
 ---
 
 ## 16. Licence
 
-The Atlas source code is released under the [MIT License](LICENSE). Third-party data, ratings, fonts and models remain under their own licences, listed above.
+The Sanjaya source code is released under the [MIT License](LICENSE). Third-party data, ratings, fonts and models remain under their own licences, listed above.

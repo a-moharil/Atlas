@@ -1,6 +1,6 @@
 "use strict";
-/* Atlas v5.9 · Ask drawer, reachable from every page.
-   Answers come from the local Ollama model, using only articles Atlas holds (the panel
+/* Sanjaya v5.9 · Ask drawer, reachable from every page.
+   Answers come from the local Ollama model, using only articles Sanjaya holds (the panel
    you're on, or everything) and the open Wikipedia page. Every sentence cites its source;
    sentences without one are marked. "Open in Google AI Mode" sends the question to Google
    in a new tab instead. */
@@ -25,18 +25,18 @@ window.ATLASAsk = (() => {
     d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Ask");
     document.body.appendChild(d);
     const top = document.querySelector(".topActions");
-    if (top && !el("#askOpen")) top.insertAdjacentHTML("afterbegin", `<button id="askOpen" class="action askOpen" aria-haspopup="dialog" title="Ask a question about what Atlas holds"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 16 14.5H9l-4 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z"/><path d="M8 8.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.3M10 12.6v.1"/></svg>Ask</button>`);
+    if (top && !el("#askOpen")) top.insertAdjacentHTML("afterbegin", `<button id="askOpen" class="action askOpen" aria-haspopup="dialog" title="Ask a question about what Sanjaya holds"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 16 14.5H9l-4 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z"/><path d="M8 8.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.3M10 12.6v.1"/></svg>Ask</button>`);
   }
   function draw() {
     const d = el("#askDrawer");
     if (!d) return;
     const c = context();
-    const scopeText = S.scope === "panel" && c.p ? `${c.label}` : "everything Atlas holds";
+    const scopeText = S.scope === "panel" && c.p ? `${c.label}` : "everything Sanjaya holds";
     d.innerHTML = `<header class="askHead"><div><h2>Ask</h2><p class="fine">Answers from ${esc(scopeText)}${c.wikiTitle ? ` and the Wikipedia page “${esc(c.wikiTitle)}”` : ""}, written by your local model. Every sentence cites its source.</p></div>
         <button class="action" data-askclose="1" aria-label="Close">Close</button></header>
       <div class="askScope" role="radiogroup" aria-label="What to search">
         ${c.p ? `<button role="radio" aria-checked="${S.scope === "panel"}" class="${S.scope === "panel" ? "on" : ""}" data-askscope="panel">This panel</button>` : ""}
-        <button role="radio" aria-checked="${S.scope !== "panel" || !c.p}" class="${S.scope !== "panel" || !c.p ? "on" : ""}" data-askscope="all">Everything in Atlas</button>
+        <button role="radio" aria-checked="${S.scope !== "panel" || !c.p}" class="${S.scope !== "panel" || !c.p ? "on" : ""}" data-askscope="all">Everything in Sanjaya</button>
         ${c.wikiTitle ? `<span class="askChip">+ Wikipedia: ${esc(c.wikiTitle)} <button data-askclearwiki="1" aria-label="Don't use this Wikipedia page">×</button></span>` : ""}
       </div>
       <form class="askForm" onsubmit="return false"><textarea id="askQ" rows="3" placeholder="For example: what are outlets reporting about the Red Sea shipping attacks?" aria-label="Your question"></textarea>
@@ -49,7 +49,7 @@ window.ATLASAsk = (() => {
   function modelLine() {
     const m = S.models;
     if (!m) return "Checking Ollama…";
-    if (m.status === "offline") return `Ollama isn't running, so Atlas can only list sources. ${esc(m.detail || "")}`;
+    if (m.status === "offline") return `Ollama isn't running, so Sanjaya can only list sources. ${esc(m.detail || "")}`;
     const opts = [...new Set([m.model, ...(m.models || [])])];
     return `Model <select id="askModelSel" aria-label="Local model">${opts.map((x) => `<option ${x === m.model ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>${m.status === "model_missing" ? ` <span class="askWarn">not installed: run <code>ollama pull ${esc(m.model)}</code></span>` : ""}`;
   }
@@ -72,11 +72,11 @@ window.ATLASAsk = (() => {
     if (it.status === "writing" || it.status === "starting") body = `<div class="askAnswer">${withCites(it, it.text || "")}<span class="askCaret" aria-hidden="true"></span></div>`;
     else if (it.status === "done") body = `<div class="askAnswer">${(it.sentences || []).map((s) => `<span class="${s.cites.length ? "" : "askUncited"}" ${s.cites.length ? "" : 'title="No source cited for this sentence"'}>${withCites(it, s.text)}</span> `).join("")}</div>
         ${(it.sentences || []).some((s) => !s.cites.length) ? `<p class="fine askNote">Underlined sentences cite no source. Treat them with care.</p>` : ""}`;
-    else if (it.status === "no_model") body = `<p class="fine askNote">Ollama isn't available (${esc(it.error || "")}). These are the sources Atlas would have used.</p>`;
-    else if (it.status === "no_sources") body = `<p class="fine askNote">Atlas holds nothing that matches this question${it.scopeLabel ? ` in ${esc(it.scopeLabel)}` : ""}. Try “Everything in Atlas”, search a desk to fetch articles from the web, or open Google AI Mode.</p>`;
+    else if (it.status === "no_model") body = `<p class="fine askNote">Ollama isn't available (${esc(it.error || "")}). These are the sources Sanjaya would have used.</p>`;
+    else if (it.status === "no_sources") body = `<p class="fine askNote">Sanjaya holds nothing that matches this question${it.scopeLabel ? ` in ${esc(it.scopeLabel)}` : ""}. Try “Everything in Sanjaya”, search a desk to fetch articles from the web, or open Google AI Mode.</p>`;
     else body = `<p class="fine askNote askErr">${esc(it.error || "Something went wrong.")}</p>`;
     const a = it.sources?.atlas || [], w = it.sources?.wikipedia || [];
-    const src = a.length || w.length ? `<details class="askSources" ${it.status === "no_model" ? "open" : ""}><summary>Sources: ${a.length} from Atlas${w.length ? `, ${w.length} from Wikipedia` : ""}</summary><ol>
+    const src = a.length || w.length ? `<details class="askSources" ${it.status === "no_model" ? "open" : ""}><summary>Sources: ${a.length} from Sanjaya${w.length ? `, ${w.length} from Wikipedia` : ""}</summary><ol>
         ${a.map((s, i) => `<li id="ask-${it.n}-A${i + 1}"><b>A${i + 1}</b> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a><small class="fine">${esc(s.outlet)} · ${esc(A().ago(s.published))}</small></li>`).join("")}
         ${w.map((s, i) => `<li id="ask-${it.n}-W${i + 1}"><b>W${i + 1}</b> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.page)}</a><small class="fine">Wikipedia · ${esc(s.section)}</small><span class="askPassage">${esc(s.text.slice(0, 260))}…</span></li>`).join("")}</ol></details>` : "";
     return `<article class="askItem" data-askn="${it.n}"><div class="askItemHead"><h3>${esc(it.question)}</h3><button class="askRemove" data-askremove="${it.n}" title="Remove this answer" aria-label="Remove this answer: ${esc(it.question)}">×</button></div><p class="fine askMeta">${esc(it.model || "")}${it.mode ? ` · sources found by ${it.mode === "both" ? "meaning and keywords" : "keywords"}` : ""}${it.searched ? ` in ${it.searched.toLocaleString()} articles` : ""}</p>${body}${src}</article>`;

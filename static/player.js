@@ -1,6 +1,6 @@
 "use strict";
-/* Atlas v5.7 · YouTube player helpers and the floating player.
-   - Talks to YouTube embeds through the IFrame API's postMessage channel, so Atlas
+/* Sanjaya v5.7 · YouTube player helpers and the floating player.
+   - Talks to YouTube embeds through the IFrame API's postMessage channel, so Sanjaya
      learns when a video won't play ("This video is unavailable") and can react.
    - The floating player can be dragged by its title bar, resized from its corner,
      maximised (button or double-click) and put into full screen. */
@@ -99,7 +99,7 @@ window.ATLASPlayer = (() => {
   function showError(code, link, info) {
     const box = $("#playerContent");
     if (!box) return;
-    box.innerHTML = `<div class="pErr"><b>${esc(errorText(code))}</b><p>${info.verified ? "The channel may have ended its live broadcast. Atlas has asked for a fresh live check." : "Atlas won't offer this video again for a week."}</p>
+    box.innerHTML = `<div class="pErr"><b>${esc(errorText(code))}</b><p>${info.verified ? "The channel may have ended its live broadcast. Sanjaya has asked for a fresh live check." : "Sanjaya won't offer this video again for a week."}</p>
       <div><a class="action primary" target="_blank" rel="noopener noreferrer" href="${esc(link)}">Watch on YouTube</a><button class="action" id="playerClose2">Close player</button></div></div>`;
     $("#playerDock").classList.add("errored");
     const cap = $("#playerCaption");

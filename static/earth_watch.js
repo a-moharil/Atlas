@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5 · Earth watch.
+/* Sanjaya v5 · Earth watch.
    Live wind / temperature / rain / ocean-current fields (Open-Meteo grid, animated locally),
    natural-hazard events (GDACS, NASA EONET, USGS) and the global temperature anomaly
    (Copernicus Climate Pulse / ERA5). Nothing is drawn that a provider did not return. */
@@ -32,7 +32,7 @@ window.ATLASEarth = (() => {
     if (useWindy()) {
       if (fr.dataset.src !== windyURL()) { fr.src = windyURL(); fr.dataset.src = windyURL(); }
       const stamp = document.querySelector("#ewStamp"); if (stamp) stamp.textContent = "Windy · ECMWF model, about 9 km";
-      const m = document.querySelector("#ewMethod"); if (m) m.textContent = "India view by Windy (ECMWF high-resolution forecast). Layers, time slider and basemap belong to Windy; its basemap may draw borders that differ from the official map of India. Switch to Atlas grid for the Survey of India outline and hazard markers.";
+      const m = document.querySelector("#ewMethod"); if (m) m.textContent = "India view by Windy (ECMWF high-resolution forecast). Layers, time slider and basemap belong to Windy; its basemap may draw borders that differ from the official map of India. Switch to Sanjaya grid for the Survey of India outline and hazard markers.";
     }
   }
   function layout() {
@@ -40,7 +40,7 @@ window.ATLASEarth = (() => {
     <section class="panel ewStage">
       <div class="ewBar"><div class="filterTabs" style="margin:0">${[["wind", "Wind"], ["temp", "Temperature"], ["rain", "Rain"], ["ocean", "Ocean currents"]].map(([k, v]) => `<button class="choice ${st.mode === k ? "active" : ""}" data-ewmode="${k}">${v}</button>`).join("")}</div>
        <div class="filterTabs" style="margin:0">${[["global", "Globe"], ["india", "India"]].map(([k, v]) => `<button class="choice ${st.region === k ? "active" : ""}" data-ewregion="${k}">${v}</button>`).join("")}</div>
-       <div class="filterTabs" id="ewIndiaSrc" style="margin:0" ${st.region === "india" ? "" : "hidden"}>${[["windy", "Windy · 9 km"], ["atlas", "Atlas grid"]].map(([k, v]) => `<button class="choice ${st.india === k ? "active" : ""}" data-ewindia="${k}">${v}</button>`).join("")}</div>
+       <div class="filterTabs" id="ewIndiaSrc" style="margin:0" ${st.region === "india" ? "" : "hidden"}>${[["windy", "Windy · 9 km"], ["atlas", "Sanjaya grid"]].map(([k, v]) => `<button class="choice ${st.india === k ? "active" : ""}" data-ewindia="${k}">${v}</button>`).join("")}</div>
        <span class="spacer"></span><span id="ewStamp" class="fine">Loading field…</span><button class="action" id="ewRefresh">Refresh</button></div>
       <div class="ewMap"><iframe id="ewWindy" title="Windy weather map of India" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe><canvas id="ewBase"></canvas><canvas id="ewTrail"></canvas><div id="ewPins" class="ewPins"></div><div id="ewTip" class="mapTip" hidden></div><div id="ewLegend" class="ewLegend"></div></div>
       <p class="fine" id="ewMethod">Open-Meteo model analysis on a coarse grid; motion is interpolated for display only.</p>
@@ -49,7 +49,7 @@ window.ATLASEarth = (() => {
       <section class="panel"><div class="panelHeading"><h2>Active hazards</h2><span id="ewHzStamp" class="fine"></span></div><div id="ewKinds" class="ewKinds"></div><label class="fine" style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="ewIndiaOnly" ${st.indiaOnly ? "checked" : ""}> Only in or near India</label><div id="ewList" class="ewList"><p class="fine">Retrieving GDACS, NASA EONET and USGS…</p></div></section>
      </div><div class="stack">
       <section class="panel"><div class="panelHeading"><h2>Planetary temperature</h2><a class="fine" href="https://pulse.climate.copernicus.eu/" target="_blank" rel="noopener noreferrer">Climate Pulse ↗</a></div><div id="ewClimate"><p class="fine">Retrieving Copernicus ERA5 series…</p></div></section>
-      <section class="panel"><h2>Sources</h2><p class="fine">Fields: Open-Meteo forecast and marine APIs (current analysis). Hazards: GDACS (UN / European Commission JRC) alert levels, NASA EONET open events, USGS M4.5+ earthquakes. Climate: Copernicus Climate Change Service / ECMWF ERA5 daily global means. All are fetched by your Atlas server and cached; none require keys.</p></section>
+      <section class="panel"><h2>Sources</h2><p class="fine">Fields: Open-Meteo forecast and marine APIs (current analysis). Hazards: GDACS (UN / European Commission JRC) alert levels, NASA EONET open events, USGS M4.5+ earthquakes. Climate: Copernicus Climate Change Service / ECMWF ERA5 daily global means. All are fetched by your Sanjaya server and cached; none require keys.</p></section>
      </div></div>`;
   }
 

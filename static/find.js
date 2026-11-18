@@ -1,7 +1,7 @@
 "use strict";
-/* Atlas v5.8 · A search bar on every article panel.
+/* Sanjaya v5.8 · A search bar on every article panel.
    Each panel searches its own articles by keywords, by meaning (the local language
-   model), or both. When nothing held matches, Atlas fetches articles about the query
+   model), or both. When nothing held matches, Sanjaya fetches articles about the query
    from Google News into the panel's desk and searches again.
    Query syntax: words (most must match), "quoted phrases", commas for either topic. */
 window.ATLASFind = (() => {
@@ -96,7 +96,7 @@ window.ATLASFind = (() => {
     const f = s.fetch;
     if (f?.busy) return `<p class="fine findWeb"><span class="findSpin" aria-hidden="true"></span>Fetching articles about “${esc(f.q)}” from Google News…</p>`;
     if (f?.error) return `<p class="fine findWeb findErr">Couldn't reach Google News: ${esc(f.error)}. <button class="linkButton" data-findweb="${esc(key)}">Try again</button></p>`;
-    if (f) return `<p class="fine findWeb">Google News returned ${f.fetched} article${f.fetched === 1 ? "" : "s"} (${f.added} new to Atlas)${f.notes?.length ? `; ${f.notes.length} search${f.notes.length === 1 ? "" : "es"} failed` : ""}. They are filed under ${esc(p.desk || "World")} as “Search further”.</p>`;
+    if (f) return `<p class="fine findWeb">Google News returned ${f.fetched} article${f.fetched === 1 ? "" : "s"} (${f.added} new to Sanjaya)${f.notes?.length ? `; ${f.notes.length} search${f.notes.length === 1 ? "" : "es"} failed` : ""}. They are filed under ${esc(p.desk || "World")} as “Search further”.</p>`;
     return n < 5 ? `<p class="fine findWeb">${n ? "Only a few matches." : ""} <button class="linkButton" data-findweb="${esc(key)}">Fetch articles about this from the web</button></p>` : `<p class="fine findWeb"><button class="linkButton" data-findweb="${esc(key)}">Fetch more from the web</button></p>`;
   }
   function paint(key) {

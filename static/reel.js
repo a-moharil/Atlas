@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5.7 · Geopolitics reel (Live TV and video page).
+/* Sanjaya v5.7 · Geopolitics reel (Live TV and video page).
    Plays recent news videos (last 24 hours) from international broadcasters one after
    another: news only, geopolitics by default. "Stop circulating" holds the current video;
    videos YouTube won't play here are skipped and not offered again. */

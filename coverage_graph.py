@@ -1,4 +1,4 @@
-"""Atlas coverage graph: sources -> stories -> articles.
+"""Sanjaya coverage graph: sources -> stories -> articles.
 
 Overview: one node per source on the page. Two kinds of edges, both kept:
   * co-coverage: how many stories two sources both covered (Jaccard over their story sets);

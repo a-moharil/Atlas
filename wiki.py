@@ -1,4 +1,4 @@
-"""English Wikipedia inside Atlas: search, read, and plain text for the Ask drawer.
+"""English Wikipedia inside Sanjaya: search, read, and plain text for the Ask drawer.
 
 Uses Wikipedia's public APIs (no key):
   - search:   https://en.wikipedia.org/w/api.php?action=query&list=search
@@ -7,8 +7,8 @@ Uses Wikipedia's public APIs (no key):
   - text:     https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1
 
 Article HTML is cleaned with an allowlist before it reaches the page: no scripts, styles,
-event handlers or unknown attributes; Wikipedia links become in-Atlas links; element ids
-are prefixed so they can't collide with Atlas's own. Responses are cached in SQLite so
+event handlers or unknown attributes; Wikipedia links become in-Sanjaya links; element ids
+are prefixed so they can't collide with Sanjaya's own. Responses are cached in SQLite so
 pages read once stay readable offline (stale copies are served when Wikipedia is unreachable).
 """
 from __future__ import annotations

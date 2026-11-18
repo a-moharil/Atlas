@@ -1,8 +1,8 @@
-"""Atlas research radar: new ML research ranked against your own papers.
+"""Sanjaya research radar: new ML research ranked against your own papers.
 
 Everything is local. Papers come from open APIs (arXiv, OpenAlex, Crossref, OpenML,
 Hugging Face, and the ccfddl deadlines dataset on GitHub). They are stored in the
-Atlas database, embedded with the same local multilingual model that groups news
+Sanjaya database, embedded with the same local multilingual model that groups news
 (when the optional pack is installed) and compared with a "fingerprint": the
 user's own papers. Without the model pack, the radar falls back to TF-IDF keyword
 similarity and says so.

@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5.6 · Coverage graph.
+/* Sanjaya v5.6 · Coverage graph.
    Overview: sources on this page as nodes. Solid lines = shared stories (co-coverage),
    dashed lines = similar topics (article-level matching by meaning). Click a source to see
    its stories and their articles. Diffuse spreads outward from one article: its story and
@@ -482,7 +482,7 @@ window.ATLASGraph = (() => {
       <section><h3>This story</h3><ul class="cgStories">${storyRow(d.seed_story, d, v, { seed: true })}</ul></section>
       <section><h3>Related stories <span class="fine">most similar first</span></h3>${rel.length ? `<ul class="cgStories">${rel.map((st) => storyRow(st, d, v)).join("")}</ul>${more}` : `<p class="fine">No closely related stories in the last ${d.days} days.</p>`}</section>
       ${via.length ? `<section><h3>Also from these outlets <span class="fine">share outlets, not meaning</span></h3><ul class="cgStories">${via.map((st) => storyRow(st, d, v)).join("")}</ul></section>` : ""}
-      <section><h3>Not covering this yet</h3>${d.gaps.length ? `<p class="fine">Outlets that usually cover this kind of story but have not covered this one in Atlas.</p><div class="cgGaps">${d.gaps.map((g) => { const o = outletOf(d, g.id); return `<button class="cgGap ${v.sel === g.id ? "on" : ""}" data-cgdsel="${esc(g.id)}">${A().logoTag(o, "xs")}${esc(o.name)}<i class="cgLeanDot ${leanCls(o.lean)}"></i></button>`; }).join("")}</div>` : `<p class="fine">Every outlet that usually covers this kind of story already has it.</p>`}
+      <section><h3>Not covering this yet</h3>${d.gaps.length ? `<p class="fine">Outlets that usually cover this kind of story but have not covered this one in Sanjaya.</p><div class="cgGaps">${d.gaps.map((g) => { const o = outletOf(d, g.id); return `<button class="cgGap ${v.sel === g.id ? "on" : ""}" data-cgdsel="${esc(g.id)}">${A().logoTag(o, "xs")}${esc(o.name)}<i class="cgLeanDot ${leanCls(o.lean)}"></i></button>`; }).join("")}</div>` : `<p class="fine">Every outlet that usually covers this kind of story already has it.</p>`}
         <div class="cgFurther"><button class="action primary" id="cgFurther" ${v.busy ? "disabled" : ""}>${v.busy ? "Searching…" : "Search further"}</button><span class="fine">Searches Google News for <b>${esc(d.terms.join(", "))}</b>${d.gaps.length ? `, including ${esc(d.gaps.slice(0, 3).map((g) => outletOf(d, g.id).name).join(", "))}` : ""}. New articles join the ${esc(v.desk)} desk.</span></div>
         ${v.msg ? `<p class="fine cgMsg">${esc(v.msg)}</p>` : ""}</section>`;
   }
@@ -527,7 +527,7 @@ window.ATLASGraph = (() => {
       const r = await A().api("/api/graph/search-further", "POST", { terms: v.data.terms, gaps: v.data.gaps.map((g) => g.id), desk: v.desk });
       v.msg = r.added ? `Found ${num(r.added)} new article${r.added === 1 ? "" : "s"} (${num(r.fetched)} checked with ${num(r.queries)} searches). Updating the map…`
         : !r.fetched && r.notes?.length ? `Google News could not be reached (${r.notes.length} of ${r.queries} searches failed). Check the internet connection and try again.`
-        : `No new articles: all ${num(r.fetched)} results are already in Atlas.`;
+        : `No new articles: all ${num(r.fetched)} results are already in Sanjaya.`;
       drawOverlay();
       if (r.added) {
         await A().hydrate();

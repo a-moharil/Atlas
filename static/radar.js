@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5.3 · Research radar: new ML research ranked against your own papers,
+/* Sanjaya v5.3 · Research radar: new ML research ranked against your own papers,
    the Vanschoren / AMOR/e lab, themes, related-work check, benchmarks, deadlines,
    reading queue and an optional weekly digest. All data stays on this computer. */
 window.ATLASRadar = (() => {
@@ -184,14 +184,14 @@ window.ATLASRadar = (() => {
     const results = r
       ? `<p class="fine rdNote">${esc(r.note)} Searched for: ${r.terms.map((t) => `<span class="rdCat">${esc(t)}</span>`).join(" ")}${r.notes?.length ? ` · ${esc(r.notes.join("; "))}` : ""}</p>
         <div class="twoEqual">
-          <section class="panel"><div class="panelHeading"><h2>Recent, held by Atlas</h2><span class="fine">arXiv and lab papers from the last 30 days</span></div>
+          <section class="panel"><div class="panelHeading"><h2>Recent, held by Sanjaya</h2><span class="fine">arXiv and lab papers from the last 30 days</span></div>
             ${r.recent.length ? `<div class="rdList">${r.recent.map((p) => paper(p, { noRemove: true })).join("")}</div>` : `<p class="fine">No close matches among recent papers.</p>`}</section>
           <section class="panel"><div class="panelHeading"><h2>Wider literature</h2><span class="fine">OpenAlex search, re-ranked on this computer</span></div>
             ${r.wider.length ? `<div class="rdList">${r.wider.map((p) => paper(p, { noRemove: true })).join("")}</div>` : `<p class="fine">No close matches in the OpenAlex results.</p>`}</section>
         </div>`
       : "";
     return `<section class="panel"><div class="panelHeading"><h2>Related-work check</h2></div>
-      <p class="fine">Paste an abstract, a paragraph from your draft, or a paper you are reviewing. Atlas finds the closest recent papers it holds and searches OpenAlex for older work, then ranks both by similarity to your text. The text is matched on this computer and only search keywords are sent to OpenAlex.</p>
+      <p class="fine">Paste an abstract, a paragraph from your draft, or a paper you are reviewing. Sanjaya finds the closest recent papers it holds and searches OpenAlex for older work, then ranks both by similarity to your text. The text is matched on this computer and only search keywords are sent to OpenAlex.</p>
       <textarea id="rdText" class="rdText" rows="7" placeholder="Paste an abstract or a few paragraphs…">${esc(S.relatedText)}</textarea>
       <div class="filters" style="margin-top:10px"><button class="action primary" id="rdFind" ${S.busy ? "disabled" : ""}>${S.busy ? "Searching…" : "Find related work"}</button>${r ? `<button class="action" id="rdClear">Clear</button>` : ""}</div></section>${results}`;
   }
@@ -236,7 +236,7 @@ window.ATLASRadar = (() => {
     if (!q.length) return empty("Your reading queue is empty", "Use “Save to reading queue” on any paper. Saved papers stay even after they leave the radar.");
     const groups = [["to read", "To read"], ["reading", "Reading"], ["read", "Read"]];
     return `<section class="panel"><div class="panelHeading"><h2>Reading queue</h2><span class="panelTools"><a class="action" href="/api/radar/bibtex" download="atlas-reading-queue.bib">Export all as BibTeX</a><button class="action" id="rdBibSel">Export selected</button></span></div>
-      <p class="fine">Notes save when you click outside the box. Everything stays in your Atlas database.</p>
+      <p class="fine">Notes save when you click outside the box. Everything stays in your Sanjaya database.</p>
       ${groups.map(([k, label]) => {
         const items = q.filter((x) => x.status === k);
         if (!items.length) return "";
@@ -270,7 +270,7 @@ window.ATLASRadar = (() => {
     const w = S.data.watch || { active: [], auto: [], added: [] };
     const chip = (t) => `<span class="rdChip ${w.added.includes(t) ? "mine" : ""}">${esc(t)}<button data-rdwatchdel="${esc(t)}" aria-label="Stop searching for ${esc(t)}" title="Stop searching for this">×</button></span>`;
     return `<section class="panel"><div class="panelHeading"><h2>Watch phrases</h2><span class="fine">${w.active.length} active</span></div>
-      <p class="fine">Extracted from your papers. Atlas searches arXiv, Hugging Face and OpenAlex for these phrases every hour, newest first, then ranks what it finds by meaning. Phrases you add are outlined.</p>
+      <p class="fine">Extracted from your papers. Sanjaya searches arXiv, Hugging Face and OpenAlex for these phrases every hour, newest first, then ranks what it finds by meaning. Phrases you add are outlined.</p>
       <div class="rdChips">${w.active.length ? w.active.map(chip).join("") : `<span class="fine">Phrases appear once your papers have been looked up.</span>`}</div>
       <div class="rdFpAdd"><input id="rdWatchAdd" placeholder="Add a phrase, e.g. loss landscape" aria-label="Phrase to add"><button class="action" id="rdWatchAddBtn">Add phrase</button><button class="linkButton" id="rdWatchReset">Reset to extracted</button></div></section>`;
   }

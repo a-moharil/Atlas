@@ -1,6 +1,6 @@
 "use strict";
-/* Atlas v5.9 · Wikipedia (English): search, read inside Atlas, see what Atlas holds on
-   the same topic, and ask about the page. Links between articles stay in Atlas. */
+/* Sanjaya v5.9 · Wikipedia (English): search, read inside Sanjaya, see what Sanjaya holds on
+   the same topic, and ask about the page. Links between articles stay in Sanjaya. */
 window.ATLASWiki = (() => {
   const A = () => window.ATLAS;
   const esc = (s) => A().esc(s);
@@ -12,7 +12,7 @@ window.ATLASWiki = (() => {
   let typing = 0;
 
   function layout() {
-    return `<div class="wkPage"><div class="heroTitle"><div><h1>Wikipedia</h1><p>Search and read English Wikipedia inside Atlas, next to the articles Atlas holds on the same topic.</p></div></div>
+    return `<div class="wkPage"><div class="heroTitle"><div><h1>Wikipedia</h1><p>Search and read English Wikipedia inside Sanjaya, next to the articles Sanjaya holds on the same topic.</p></div></div>
       <form class="wkSearch" role="search" onsubmit="return false"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
         <input id="wkQ" type="search" value="${esc(S.q)}" placeholder="Search Wikipedia" aria-label="Search Wikipedia" autocomplete="off"><button class="action primary" id="wkGo">Search</button></form>
       <div class="wkBody"><div id="wkMain" class="wkMain"></div><aside id="wkSide" class="wkSide"></aside></div></div>`;
@@ -51,7 +51,7 @@ window.ATLASWiki = (() => {
     } catch (e) { S.error = e.message; if (opts.quiet) S.page = null; }
     S.loading = false; draw();
   }
-  // Atlas articles on the same topic, through the panel search.
+  // Sanjaya articles on the same topic, through the panel search.
   async function held(title, aliases) {
     // The title or any bolded alias (commas mean "either").
     const q = [title, ...aliases.filter((x) => x.toLowerCase() !== title.toLowerCase())].map((x) => x.replace(/,/g, " ")).join(", ");
@@ -84,7 +84,7 @@ window.ATLASWiki = (() => {
         ${S.suggestion ? `<p class="fine">Did you mean <button class="linkButton" data-wksearch="${esc(S.suggestion)}">${esc(S.suggestion)}</button>?</p>` : ""}
         ${S.results ? (S.results.length ? `<ol class="wkResults">${S.results.map((r) => `<li><button class="wkHit" data-wiki="${esc(r.title)}"><b>${esc(r.title)}</b><span>${esc(r.snippet)}…</span><small class="fine">${(r.words || 0).toLocaleString()} words</small></button></li>`).join("")}</ol>` : `<div class="empty"><b>No Wikipedia articles found</b><span class="fine">Try fewer or different words.</span></div>`) : ""}`;
     } else {
-      main.innerHTML = `<div class="empty"><b>Search English Wikipedia</b><span class="fine">Articles open here, and links between them stay in Atlas. Pages you've read stay readable offline.</span></div>`;
+      main.innerHTML = `<div class="empty"><b>Search English Wikipedia</b><span class="fine">Articles open here, and links between them stay in Sanjaya. Pages you've read stay readable offline.</span></div>`;
     }
     drawSide();
   }
@@ -93,8 +93,8 @@ window.ATLASWiki = (() => {
     if (!side) return;
     if (!S.page) { side.innerHTML = ""; return; }
     const h = S.held;
-    side.innerHTML = `<section class="panel"><div class="panelHeading"><h2>Held in Atlas</h2>${h?.mode ? `<span class="fine">by ${h.mode === "both" ? "meaning and keywords" : h.mode}</span>` : ""}</div>
-      ${!h ? `<p class="fine">Looking for related articles…</p>` : h.list.length ? `<div class="newsList">${h.list.map((e) => A().card(e, { short: true })).join("")}</div>` : `<p class="fine">Atlas doesn't hold articles about “${esc(S.page.title)}”. Search a desk to fetch some from the web.</p>`}</section>`;
+    side.innerHTML = `<section class="panel"><div class="panelHeading"><h2>Held in Sanjaya</h2>${h?.mode ? `<span class="fine">by ${h.mode === "both" ? "meaning and keywords" : h.mode}</span>` : ""}</div>
+      ${!h ? `<p class="fine">Looking for related articles…</p>` : h.list.length ? `<div class="newsList">${h.list.map((e) => A().card(e, { short: true })).join("")}</div>` : `<p class="fine">Sanjaya doesn't hold articles about “${esc(S.page.title)}”. Search a desk to fetch some from the web.</p>`}</section>`;
   }
 
   function onClick(ev) {

@@ -1,8 +1,8 @@
-"""Ask drawer: answers from articles Atlas holds and the open Wikipedia page, written by
+"""Ask drawer: answers from articles Sanjaya holds and the open Wikipedia page, written by
 the local Ollama model, with every sentence cited.
 
 Retrieval
-  - Atlas articles: the panel-search ranking (find.py) over the panel the question was
+  - Sanjaya articles: the panel-search ranking (find.py) over the panel the question was
     asked from, or over everything held. Questions are long, so keyword matching is
     loosened: any query word counts and BM25 does the ranking. With the language model
     on, meaning and keywords are blended.
@@ -10,8 +10,8 @@ Retrieval
     the same way; the lead passage is always offered.
 
 Generation
-  - Sources are numbered [A1]... (Atlas) and [W1]... (Wikipedia). The model is told to
-    use only those sources and to cite each sentence. Atlas then checks the citations:
+  - Sources are numbered [A1]... (Sanjaya) and [W1]... (Wikipedia). The model is told to
+    use only those sources and to cite each sentence. Sanjaya then checks the citations:
     unknown ones are removed and uncited sentences are marked, so a reader can see what
     is supported.
   - Runs in a background job and streams into the drawer. If Ollama isn't running, the
@@ -36,7 +36,7 @@ Use ONLY the numbered sources below. Do not use outside knowledge.
 Cite every sentence with the source ids it relies on, in square brackets, for example [A2] or [W1][A4].
 If the sources don't answer the question, say so in one sentence and stop.
 Be concise: at most {words} words, in plain English, no headings. Mention when sources disagree.
-Atlas articles are news reports; say "reports" or "according to" rather than stating claims as settled fact."""
+Sanjaya articles are news reports; say "reports" or "according to" rather than stating claims as settled fact."""
 
 
 def loosen(groups):
