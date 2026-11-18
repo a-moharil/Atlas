@@ -41,6 +41,7 @@ import earth_watch
 import logos
 import semantic
 import lm_labels
+import research_radar
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -53,6 +54,7 @@ DB_FILE = Path(os.environ.get('OBS_DB', str(ROOT / 'observatory.sqlite3')))
 REFRESH_SECONDS = max(300, int(os.environ.get('OBS_REFRESH_SECONDS', str(REGISTRY['refresh_minutes'] * 60))))
 USER_AGENT = 'IndiaWorldResearchObservatory/1.0 (+research dashboard; feed reader)'
 MAX_XML_BYTES = 2_500_000
+SKIP_NETWORK = os.environ.get('OBS_SKIP_NETWORK') == '1'
 NETWORK_TIMEOUT = 12
 NEWS_LIMIT = 4000
 STATE_LOCK = threading.RLock()
@@ -122,6 +124,7 @@ def init_db():
         video_check.init(con)
         semantic.init(con)
         lm_labels.init(con)
+        research_radar.init(con)
         con.commit()
     publishers.set_feeds(all_feed_configs())
     content_cleanup.EXTRA_FILTER=publishers.visibility_clause
@@ -426,6 +429,7 @@ def refresh_cycle(force_local=False, claimed=False, scope="all"):
             refresh_live_channels()
             verify_videos()
         threading.Thread(target=lm_work,daemon=True,name='lm-work').start()
+        if not SKIP_NETWORK:radar_tick()
         # Papers refresh only once per 12 hours (or when there is no successful paper fetch).
         with closing(db_connect()) as con:
             sample = con.execute("SELECT success FROM feeds_status WHERE id='openalex_india'").fetchone()
@@ -547,6 +551,15 @@ def refresh_live_channels(force=False):
 
 
 LM_BUSY=threading.Lock()
+def radar_tick(force=False):
+    """Keep the research radar fresh in the background. Each source has its own schedule
+    (retrieval_jobs skips any that are not due), so calling this often is cheap."""
+    try:
+        return research_radar.run_jobs(retrieval_jobs.request,research_fetch,db_connect,DB_FILE.parent/'model_cache',DB_FILE.parent/'research_cache',force)
+    except Exception as exc:
+        print('[radar]',type(exc).__name__,str(exc)[:200]);return {}
+
+
 def lm_work(label=True):
     """Embed new articles, then (if switched on) label top newsroom groups. Background only."""
     if not LM_BUSY.acquire(blocking=False):return
@@ -771,6 +784,45 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_payload({'embedding':{**st,'installed':semantic.available(),'embedded':embedded,'articles':total,'model':semantic.MODEL,'dimensions':semantic.DIM},
                     'settings':{**cfg,'labels_enabled':cfg.get('labels_enabled','0'),'ollama_url':cfg.get('ollama_url',lm_labels.DEFAULT_URL),'ollama_model':cfg.get('ollama_model',lm_labels.DEFAULT_MODEL)},
                     'labels':{**lab,'stored':labels},'busy':LM_BUSY.locked()})
+            if parsed.path == '/api/radar':
+                # Research radar: each source is a cached background job with its own schedule; the page polls while they run.
+                force=params.get('refresh',['0'])[0]=='1';mc=DB_FILE.parent/'model_cache'
+                try:days=max(1,min(30,int(params.get('days',['7'])[0])))
+                except ValueError:days=7
+                jobs=radar_tick(force)
+                data=research_radar.overview(db_connect,mc,days=days)
+                data['sources']={k:{x:v.get(x) for x in ('pending','error','last_checked','cache_state','data_status','fetched','added','held','found','notes','resolved','note','keyed')} for k,v in jobs.items()}
+                data['openml']={k:(jobs.get('openml') or {}).get(k) or [] for k in ('datasets','tasks')}
+                data['models']=(jobs.get('huggingface') or {}).get('models') or []
+                data['deadlines']={k:(jobs.get('deadlines') or {}).get(k) for k in ('conferences','upcoming','source')}
+                with closing(db_connect()) as con:data['digest']=research_radar.digest_get(con)
+                return self.send_payload(data)
+            if parsed.path == '/api/radar/search':
+                g=lambda k,d='':params.get(k,[d])[0]
+                try:days=max(1,min(30,int(g('days','7'))))
+                except ValueError:days=7
+                try:mn=float(g('min','0') or 0)
+                except ValueError:mn=0.0
+                f={'lane':g('lane'),'cat':g('cat'),'min':mn,'source':g('source'),'saved':g('saved'),'hf':g('hf')=='1'}
+                mode=g('mode','auto') if g('mode','auto') in ('auto','keyword','semantic') else 'auto'
+                return self.send_payload(research_radar.search(db_connect,DB_FILE.parent/'model_cache',g('q')[:500],mode,f,days))
+            if parsed.path == '/api/radar/themes':
+                try:days=max(1,min(30,int(params.get('days',['7'])[0])))
+                except ValueError:days=7
+                return self.send_payload(research_radar.themes(db_connect,DB_FILE.parent/'model_cache',days=days))
+            if parsed.path == '/api/radar/queue':
+                with closing(db_connect()) as con:
+                    research_radar.init(con);return self.send_payload({'queue':research_radar.queue_list(con)})
+            if parsed.path == '/api/radar/bibtex':
+                ids=[x for x in params.get('ids',[''])[0].split(',') if x]
+                with closing(db_connect()) as con:
+                    research_radar.init(con);body=research_radar.bibtex(con,ids or None).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type','application/x-bibtex; charset=utf-8')
+                self.send_header('Content-Disposition','attachment; filename="atlas-reading-queue.bib"')
+                self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
+                self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+                return
             if parsed.path == '/api/lm/borderline':
                 with closing(db_connect()) as con:
                     cfg=semantic.settings(con);condition,values=content_cleanup.where_visible(con)
@@ -967,6 +1019,49 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/lm/run':
                 threading.Thread(target=lm_work,kwargs={'label':bool(data.get('labels',True))},daemon=True,name='lm-work').start()
                 return self.send_payload({'started':True})
+            if path == '/api/radar/related':
+                try:
+                    return self.send_payload(research_radar.related_work(data.get('text',''),db_connect,research_fetch,DB_FILE.parent/'model_cache'))
+                except ValueError as e:
+                    return self.send_payload({'error':str(e)},400)
+            if path == '/api/radar/queue':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:return self.send_payload({'queue':research_radar.queue_action(con,data)})
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/radar/fingerprint':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:
+                        if data.get('action')=='remove':
+                            fid=str(data.get('id',''));con.execute('DELETE FROM radar_fingerprint WHERE id=?',(fid,));con.execute('DELETE FROM radar_vecs WHERE id=?',('fp:'+fid,))
+                        else:research_radar.fp_add(con,str(data.get('ref',''))[:600])
+                        con.commit()
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                    fps=research_radar.fingerprint(con)
+                retrieval_jobs.request('radar-fingerprint',lambda:research_radar.resolve_fingerprint(db_connect,research_fetch,DB_FILE.parent/'model_cache'),DB_FILE.parent/'research_cache',True,ttl=7*86400)
+                return self.send_payload({'fingerprint':[{k:f.get(k) for k in ('id','kind','ref','title','year','url','status','detail')} for f in fps]})
+            if path == '/api/radar/watch':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:w=research_radar.watch_action(con,data)
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                retrieval_jobs.request('radar-keywords',research_radar.job_specs(research_fetch,db_connect,DB_FILE.parent/'model_cache')['keywords'][1],DB_FILE.parent/'research_cache',True,ttl=3600)
+                return self.send_payload({'watch':w})
+            if path == '/api/radar/settings':
+                key=str(data.get('openalex_key','')).strip()
+                if key and not re.fullmatch(r'[A-Za-z0-9_\-]{8,80}',key):return self.send_payload({'error':'That does not look like an OpenAlex API key.'},400)
+                with closing(db_connect()) as con:
+                    research_radar.init(con);research_radar.set_meta(con,'openalex_key',key);con.commit()
+                return self.send_payload({'openalex_key':bool(key)})
+            if path == '/api/radar/probe':
+                return self.send_payload({'checks':research_radar.probe(research_fetch,db_connect)})
+            if path == '/api/radar/digest':
+                if research_radar.DIGEST.get('status')=='running':return self.send_payload({'started':False,'status':'running'})
+                with closing(db_connect()) as con:cfg=semantic.settings(con)
+                url=cfg.get('ollama_url') or lm_labels.DEFAULT_URL;model=cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+                threading.Thread(target=research_radar.digest_run,args=(db_connect,DB_FILE.parent/'model_cache',url,model,lm_labels._call),daemon=True,name='radar-digest').start()
+                return self.send_payload({'started':True,'status':'running'})
             if path == '/api/wall':
                 # Removing an article from the wall only hides it from display panels;
                 # it stays in the database, in coverage counts and in Compare coverage.
@@ -1064,6 +1159,7 @@ def main():
     init_db()
     threading.Thread(target=poll_loop, daemon=True, name='auto-poll').start()
     threading.Thread(target=lm_work, daemon=True, name='lm-work').start()
+    if not SKIP_NETWORK:radar_tick()
     with ThreadingHTTPServer((args.host, args.port), Handler) as server:
         print(f'\nIndia & World Observatory | http://{args.host}:{args.port}/')
         print('The backend checks feeds on startup and every', int(REFRESH_SECONDS/60), 'minutes while running.')

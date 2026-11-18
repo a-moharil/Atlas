@@ -40,6 +40,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <symbol id="i-geo" viewBox="0 0 20 20"><circle cx="5" cy="6" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="10" cy="15" r="2"/><path d="m6.8 6.9 2.4 6.3M13.4 6.4l-2.6 6.8M7 5.8l6-.6"/></symbol>
   <symbol id="i-macro" viewBox="0 0 20 20"><path d="M3.5 16.5V9M8 16.5V4M12.5 16.5v-5M17 16.5V7"/></symbol>
   <symbol id="i-constellation" viewBox="0 0 20 20"><circle cx="4.5" cy="13" r="1.4"/><circle cx="9" cy="5" r="1.4"/><circle cx="15.5" cy="8.5" r="1.4"/><circle cx="12.5" cy="15.5" r="1.4"/><path d="m5.3 11.8 3-5.6M10.3 5.7l3.9 2.1M15 9.9l-2 4.3M5.9 13.3l5.2 2"/></symbol>
+  <symbol id="i-radar" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.6"/><path d="M10 10l5.2-5.2"/><circle cx="14.4" cy="7.6" r="1" fill="currentColor"/></symbol>
   <symbol id="i-library" viewBox="0 0 20 20"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3zM12.6 4.2l2.9-.8 3 12.6-2.9.7z"/></symbol>
   <symbol id="i-policy" viewBox="0 0 20 20"><path d="M3 7.5 10 3l7 4.5M4.5 8v7M8 8v7M12 8v7M15.5 8v7M2.5 17h15"/></symbol>
   <symbol id="i-sources" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="11" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6.5" height="5" rx="1.5"/><path d="M11 13h6.5M11 16h4"/></symbol>
@@ -75,6 +76,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <button class="nav" data-page="macro"><svg><use href="#i-macro"/></svg><span>Macroeconomics</span></button>
   <button class="nav" data-page="constellation"><svg><use href="#i-constellation"/></svg><span>Article constellation</span></button>
   <button class="nav" data-page="research"><svg><use href="#i-library"/></svg><span>Research library</span></button>
+  <button class="nav" data-page="radar"><svg><use href="#i-radar"/></svg><span>Research radar</span><em class="navNew">New</em></button>
   <button class="nav" data-page="mygov"><svg><use href="#i-policy"/></svg><span>MyGov policy</span></button>
   <div class="navGroup">System</div>
   <button class="nav" data-page="sources"><svg><use href="#i-sources"/></svg><span>Sources</span><em class="navNew">New</em></button>
@@ -124,6 +126,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
 <script src="/earth_watch.js" defer></script>
 <script src="/sources.js" defer></script>
 <script src="/lm.js" defer></script>
+<script src="/radar.js" defer></script>
 <script src="/wall.js" defer></script>
 <script src="/atlas3.js" defer></script>
 </body>

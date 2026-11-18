@@ -59,6 +59,7 @@ It runs entirely on your own computer. There is no account, no cloud service and
 | **Article constellation** | A 3-D map of retrieved reporting, clustered by shared vocabulary. |
 | **Research library, MyGov policy** | Think-tank analysis, scholarly metadata from OpenAlex, and ministry and scheme updates. |
 | **Sources** | Every publisher with its logo, masthead, bias rating and paywall model. Mark publishers as *primary* or *block* them everywhere. |
+| **Research radar** | New machine learning papers from arXiv ranked against your own papers, the Vanschoren and AMOR/e lab, weekly themes, a related-work check, OpenML and Hugging Face, conference deadlines and a reading queue with BibTeX export. |
 | **Language model** | Status and tuning for grouping by meaning and the optional generated labels. |
 
 Across the app:
@@ -146,7 +147,7 @@ sudo apt update && sudo apt install python3 python3-venv python3-pip
 There are two ways:
 
 - **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Atlas`.
-- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.4](#54-updating).
+- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.5](#55-updating).
 
 ### 3.4 Start Atlas
 
@@ -230,7 +231,38 @@ The default (0.72) is a starting point. Check it against a day or two of your ow
   - **Block** an outlet: hidden everywhere, and its feeds are not even fetched.
 - **Coverage audit:** feed health, failures and collection history.
 
-### 5.3 Keeping your data
+### 5.3 Research radar
+
+The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Atlas looks each one up on arXiv, Crossref or OpenAlex.
+
+- **Where papers come from** (all open, no account needed):
+  - **Watch phrases:** extracted automatically from your papers, such as *pipeline synthesis*, *training dynamics* or *issue trackers*. You can add or remove phrases under **Your papers**.
+  - **arXiv search:** small queries for your watch phrases in cs.LG, stat.ML, cs.AI, cs.NE, cs.CL and cs.SE. They run hourly but only ask for papers newer than the last run.
+  - **arXiv daily listings:** each category's daily RSS feed, the broad view behind Themes.
+  - **Hugging Face:** the daily papers list (with upvotes) and paper search for your phrases.
+  - **OpenAlex:** journals and proceedings for your phrases. It works without a key on a small daily allowance; a free key from openalex.org raises it tenfold and can be pasted under **Your papers → Sources**.
+  - **Refreshing:** papers appear as each query returns, and the sources keep refreshing in the background while Atlas runs. arXiv publishes once a day (Sunday to Thursday evenings, US Eastern time), so new arXiv papers arrive once a day however often Atlas checks.
+- **For you:** the papers sorted into five lanes: AutoML and pipeline synthesis, training dynamics and diagnostics, transformers and representations, software engineering for ML, and data-centric ML.
+  - Each paper shows a "% match" to your closest paper and names it.
+  - The dice and Remove work as on the news walls.
+- **Search and filters:** a search box with an **Auto / Keyword / Semantic** switch.
+  - **Keyword** matches exact words. It supports `"a phrase"`, `author:name`, `cat:cs.LG`, `title:word` and `-exclude`.
+  - **Semantic** ranks papers by meaning with the local model, for when you describe an idea in a sentence.
+  - **Auto** picks keyword search for quotes, fields, exclusions or a few words, and semantic search for a description. It says which it chose, and one click reruns the search in the other mode.
+  - **Filters:** lane, category, source, minimum match, saved or not, and on Hugging Face daily papers.
+- **Vanschoren and AMOR/e:** papers with Joaquin Vanschoren as an author, from arXiv and OpenAlex. Names of current AMOR/e members are highlighted.
+- **Themes:** the period's papers grouped by meaning into topics, labelled with phrases the papers share.
+- **Related-work check:** paste an abstract or a draft paragraph. Atlas returns the closest papers it holds, plus older work from an OpenAlex search re-ranked on your computer. Only the search phrases are sent to OpenAlex.
+- **Benchmarks and datasets:** the newest OpenML datasets and tasks, and trending Hugging Face models. Radar papers that are on Hugging Face's daily papers list show their upvotes.
+- **Deadlines:** upcoming paper deadlines, rebuttals and decisions for NeurIPS, ICML, ICLR, KDD, ICSE and MSR, converted to your time zone. The AutoML Conference isn't in the open dataset, so it links to its official site.
+- **Reading queue:** save papers, mark them *to read*, *reading* or *read*, keep notes, and export all or selected papers as BibTeX.
+- **Weekly digest (optional):** your local Ollama model summarises the week's top matches, marked *Generated*.
+
+Lanes, arXiv categories, the traced lab, the conferences and query sizes are set in `radar_config.json`.
+
+**Checking the sources.** **Your papers → Sources → Test sources** sends one small request to each source. Outside Atlas, `python tools/check_radar_sources.py` does the same and prints which sources answer from your network.
+
+### 5.4 Keeping your data
 
 Your data lives in **`observatory.sqlite3`**, plus `model_cache/` if you installed the model. Neither is uploaded to GitHub (they're in `.gitignore`). To move to a new computer or a new version, copy both into the new folder. Older databases can also be migrated explicitly:
 
@@ -238,7 +270,7 @@ Your data lives in **`observatory.sqlite3`**, plus `model_cache/` if you install
 python migrate_database.py "path/to/old/observatory.sqlite3"
 ```
 
-### 5.4 Updating
+### 5.5 Updating
 
 - **If you used `git clone`:** stop Atlas, run `git pull`, and start it again.
 - **If you downloaded a ZIP:** download the new ZIP, extract it to a new folder, then copy `observatory.sqlite3` (and `model_cache/`) from the old folder into it.
@@ -354,7 +386,16 @@ Where it's used:
   - Single-outlet stories are skipped, because there is nothing to compare.
   - Output is always tagged **Generated**, names its model, and never replaces publisher text.
 
-### 7.3 What is *not* a model
+### 7.3 The research radar uses the same embedding model
+
+The radar embeds each paper's title and the start of its abstract with the model from 7.1, once per paper. Your papers are embedded the same way.
+
+- **"% match":** the cosine similarity between a new paper and your closest paper.
+- **Lane:** the lane whose description the paper is nearest to.
+- **Themes:** the same centroid-guarded grouping used for news, with a lower threshold (0.6), because papers on one topic are less alike than reports of one event.
+- **Without the model pack:** the radar falls back to TF-IDF keyword similarity and says *Keyword mode*, as news grouping does.
+
+### 7.4 What is *not* a model
 
 These use transparent rules or published third-party data, not machine learning:
 
@@ -366,7 +407,7 @@ These use transparent rules or published third-party data, not machine learning:
 
 That keeps them explainable. See the next section.
 
-### 7.4 Optional cloud analysis (off unless you configure it)
+### 7.5 Optional cloud analysis (off unless you configure it)
 
 `analysis_api.py` can send *user-selected* text to an OpenAI-compatible API for deep comparison, **only** if you set `ATLAS_OPENAI_API_KEY` in the environment (model via `ATLAS_AI_MODEL`). Without the key it does nothing and says so. It is independent of the local models above.
 
@@ -421,7 +462,7 @@ India's boundary and states come from the **Survey of India** maps distributed b
 | `OBS_REFRESH_SECONDS` | `900` | Collection interval, minimum 300. |
 | `ATLAS_LIVE_REFRESH_SECONDS` | `900` | Live-stream re-check interval, minimum 300. |
 | `OBS_SKIP_NETWORK` | unset | `1` disables outbound collection (development and tests). |
-| `ATLAS_OPENAI_API_KEY` | unset | Enables the optional cloud analysis in 7.4. |
+| `ATLAS_OPENAI_API_KEY` | unset | Enables the optional cloud analysis in 7.5. |
 | `ATLAS_AI_MODEL` | `gpt-4.1-mini` | Model name for that optional feature. |
 
 Language model settings (strictness, time window, labels on/off, Ollama model) are set in the app and stored in the database.
@@ -433,7 +474,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # ~93 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # ~112 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -462,6 +503,8 @@ atlas/
 ├─ emergency.py            newsroom triage, grouping and source controls
 ├─ semantic.py             embeddings, grouping by meaning, related articles
 ├─ lm_labels.py            optional Ollama labels and summaries
+├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
+├─ radar_config.json       radar lanes, arXiv categories, traced lab, conferences, your seed papers
 ├─ earth_watch.py          GDACS, EONET, USGS, Open-Meteo, Copernicus series
 ├─ tile_gateway.py         caching proxy for map tiles
 ├─ retrieval_jobs.py       cached background jobs for slow providers
@@ -490,6 +533,7 @@ atlas/
 | Top bar says *Keyword mode* | The model pack isn't installed, is still loading, or is still processing. See **System → Language model** for the exact reason. |
 | *Check Ollama* fails | Make sure the Ollama app is running and `ollama list` shows the model you selected. |
 | A page looks broken after updating | Hard-refresh the browser (Ctrl+Shift+R, or Cmd+Shift+R on a Mac). |
+| Research radar sources fail | Run `python tools/check_radar_sources.py`. A firewall or proxy may block arXiv, Hugging Face or OpenAlex. *OpenAlex: daily budget used up* means adding a free OpenAlex key. |
 | Map tiles fail | Use **Test tiles** on the Satellite atlas. Tile providers must be reachable from the server. |
 
 ---
@@ -499,13 +543,14 @@ atlas/
 - Atlas binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
 - Outbound requests go only to the feeds and data providers listed in this README and in `source_registry.json`, plus Ollama on your own machine if you enable labels.
 - No analytics or telemetry. Your reading, removals, blocks and settings stay in `observatory.sqlite3`, which is excluded from Git.
-- The optional cloud analysis (7.4) is the only feature that can send text off your machine. It is inactive without an API key you provide.
+- The optional cloud analysis (7.5) is the only feature that can send text off your machine. It is inactive without an API key you provide.
 
 ---
 
 ## 14. Known limitations
 
 - **Feeds:** many feeds are Google News discovery queries, which can throttle, reorder or drop items. Coverage is broad but not complete.
+- **Research radar:** keyword-driven fetching can miss papers that describe your topics in different words. The arXiv daily listings and the editable watch phrases are there to catch them. arXiv's daily listing doesn't cover papers updated or replaced later.
 - **Ratings:** bias ratings are third-party and outlet-level, with a US-centric axis. Many Indian and regional outlets are unrated.
 - **Grouping:** grouping by meaning can still occasionally join separate events or split one. The borderline-pairs view exists to help you calibrate.
 - **Generated labels:** small local models can make mistakes. Labels are aids for scanning, not summaries to cite.
@@ -530,7 +575,13 @@ atlas/
   - [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
-- **Research metadata:** [OpenAlex](https://openalex.org) (CC0).
+- **Research metadata:**
+  - [OpenAlex](https://openalex.org) (CC0)
+  - [Crossref](https://www.crossref.org)
+  - [arXiv](https://arxiv.org): thank you to arXiv for use of its open access interoperability
+  - [OpenML](https://www.openml.org)
+  - [Hugging Face](https://huggingface.co) daily papers, paper search and trending models
+  - Conference dates from the [ccf-deadlines](https://github.com/ccfddl/ccf-deadlines) open dataset
 - **Fonts:**
   - [Schibsted Grotesk](https://github.com/schibsted/schibsted-grotesk)
   - [Newsreader](https://github.com/productiontype/Newsreader)

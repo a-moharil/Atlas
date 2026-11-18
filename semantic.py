@@ -167,6 +167,30 @@ def embed_pending(db_connect, cache_dir, limit=1500, batch=48) -> int:
     return done
 
 
+_EMBED_LOCK = threading.Lock()
+
+
+def embed_texts(texts, cache_dir=None):
+    """Unit vectors (float32) for arbitrary texts, or None when the model pack is unavailable.
+    Used by the research radar; news grouping does not go through here."""
+    if not available():
+        return None
+    if _model is None and cache_dir is not None:
+        _load_model(cache_dir)
+    if _model is None:
+        return None
+    texts = [str(t or '')[:2000] for t in texts]
+    if not texts:
+        return []
+    with _EMBED_LOCK:
+        raw = list(_model.embed(texts, batch_size=32))
+    out = []
+    for v in raw:
+        v = _np.asarray(v, dtype=_np.float32)
+        out.append(v / (float(_np.linalg.norm(v)) or 1.0))
+    return out
+
+
 def vectors(db_connect, ids) -> dict:
     """id -> unit vector for the given ids (only those already embedded)."""
     if _np is None or not ids:
