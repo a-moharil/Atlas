@@ -1,6 +1,6 @@
 # Sanjaya
 
-**A local-first news and geopolitics dashboard for India and the world.**
+**A grounded news and geopolitics dashboard for India and the world.**
 
 *To gather, distinguish and present honest accounts of the world.* By Ambarish Moharil.
 
