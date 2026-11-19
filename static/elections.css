@@ -1,0 +1,100 @@
+/* Sanjaya v6.3 · Elections. Party colours carry the meaning here; the chrome stays quiet.
+   Lean colours (blue / frost / red) are not used: they belong to publisher lean only. */
+.elPage{display:grid;gap:16px}
+.elPage .heroTitle{margin-bottom:4px}
+.elCountries{display:flex;gap:6px;flex-wrap:wrap}
+.elLevels{margin:0}
+.elPicker{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.elPicker .choice small{color:var(--muted);font-weight:500;margin-left:2px}
+.elSelect{display:inline-flex;align-items:center;gap:8px;margin-right:8px;color:var(--muted);font-size:.84rem}
+.elSelect select{min-height:36px;padding:6px 10px;border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--well);color:var(--ink);font-weight:600}
+.choice.active,.choice[aria-pressed="true"]{background:rgba(143,217,232,.16);border-color:rgba(143,217,232,.45);color:var(--ink)}
+.choice:disabled{opacity:.4;cursor:default}
+
+.elHead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding:4px 2px 0}
+.elHead h2{margin:0;font-size:1.7rem;font-weight:720;letter-spacing:-.03em}
+.elHead .fine{margin:4px 0 0}
+.elStats{display:flex;gap:26px;flex-wrap:wrap}
+.elStats div{display:grid;gap:0}
+.elStats b{font-size:1.55rem;font-weight:720;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.elStats span{color:var(--muted);font-size:.78rem;max-width:16ch;line-height:1.3}
+
+.elTop{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);gap:16px;align-items:start}
+.elPanelBar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.elPanelBar h3,.elBlocs h3,.elSeat h3,.elTables h3,.elNext h3{margin:0;font-size:1rem;font-weight:650}
+.elMini{margin:0;padding:3px;border-radius:11px}
+.elMini .choice{min-height:28px;padding:4px 10px;font-size:.78rem}
+.elChamber svg{display:block;width:100%;height:auto}
+.elSvgLabel{fill:var(--ink);font-size:13px;font-weight:650}
+.elSvgFine{fill:var(--muted);font-size:11.5px}
+.elCoalition{min-height:26px;font-size:.9rem;color:var(--ink-2);text-align:center}
+.elCoalition b{color:var(--ink)}
+
+.elBlocList{list-style:none;margin:10px 0 6px;padding:0;display:grid;gap:12px}
+.elBlocRow{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.elBlocRow b{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.elBlocRow .num{font-weight:700;font-variant-numeric:tabular-nums;min-width:3ch;text-align:right}
+.elBlocRow .elShare{color:var(--muted);font-weight:500;min-width:6ch}
+.elSw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;vertical-align:-1px;margin-right:6px}
+.elBlocRow .elSw{margin:0}
+.elBar{position:relative;height:6px;border-radius:999px;background:rgba(190,228,240,.08);margin:6px 0 6px 20px;overflow:visible}
+.elBar i{display:block;height:100%;border-radius:999px}
+.elBar em{position:absolute;top:-3px;width:2px;height:12px;background:var(--ink);opacity:.8;border-radius:1px}
+.elChips{display:flex;flex-wrap:wrap;gap:5px;margin-left:20px}
+.elParty{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);font-size:.76rem;font-weight:600;cursor:pointer}
+.elParty .elSw{margin:0;width:8px;height:8px;border-radius:50%}
+.elParty .num{color:var(--muted)}
+.elParty.on{border-color:var(--ink);color:var(--ink);background:rgba(190,228,240,.10)}
+
+.elMapRow{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,.9fr);gap:16px;align-items:start}
+.elMapBar{display:flex;gap:8px;flex-wrap:wrap}
+.elMapFrame{border-radius:var(--r-card);background:var(--well);padding:8px;min-height:240px}
+.elGeo{display:block;width:100%;height:auto;max-height:78vh}
+.elSeatShape{stroke:rgba(6,17,26,.85);stroke-width:.45;cursor:pointer;transition:opacity .12s}
+.elSeatShape:hover{stroke:var(--ink);stroke-width:1.2}
+.elSeatShape.sel{stroke:var(--ink);stroke-width:2}
+.elBoundary{fill:none;stroke:rgba(230,239,242,.75);stroke-width:1.1;pointer-events:none}
+.elSeat{position:sticky;top:16px}
+.elSeat h4{margin:14px 0 6px;font-size:.86rem;color:var(--muted);font-weight:600}
+.elSeat small{color:var(--muted);font-weight:500}
+.elDuel{display:grid;gap:10px;margin:10px 0}
+.elDuel div{display:grid;grid-template-columns:14px 1fr;column-gap:6px}
+.elDuel .elSw{grid-row:span 2;margin-top:5px}
+.elDuel span:not(.elSw){color:var(--ink-2);font-size:.84rem}
+.elClosest{margin:0;padding-left:20px;display:grid;gap:6px}
+.elClosest li{line-height:1.35}
+
+.elTables{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:16px;align-items:start}
+.elTable{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:8px}
+.elTable th{text-align:left;color:var(--muted);font-weight:600;font-size:.76rem;padding:6px 8px;border-bottom:1px solid var(--line-2)}
+.elTable td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.elTable td small{color:var(--muted)}
+.elTable .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.elTable .up{color:var(--mint)}
+.elTable .down{color:var(--coral)}
+.elFlips{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px}
+.elFlips li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.elSourcesList{margin:6px 0 0;padding-left:18px}
+
+.elPack{max-width:760px}
+.elPack h2{margin:0 0 6px}
+.elPack p{color:var(--ink-2)}
+.elProgress{height:8px;border-radius:999px;background:var(--well);overflow:hidden;margin:12px 0 4px}
+.elProgress i{display:block;height:100%;background:var(--glacier);transition:width .4s var(--ease)}
+.elSources{margin-top:14px;color:var(--ink-2);font-size:.86rem}
+.elSources summary{cursor:pointer;color:var(--glacier);font-weight:600}
+.elError{color:var(--coral)}
+.elNote{color:var(--ink-2);font-size:.92rem}
+.elBlackout{border-color:rgba(240,180,90,.45);background:rgba(240,180,90,.08)}
+.elPlanned{max-width:760px}
+.elPlanned h2{margin:0 0 6px}
+.elNext{padding:14px 18px}
+.elNext .fine{margin:4px 0 0}
+.elAttr{margin:-4px 2px 0}
+
+.elLegend{display:flex;align-items:center;gap:8px;margin:8px 0 0;color:var(--ink-2);font-size:.82rem}
+.elRamp{display:inline-block;width:70px;height:8px;border-radius:999px;background:linear-gradient(90deg,rgba(4,14,21,.9),var(--ink-2))}
+.elTip{position:fixed;z-index:60;pointer-events:none;max-width:280px;padding:7px 10px;border-radius:9px;background:rgba(6,17,26,.94);border:1px solid var(--line-2);color:var(--ink);font-size:.82rem;line-height:1.35;box-shadow:0 12px 30px -12px rgba(0,0,0,.7)}
+
+@media (max-width:1100px){.elTop,.elMapRow,.elTables{grid-template-columns:1fr}.elSeat{position:static}}
+@media (prefers-reduced-motion:reduce){.elProgress i,.elSeatShape{transition:none}}

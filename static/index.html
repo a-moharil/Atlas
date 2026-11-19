@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/constellation.css">
 <link rel="stylesheet" href="/mygov.css">
 <link rel="stylesheet" href="/newsroom.css">
+<link rel="stylesheet" href="/elections.css">
 <link rel="stylesheet" href="/atlas5.css">
 </head>
 <body>
@@ -48,6 +49,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <symbol id="i-wiki" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><path d="M2.8 10h14.4M10 2.8c2 2 3 4.4 3 7.2s-1 5.2-3 7.2c-2-2-3-4.4-3-7.2s1-5.2 3-7.2z"/></symbol>
   <symbol id="i-radar" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.6"/><path d="M10 10l5.2-5.2"/><circle cx="14.4" cy="7.6" r="1" fill="currentColor"/></symbol>
   <symbol id="i-library" viewBox="0 0 20 20"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3zM12.6 4.2l2.9-.8 3 12.6-2.9.7z"/></symbol>
+  <symbol id="i-ballot" viewBox="0 0 20 20"><rect x="3" y="9" width="14" height="8.5" rx="1.5"/><path d="M6.5 9V3.5h7V9M8.5 6.2l1.3 1.3 2.2-2.4M6 12.5h8"/></symbol>
   <symbol id="i-policy" viewBox="0 0 20 20"><path d="M3 7.5 10 3l7 4.5M4.5 8v7M8 8v7M12 8v7M15.5 8v7M2.5 17h15"/></symbol>
   <symbol id="i-sources" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="11" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6.5" height="5" rx="1.5"/><path d="M11 13h6.5M11 16h4"/></symbol>
   <symbol id="i-audit" viewBox="0 0 20 20"><path d="M3 10h3l2-5 4 10 2-5h3"/></symbol>
@@ -68,6 +70,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <button class="nav active" data-page="room"><svg><use href="#i-room"/></svg><span>Situation room</span></button>
   <button class="nav" data-page="news"><svg><use href="#i-world"/></svg><span>World</span></button>
   <button class="nav" data-page="india"><svg><use href="#i-india"/></svg><span>India</span></button>
+  <button class="nav" data-page="elections"><svg><use href="#i-ballot"/></svg><span>Elections</span><em class="navNew">New</em></button>
   <button class="nav" data-page="technology"><svg><use href="#i-tech"/></svg><span>Technology</span></button>
   <button class="nav" data-page="finance"><svg><use href="#i-finance"/></svg><span>Finance and energy</span></button>
   <button class="nav" data-page="emergency"><svg><use href="#i-alert"/></svg><span>Emergency newsroom</span></button>
@@ -139,6 +142,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
 <script src="/coverage_graph.js" defer></script>
 <script src="/find.js" defer></script>
 <script src="/wiki.js" defer></script>
+<script src="/elections.js" defer></script>
 <script src="/ask.js" defer></script>
 <script src="/calibrate.js" defer></script>
 <script src="/about.js" defer></script>
