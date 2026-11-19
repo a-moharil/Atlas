@@ -5,7 +5,7 @@ import json,re,datetime as dt
 from collections import Counter,defaultdict
 from pathlib import Path
 from urllib.parse import urlparse
-CATALOGUE=json.loads((Path(__file__).parent/'mygov_catalogue.json').read_text())
+CATALOGUE=json.loads((Path(__file__).parent/'mygov_catalogue.json').read_text(encoding='utf-8'))
 TOPICS={
  'Digital':r'\b(?:upi|digital|aadhaar|digilocker|indiaai|semiconductor|artificial intelligence|broadband|ondc)\b',
  'Research':r'\b(?:research|doctoral|ph\.?d|jrf|anrf|innovation|fellowship|quantum)\b',
