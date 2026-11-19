@@ -41,6 +41,12 @@ import earth_watch
 import logos
 import semantic
 import lm_labels
+import research_radar
+import coverage_graph
+import geo_video
+import find
+import wiki
+import ask
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -53,6 +59,7 @@ DB_FILE = Path(os.environ.get('OBS_DB', str(ROOT / 'observatory.sqlite3')))
 REFRESH_SECONDS = max(300, int(os.environ.get('OBS_REFRESH_SECONDS', str(REGISTRY['refresh_minutes'] * 60))))
 USER_AGENT = 'IndiaWorldResearchObservatory/1.0 (+research dashboard; feed reader)'
 MAX_XML_BYTES = 2_500_000
+SKIP_NETWORK = os.environ.get('OBS_SKIP_NETWORK') == '1'
 NETWORK_TIMEOUT = 12
 NEWS_LIMIT = 4000
 STATE_LOCK = threading.RLock()
@@ -122,6 +129,7 @@ def init_db():
         video_check.init(con)
         semantic.init(con)
         lm_labels.init(con)
+        research_radar.init(con)
         con.commit()
     publishers.set_feeds(all_feed_configs())
     content_cleanup.EXTRA_FILTER=publishers.visibility_clause
@@ -415,7 +423,7 @@ def refresh_cycle(force_local=False, claimed=False, scope="all"):
                     if elapsed<3600:continue
                 due.append(f)
             sources=due
-        if scope=='all':sources += [{**c, 'tier': 'video', 'url': 'https://www.youtube.com/feeds/videos.xml?channel_id=' + c['channel_id']} for c in REGISTRY['channels']]
+        if scope=='all':sources += [{**c, 'tier': 'video', 'url': 'https://www.youtube.com/feeds/videos.xml?channel_id=' + c['channel_id']} for c in REGISTRY['channels']+geo_reel_channels(extra_only=True)]
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
             pending = [pool.submit(fetch_source, f, 'video' if 'channel_id' in f else 'article', run_id) for f in sources]
             for future in concurrent.futures.as_completed(pending):
@@ -426,6 +434,7 @@ def refresh_cycle(force_local=False, claimed=False, scope="all"):
             refresh_live_channels()
             verify_videos()
         threading.Thread(target=lm_work,daemon=True,name='lm-work').start()
+        if not SKIP_NETWORK:radar_tick()
         # Papers refresh only once per 12 hours (or when there is no successful paper fetch).
         with closing(db_connect()) as con:
             sample = con.execute("SELECT success FROM feeds_status WHERE id='openalex_india'").fetchone()
@@ -547,6 +556,215 @@ def refresh_live_channels(force=False):
 
 
 LM_BUSY=threading.Lock()
+_GRAPH_STATE = {'t': 0.0, 'entries': None}
+GRAPH_DESKS = {'World', 'India', 'Policy', 'Technology', 'Finance', 'Energy'}
+
+
+def graph_entries():
+    """Entries exactly as the page sees them (same story groups and publishers), cached for 30 s."""
+    if _GRAPH_STATE['entries'] is None or time.time() - _GRAPH_STATE['t'] > 30:
+        _GRAPH_STATE.update(t=time.time(), entries=read_state()['entries'])
+    return _GRAPH_STATE['entries']
+
+
+def graph_pref():
+    with closing(db_connect()) as con:
+        prefs = publishers.prefs(con)
+    return lambda h: prefs.get(h, '')
+
+
+def search_further(terms, gaps, desk):
+    """Fetch new articles for a diffused story through Google News: one open query, then one per
+    outlet that has not covered it. New articles join the seed's desk and are embedded in the background."""
+    terms = [re.sub(r'[^\w\s\-.]', ' ', str(t))[:60].strip() for t in terms if str(t).strip()][:5]
+    if not terms:
+        raise ValueError('No search terms for this story.')
+    gaps = [g for g in gaps if re.fullmatch(r'[a-z0-9.-]{3,80}', str(g))][:3]
+    desk = desk if desk in GRAPH_DESKS else 'World'
+    r = fetch_google(coverage_graph.search_queries(terms, gaps), desk)
+    r.pop('ids', None)
+    return r
+
+
+def fetch_google(queries, desk):
+    """Run Google News RSS searches; new articles join the desk as 'Search further' records."""
+    source = {'id': f'expand:{desk}', 'name': 'Search further', 'tier': 'reporting', 'region': 'Global', 'desk': desk}
+    added, fetched, notes, ids = 0, 0, [], []
+    for q in queries:
+        url = 'https://news.google.com/rss/search?' + urllib.parse.urlencode({'q': q, 'hl': 'en-IN', 'gl': 'IN', 'ceid': 'IN:en'})
+        try:
+            rows = parse_feed(fetch_bytes(url), source, 'article')
+            for r in rows:  # Google News appends " - Publisher"; the publisher is kept separately
+                r['title'] = coverage_graph.clean_title(r.get('title', ''))
+            fetched += len(rows)
+            added += persist_records(rows) or 0
+            ids += [r['id'] for r in rows]
+        except Exception as exc:
+            notes.append(f'{q[:40]}…: {type(exc).__name__}')
+    _GRAPH_STATE['entries'] = None
+    if added:
+        threading.Thread(target=lm_work, kwargs={'label': False}, daemon=True, name='lm-expand').start()
+    return {'queries': len(queries), 'fetched': fetched, 'added': added, 'notes': notes, 'ids': list(dict.fromkeys(ids))}
+
+
+def _single(e):
+    """Publisher details for an article that isn't in the page's current state (no story group)."""
+    h = publishers.entry_host(e)
+    pr = publishers.profile(h, (e.get('source') or '').split(' · ')[0])
+    lean = pr.get('lean')
+    e['publisher'] = h
+    e['paywall'] = publishers.article_paywall(e, h)
+    e['story'] = {'id': e['id'], 'sources': 1, 'articles': 1, 'method': 'single', 'similarity': None,
+                  'dist': {'left': int(lean is not None and lean < 0), 'center': int(lean == 0), 'right': int(lean is not None and lean > 0), 'unrated': int(lean is None)}}
+    return pr
+
+
+WIKI_UA = 'Sanjaya/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
+
+
+def wiki_get(url, max_bytes=2_000_000):
+    """Wikipedia asks API clients for an identifying User-Agent."""
+    validate_external_url(url)
+    req = urllib.request.Request(url, headers={'User-Agent': WIKI_UA, 'Accept': 'application/json, text/html'})
+    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=20) as res:
+        block = res.read(max_bytes + 1)
+    if len(block) > max_bytes:
+        raise ValueError('Wikipedia response exceeded size limit')
+    return block
+
+
+def ask_question(data):
+    """Retrieve sources for a question and start a local Ollama answer (see ask.py)."""
+    q = re.sub(r'\s+', ' ', str(data.get('question', ''))).strip()[:600]
+    if len(q) < 3:
+        raise ValueError('Type a question.')
+    state = {e['id']: e for e in graph_entries()}
+    ids = [str(i)[:40] for i in (data.get('ids') or [])][:20000]
+    pool = {i: state[i] for i in (ids or list(state)) if i in state}
+    use_meaning = semantic.ready()
+    qv = (semantic.embed_texts([q], DB_FILE.parent / 'model_cache') or [None])[0] if use_meaning else None
+    mode = 'both' if qv is not None else 'keywords'
+    sims = {}
+    if qv is not None:
+        for i, v in semantic.vectors(db_connect, list(pool)).items():
+            sims[i] = float(v @ qv)
+    docs = [(i, e.get('title', ''), e.get('summary', ''), e.get('source', '')) for i, e in pool.items()]
+    ranked = ask.rank_loose(q, docs, mode, sims)
+    per, articles = {}, []
+    for r in ranked:  # at most two articles per outlet, eight in all
+        e = pool[r['id']]
+        h = e.get('publisher') or e.get('source')
+        if per.get(h, 0) >= 2:
+            continue
+        per[h] = per.get(h, 0) + 1
+        prof = publishers.profile(e.get('publisher', '')) if e.get('publisher') else {}
+        articles.append({'id': e['id'], 'title': e.get('title', ''), 'summary': e.get('summary', ''), 'url': e.get('url', ''),
+                         'published': e.get('published') or e.get('retrieved'), 'source': e.get('source', ''),
+                         'outlet': prof.get('name') or e.get('source', ''), 'publisher': e.get('publisher', '')})
+        if len(articles) >= 8:
+            break
+    passages = []
+    title = str(data.get('wiki') or '').strip()
+    wiki_note = ''
+    if title:
+        try:
+            ps = wiki.passages(wiki.plain_text(title, wiki_get, db_connect))[:400]
+            pdocs = [(str(n), '', p['text'], p['section']) for n, p in enumerate(ps)]
+            psims = {}
+            if qv is not None and ps:
+                for n, v in enumerate(semantic.embed_texts([p['text'] for p in ps[:200]], DB_FILE.parent / 'model_cache') or []):
+                    psims[str(n)] = float(v @ qv)
+            order = [int(r['id']) for r in ask.rank_loose(q, pdocs, mode, psims)][:4]
+            if ps and 0 not in order:
+                order = [0] + order[:3]  # the lead is always offered
+            page_name = title.replace('_', ' ')
+            passages = [{'page': page_name, 'section': ps[n]['section'], 'text': ps[n]['text'],
+                         'url': f"{wiki.BASE}/wiki/{urllib.parse.quote(wiki.norm_title(title))}"} for n in order]
+        except Exception as exc:
+            wiki_note = f'Could not read the Wikipedia page ({type(exc).__name__}).'
+    with closing(db_connect()) as con:
+        cfg = semantic.settings(con)
+    url = cfg.get('ollama_url') or lm_labels.DEFAULT_URL
+    model = cfg.get('ask_model') or cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+    out = {'question': q, 'mode': mode, 'model': model, 'wiki_note': wiki_note,
+           'sources': {'atlas': articles, 'wikipedia': passages}, 'searched': len(pool)}
+    if not articles and not passages:
+        return {**out, 'status': 'no_sources'}
+    status = lm_labels.check(url, model)
+    if status['status'] != 'ready':
+        return {**out, 'status': 'no_model', 'error': status['detail'], 'models': status.get('models', [])}
+    job = ask.start(q, articles, passages, url, model)
+    return {**out, 'status': 'writing', 'job': job['id']}
+
+
+def find_articles(data):
+    """Rank a panel's articles (or the reel's videos) for a query. See find.py for the query syntax."""
+    groups = find.parse(data.get('q', ''))
+    if not groups:
+        raise ValueError('Type one or more keywords.')
+    want = str(data.get('mode', 'auto'))
+    if want not in ('auto', 'keywords', 'meaning', 'both'):
+        want = 'auto'
+    limit = max(5, min(200, int(data.get('limit') or 60)))
+    extra_rows, directory = [], {}
+    if data.get('source') == 'reel':
+        vids = geo_reel(data.get('hours', 24), 'news')['videos']
+        pool = {v['id']: {**v, 'medium': 'video', 'summary': '', 'source': v['channel']} for v in vids}
+    else:
+        state = {e['id']: e for e in graph_entries()}
+        ids = [str(i)[:40] for i in (data.get('ids') or [])][:20000]
+        extra = [str(i)[:40] for i in (data.get('extra') or [])][:400]
+        pool = {i: state[i] for i in (ids or list(state)) if i in state}
+        missing = [i for i in extra if i not in state]
+        for i in extra:
+            if i in state:
+                pool[i] = state[i]
+        if missing:
+            with closing(db_connect()) as con:
+                condition, values = content_cleanup.where_visible(con)
+                for r in con.execute(f"SELECT * FROM entries WHERE {condition} AND id IN ({','.join('?' for _ in missing)})", (*values, *missing)):
+                    e = dict(r)
+                    directory[publishers.entry_host(e)] = _single(e)
+                    pool[e['id']] = e
+                    extra_rows.append(e)
+    docs = [(i, e.get('title', ''), e.get('summary', ''), e.get('source', '')) for i, e in pool.items()]
+    usable = semantic.ready() and want != 'keywords'
+    mode = ('both' if usable else 'keywords') if want == 'auto' else want
+    note = ''
+    if mode in ('meaning', 'both') and not usable:
+        note = 'The language model is off or still loading, so this search used keywords only.'
+        mode = 'keywords'
+    sims = {}
+    if mode in ('meaning', 'both'):
+        qv = semantic.embed_texts([' '.join(g) for g in groups], DB_FILE.parent / 'model_cache') or []
+        vecs = semantic.vectors(db_connect, [i for i in pool if not str(i).startswith('geo')]) if data.get('source') != 'reel' else {}
+        todo = [i for i in pool if i not in vecs][:600]
+        if todo and qv:
+            for i, v in zip(todo, semantic.embed_texts([semantic.clean(pool[i].get('title', ''), pool[i].get('summary', '')) for i in todo], DB_FILE.parent / 'model_cache') or []):
+                vecs[i] = v
+        if qv:
+            for i, v in vecs.items():
+                sims[i] = max(float(v @ q) for q in qv)
+        else:
+            note, mode = 'The language model could not embed the query, so this search used keywords only.', 'keywords'
+    results = find.rank(groups, docs, mode, sims, limit)
+    keep = {r['id'] for r in results}
+    if data.get('source') == 'reel':
+        extra_rows = list(pool.values())
+    return {'mode': mode, 'groups': groups, 'results': results, 'pool': len(pool), 'note': note,
+            'entries': extra_rows if data.get('source') != 'reel' else [e for e in extra_rows if e['id'] in keep], 'publishers': directory,
+            'semantic': semantic.ready()}
+
+
+def radar_tick(force=False):
+    """Keep the research radar fresh in the background. Each source has its own schedule
+    (retrieval_jobs skips any that are not due), so calling this often is cheap."""
+    try:
+        return research_radar.run_jobs(retrieval_jobs.request,research_fetch,db_connect,DB_FILE.parent/'model_cache',DB_FILE.parent/'research_cache',force)
+    except Exception as exc:
+        print('[radar]',type(exc).__name__,str(exc)[:200]);return {}
+
+
 def lm_work(label=True):
     """Embed new articles, then (if switched on) label top newsroom groups. Background only."""
     if not LM_BUSY.acquire(blocking=False):return
@@ -593,10 +811,24 @@ def emergency_payload(hours):
     return data
 
 
+def geo_reel_channels(extra_only=False):
+    """Channels for the geopolitics reel: its own list, plus included existing channels."""
+    cfg=REGISTRY.get('geo_reel',{})
+    extra=[{**c,'geo_reel':True} for c in cfg.get('channels',[])]
+    if extra_only:return extra
+    inc=set(cfg.get('include',[]))
+    return extra+[c for c in REGISTRY['channels'] if c['id'] in inc]
+
+
 def verify_videos(limit=60):
-    """oEmbed-check recent uploads and configured fallback streams (bounded, background)."""
+    """oEmbed-check recent uploads and configured fallback streams (bounded, background).
+    Reel videos from the last 30 hours go first, so the reel fills quickly after a refresh."""
+    reel=[c['id'] for c in geo_reel_channels()]
+    since=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(hours=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    marks=','.join('?' for _ in reel) or "''"
     with closing(db_connect()) as con:
-        ids=[r['video_id'] for r in con.execute("SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL ORDER BY COALESCE(published,retrieved) DESC LIMIT 120")]
+        first=[r['video_id'] for r in con.execute(f"SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL AND source_id IN ({marks}) AND COALESCE(published,retrieved)>=? ORDER BY COALESCE(published,retrieved) DESC LIMIT 200",(*reel,since))]
+        ids=first+[r['video_id'] for r in con.execute("SELECT video_id FROM entries WHERE medium='video' AND video_id IS NOT NULL AND source_id NOT LIKE 'geo\\_%' ESCAPE '\\' ORDER BY COALESCE(published,retrieved) DESC LIMIT 120")]
     ids=[c.get('fallback_id') for c in REGISTRY.get('live_channels',[]) if c.get('fallback_id')]+ids
     try:return video_check.verify(ids,db_connect,fetch_bytes,utc_now,limit)
     except Exception as exc:
@@ -628,11 +860,31 @@ def live_channels_state():
     return out
 
 
+def geo_reel(hours='24',scope='geo'):
+    try:hours=max(1,min(72,int(hours)))
+    except Exception:hours=24
+    chans={c['id']:c for c in geo_reel_channels()}
+    since=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(hours=hours+1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    marks=','.join('?' for _ in chans) or "''"
+    with closing(db_connect()) as con:
+        rows=[dict(r) for r in con.execute(f'''SELECT id,source_id,source,title,summary,video_id,published,retrieved FROM entries
+            WHERE medium='video' AND video_id IS NOT NULL AND source_id IN ({marks})
+            AND COALESCE(published,retrieved)>=? ORDER BY COALESCE(published,retrieved) DESC LIMIT 1500''',(*chans,since))]
+        states=video_check.states(con)
+        hidden={r[0] for r in con.execute('SELECT entry_id FROM wall_hidden')}
+        status={r['id']:dict(r) for r in con.execute('SELECT * FROM feeds_status')}
+    videos,counts=geo_video.select(rows,states,chans,hours,scope!='news',hidden=hidden)
+    channels=[{'id':k,'name':c['name'],'region':c.get('region',''),'state':status.get(k,{}).get('state') or 'not fetched yet',
+               'error':status.get(k,{}).get('error') or '','videos':sum(1 for v in videos if v['source_id']==k)} for k,c in chans.items()]
+    return {'videos':videos[:120],'counts':counts,'channels':channels,'hours':hours,'scope':'news' if scope=='news' else 'geo','time':utc_now()}
+
+
 def read_state():
     live=live_channels_state()
     with closing(db_connect()) as con:
         condition,values=content_cleanup.where_visible(con)
-        entries = [dict(r) for r in con.execute(f'''SELECT * FROM entries WHERE {condition} ORDER BY
+        # Reel-only broadcaster uploads stay out of the desks, story groups and upload rail.
+        entries = [dict(r) for r in con.execute(f'''SELECT * FROM entries WHERE {condition} AND source_id NOT LIKE 'geo\\_%' ESCAPE '\\' ORDER BY
             CASE WHEN published IS NULL THEN 1 ELSE 0 END,
             COALESCE(published,retrieved) DESC LIMIT ?''',( *values,NEWS_LIMIT))]
         statuses = {r['id']: dict(r) for r in con.execute('SELECT * FROM feeds_status')}
@@ -657,10 +909,12 @@ def read_state():
     with closing(db_connect()) as con:lm_cfg=semantic.settings(con)
     meaning,grouping_mode,grouping_note=semantic.story_groups(entries,db_connect,lm_cfg)
     directory=publishers.enrich(entries,meaning)
+    for host in publishers.OVERRIDES:  # outlets you've calibrated, for the list of your ratings
+        if host not in directory:directory[host]=publishers.profile(host)
     for host in prefs:  # primary/blocked publishers always resolve to a full identity
         if host not in directory:directory[host]=publishers.profile(host)
     return dict(entries=entries, status=statuses, notes=notes, watch_terms=terms, video_audit=audit,
-                publishers=directory, source_prefs=prefs, wall_hidden=wall_hidden, publisher_method=publishers.DATA['method'],
+                publishers=directory, source_prefs=prefs, wall_hidden=wall_hidden, lean_overrides=publishers.OVERRIDES, publisher_method=publishers.DATA['method'],
                 grouping={'mode':grouping_mode,'note':grouping_note or ('Stories grouped by meaning with '+semantic.MODEL if grouping_mode=='meaning' else ''),'status':semantic.status().get('status')},
                 registry=dict(feeds=all_feed_configs(),channels=REGISTRY['channels'],research=REGISTRY['research']),
                 publisher_profiles=PROFILES, geo=atlas_plus.geo_state(db_connect),
@@ -709,7 +963,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def read_json(self):
         n = int(self.headers.get('Content-Length', '0'))
-        if n > 30_000:
+        if n > (600_000 if self.path.split('?')[0] in ('/api/find', '/api/ask') else 30_000):
             raise ValueError('Request is too large.')
         return json.loads(self.rfile.read(n).decode('utf-8')) if n else {}
 
@@ -726,7 +980,7 @@ class Handler(BaseHTTPRequestHandler):
         ext = path.suffix.lower()
         mime = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
                 '.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.geojson':'application/geo+json; charset=utf-8',
-                '.svg':'image/svg+xml','.pdf':'application/pdf','.png':'image/png'}.get(ext, 'application/octet-stream')
+                '.svg':'image/svg+xml','.pdf':'application/pdf','.png':'image/png','.ico':'image/x-icon','.jpg':'image/jpeg'}.get(ext, 'application/octet-stream')
         self.send_response(200)
         self.send_header('Content-Type', mime)
         self.send_header('Cache-Control', 'no-store')
@@ -771,6 +1025,45 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_payload({'embedding':{**st,'installed':semantic.available(),'embedded':embedded,'articles':total,'model':semantic.MODEL,'dimensions':semantic.DIM},
                     'settings':{**cfg,'labels_enabled':cfg.get('labels_enabled','0'),'ollama_url':cfg.get('ollama_url',lm_labels.DEFAULT_URL),'ollama_model':cfg.get('ollama_model',lm_labels.DEFAULT_MODEL)},
                     'labels':{**lab,'stored':labels},'busy':LM_BUSY.locked()})
+            if parsed.path == '/api/radar':
+                # Research radar: each source is a cached background job with its own schedule; the page polls while they run.
+                force=params.get('refresh',['0'])[0]=='1';mc=DB_FILE.parent/'model_cache'
+                try:days=max(1,min(30,int(params.get('days',['7'])[0])))
+                except ValueError:days=7
+                jobs=radar_tick(force)
+                data=research_radar.overview(db_connect,mc,days=days)
+                data['sources']={k:{x:v.get(x) for x in ('pending','error','last_checked','cache_state','data_status','fetched','added','held','found','notes','resolved','note','keyed')} for k,v in jobs.items()}
+                data['openml']={k:(jobs.get('openml') or {}).get(k) or [] for k in ('datasets','tasks')}
+                data['models']=(jobs.get('huggingface') or {}).get('models') or []
+                data['deadlines']={k:(jobs.get('deadlines') or {}).get(k) for k in ('conferences','upcoming','source')}
+                with closing(db_connect()) as con:data['digest']=research_radar.digest_get(con)
+                return self.send_payload(data)
+            if parsed.path == '/api/radar/search':
+                g=lambda k,d='':params.get(k,[d])[0]
+                try:days=max(1,min(30,int(g('days','7'))))
+                except ValueError:days=7
+                try:mn=float(g('min','0') or 0)
+                except ValueError:mn=0.0
+                f={'lane':g('lane'),'cat':g('cat'),'min':mn,'source':g('source'),'saved':g('saved'),'hf':g('hf')=='1'}
+                mode=g('mode','auto') if g('mode','auto') in ('auto','keyword','semantic') else 'auto'
+                return self.send_payload(research_radar.search(db_connect,DB_FILE.parent/'model_cache',g('q')[:500],mode,f,days))
+            if parsed.path == '/api/radar/themes':
+                try:days=max(1,min(30,int(params.get('days',['7'])[0])))
+                except ValueError:days=7
+                return self.send_payload(research_radar.themes(db_connect,DB_FILE.parent/'model_cache',days=days))
+            if parsed.path == '/api/radar/queue':
+                with closing(db_connect()) as con:
+                    research_radar.init(con);return self.send_payload({'queue':research_radar.queue_list(con)})
+            if parsed.path == '/api/radar/bibtex':
+                ids=[x for x in params.get('ids',[''])[0].split(',') if x]
+                with closing(db_connect()) as con:
+                    research_radar.init(con);body=research_radar.bibtex(con,ids or None).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type','application/x-bibtex; charset=utf-8')
+                self.send_header('Content-Disposition','attachment; filename="atlas-reading-queue.bib"')
+                self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
+                self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+                return
             if parsed.path == '/api/lm/borderline':
                 with closing(db_connect()) as con:
                     cfg=semantic.settings(con);condition,values=content_cleanup.where_visible(con)
@@ -914,6 +1207,25 @@ class Handler(BaseHTTPRequestHandler):
                 detail=params.get('detail',[''])[0]
                 return self.send_payload(atlas_v3.shakemap(detail,fetch_bytes))
             if parsed.path == '/api/live-channels': return self.send_payload({'channels':live_channels_state(),'time':utc_now()})
+            if parsed.path == '/api/wiki/search':
+                try:return self.send_payload(wiki.search(params.get('q',[''])[0],wiki_get,db_connect))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                except Exception as e:return self.send_payload({'error':f'Wikipedia could not be reached ({type(e).__name__}).'},502)
+            if parsed.path == '/api/wiki/page':
+                try:return self.send_payload(wiki.page(params.get('title',[''])[0],wiki_get,db_connect))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                except urllib.error.HTTPError as e:return self.send_payload({'error':'Wikipedia has no article with that title.' if e.code==404 else f'Wikipedia answered {e.code}.'},404 if e.code==404 else 502)
+                except Exception as e:return self.send_payload({'error':f'Wikipedia could not be reached ({type(e).__name__}).'},502)
+            if parsed.path.startswith('/api/ask/job/'):
+                j=ask.get(parsed.path.rsplit('/',1)[-1][:20])
+                return self.send_payload(j) if j else self.send_payload({'error':'No such answer.'},404)
+            if parsed.path == '/api/ask/models':
+                with closing(db_connect()) as con:cfg=semantic.settings(con)
+                url=cfg.get('ollama_url') or lm_labels.DEFAULT_URL;model=cfg.get('ask_model') or cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+                st=lm_labels.check(url,model)
+                return self.send_payload({'model':model,'status':st['status'],'detail':st['detail'],'models':st.get('models',[])})
+            if parsed.path == '/api/geo-reel':
+                return self.send_payload(geo_reel(params.get('hours',['24'])[0],params.get('scope',['geo'])[0]))
             if parsed.path == '/api/brief':
                 key=params.get('id',[''])[0][:100]
                 with closing(db_connect()) as con:
@@ -967,6 +1279,81 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/lm/run':
                 threading.Thread(target=lm_work,kwargs={'label':bool(data.get('labels',True))},daemon=True,name='lm-work').start()
                 return self.send_payload({'started':True})
+            if path == '/api/graph':
+                ids=[str(x)[:40] for x in (data.get('ids') or [])][:coverage_graph.MAX_PAGE]
+                return self.send_payload(coverage_graph.overview(graph_entries(),ids,db_connect,publishers.profile,graph_pref()))
+            if path == '/api/video/player-error':
+                vid=str(data.get('video_id',''))[:11]
+                with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
+                return self.send_payload({'ok':ok})
+            if path == '/api/ask':
+                try:return self.send_payload(ask_question(data))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/ask/settings':
+                try:
+                    with closing(db_connect()) as con:semantic.set_setting(con,'ask_model',str(data.get('model','')))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                return self.send_payload({'ok':True})
+            if path == '/api/find':
+                try:return self.send_payload(find_articles(data))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/find/fetch':
+                groups = find.parse(data.get('q', ''))
+                if not groups:
+                    return self.send_payload({'error': 'Type one or more keywords.'}, 400)
+                desk = data.get('desk') if data.get('desk') in GRAPH_DESKS else 'World'
+                return self.send_payload(fetch_google(find.web_queries(groups, int(data.get('days') or 7)), desk))
+            if path == '/api/graph/diffuse':
+                try:days=max(1,min(14,int(data.get('days',7))))
+                except (TypeError,ValueError):days=7
+                try:return self.send_payload(coverage_graph.diffuse(graph_entries(),str(data.get('seed',''))[:40],db_connect,publishers.profile,days,pref_of=graph_pref()))
+                except LookupError as e:return self.send_payload({'error':str(e)},404)
+            if path == '/api/graph/search-further':
+                try:return self.send_payload(search_further(data.get('terms') or [],data.get('gaps') or [],str(data.get('desk','World'))))
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/radar/related':
+                try:
+                    return self.send_payload(research_radar.related_work(data.get('text',''),db_connect,research_fetch,DB_FILE.parent/'model_cache'))
+                except ValueError as e:
+                    return self.send_payload({'error':str(e)},400)
+            if path == '/api/radar/queue':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:return self.send_payload({'queue':research_radar.queue_action(con,data)})
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+            if path == '/api/radar/fingerprint':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:
+                        if data.get('action')=='remove':
+                            fid=str(data.get('id',''));con.execute('DELETE FROM radar_fingerprint WHERE id=?',(fid,));con.execute('DELETE FROM radar_vecs WHERE id=?',('fp:'+fid,))
+                        else:research_radar.fp_add(con,str(data.get('ref',''))[:600])
+                        con.commit()
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                    fps=research_radar.fingerprint(con)
+                retrieval_jobs.request('radar-fingerprint',lambda:research_radar.resolve_fingerprint(db_connect,research_fetch,DB_FILE.parent/'model_cache'),DB_FILE.parent/'research_cache',True,ttl=7*86400)
+                return self.send_payload({'fingerprint':[{k:f.get(k) for k in ('id','kind','ref','title','year','url','status','detail')} for f in fps]})
+            if path == '/api/radar/watch':
+                with closing(db_connect()) as con:
+                    research_radar.init(con)
+                    try:w=research_radar.watch_action(con,data)
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                retrieval_jobs.request('radar-keywords',research_radar.job_specs(research_fetch,db_connect,DB_FILE.parent/'model_cache')['keywords'][1],DB_FILE.parent/'research_cache',True,ttl=3600)
+                return self.send_payload({'watch':w})
+            if path == '/api/radar/settings':
+                key=str(data.get('openalex_key','')).strip()
+                if key and not re.fullmatch(r'[A-Za-z0-9_\-]{8,80}',key):return self.send_payload({'error':'That does not look like an OpenAlex API key.'},400)
+                with closing(db_connect()) as con:
+                    research_radar.init(con);research_radar.set_meta(con,'openalex_key',key);con.commit()
+                return self.send_payload({'openalex_key':bool(key)})
+            if path == '/api/radar/probe':
+                return self.send_payload({'checks':research_radar.probe(research_fetch,db_connect)})
+            if path == '/api/radar/digest':
+                if research_radar.DIGEST.get('status')=='running':return self.send_payload({'started':False,'status':'running'})
+                with closing(db_connect()) as con:cfg=semantic.settings(con)
+                url=cfg.get('ollama_url') or lm_labels.DEFAULT_URL;model=cfg.get('ollama_model') or lm_labels.DEFAULT_MODEL
+                threading.Thread(target=research_radar.digest_run,args=(db_connect,DB_FILE.parent/'model_cache',url,model,lm_labels._call),daemon=True,name='radar-digest').start()
+                return self.send_payload({'started':True,'status':'running'})
             if path == '/api/wall':
                 # Removing an article from the wall only hides it from display panels;
                 # it stays in the database, in coverage counts and in Compare coverage.
@@ -981,6 +1368,15 @@ class Handler(BaseHTTPRequestHandler):
                     con.commit()
                     hidden=[r[0] for r in con.execute('SELECT entry_id FROM wall_hidden ORDER BY created DESC LIMIT 20000')]
                 return self.send_payload({'ok':True,'wall_hidden':hidden})
+            if path == '/api/lean':
+                lean=data.get('lean')
+                lean='reset' if lean=='reset' else None if lean in (None,'none','') else lean
+                try:
+                    with closing(db_connect()) as con:
+                        overrides=publishers.set_lean(con,str(data.get('host',''))[:130],lean,str(data.get('note','')),utc_now())
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                _GRAPH_STATE['entries']=None
+                return self.send_payload({'ok':True,'lean_overrides':overrides})
             if path == '/api/source-pref':
                 with closing(db_connect()) as con:
                     publishers.set_pref(con,str(data.get('host',''))[:130],str(data.get('state','')),utc_now())
@@ -1064,6 +1460,7 @@ def main():
     init_db()
     threading.Thread(target=poll_loop, daemon=True, name='auto-poll').start()
     threading.Thread(target=lm_work, daemon=True, name='lm-work').start()
+    if not SKIP_NETWORK:radar_tick()
     with ThreadingHTTPServer((args.host, args.port), Handler) as server:
         print(f'\nIndia & World Observatory | http://{args.host}:{args.port}/')
         print('The backend checks feeds on startup and every', int(REFRESH_SECONDS/60), 'minutes while running.')

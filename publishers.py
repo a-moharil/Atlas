@@ -129,6 +129,12 @@ def lean_bucket(v):
     return 2
 
 
+# Your own calibration of an outlet's lean: host -> {'lean': -2..2 or None, 'note', 'updated'}.
+# Applied inside profile(), so cards, gauges, story spreads and the coverage graph all use it.
+OVERRIDES: dict = {}
+_OVERRIDE_VERSION = [0]
+
+
 def profile(host: str, fallback_name: str = '') -> dict:
     p = PUBLISHERS.get(host)
     gov = host.endswith(('.gov.in', '.nic.in', '.gov', '.gov.uk', '.go.jp', '.gov.au', '.int')) or host.endswith('europa.eu')
@@ -145,7 +151,12 @@ def profile(host: str, fallback_name: str = '') -> dict:
     if p.get('allsides') in SCALE:
         raters.append({'provider': 'AllSides', 'rating': LEAN_NAMES[SCALE[p['allsides']]]})
     kind = p.get('kind') or 'news'
-    return {
+    published = {'lean_original': b, 'lean_original_label': LEAN_NAMES.get(b, 'Not rated'), 'lean_user': False, 'lean_note': ''}
+    o = OVERRIDES.get(host)
+    if o is not None:
+        b = o['lean']
+        published.update(lean_user=True, lean_note=o.get('note', ''))
+    return {**published,
         'host': host, 'name': p['name'], 'country': p.get('country', ''), 'ownership': p.get('ownership', ''),
         'masthead': p.get('masthead', 'grotesk'), 'kind': kind,
         'lean': b, 'lean_score': None if v is None else round(v, 2), 'lean_label': LEAN_NAMES.get(b, 'Not rated' if kind == 'news' else 'Institutional · not rated'),
@@ -173,8 +184,45 @@ def article_paywall(entry: dict, host: str) -> str:
 
 def init(con):
     con.executescript('''CREATE TABLE IF NOT EXISTS source_prefs(
-        host TEXT PRIMARY KEY, state TEXT NOT NULL CHECK(state IN ('primary','blocked')), updated TEXT NOT NULL);''')
+        host TEXT PRIMARY KEY, state TEXT NOT NULL CHECK(state IN ('primary','blocked')), updated TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS lean_overrides(
+        host TEXT PRIMARY KEY, lean INTEGER CHECK(lean IS NULL OR lean BETWEEN -2 AND 2), note TEXT NOT NULL DEFAULT '', updated TEXT NOT NULL);''')
     con.commit()
+    load_overrides(con)
+
+
+def load_overrides(con) -> dict:
+    global OVERRIDES
+    try:
+        OVERRIDES = {r[0]: {'lean': r[1], 'note': r[2], 'updated': r[3]} for r in con.execute('SELECT host,lean,note,updated FROM lean_overrides')}
+    except Exception:
+        OVERRIDES = {}
+    _OVERRIDE_VERSION[0] += 1
+    return OVERRIDES
+
+
+def set_lean(con, host: str, lean, note: str, now: str) -> dict:
+    """lean: -2..2, None ('not rated' in your view) or 'reset' (use the published rating again)."""
+    host = norm_host(host) if not host.startswith('feed:') else host
+    if not re.fullmatch(r'(feed:[A-Za-z0-9_\-]{2,80}|[a-z0-9][a-z0-9.\-]{1,120})', host or ''):
+        raise ValueError('Invalid publisher')
+    note = re.sub(r'\s+', ' ', str(note or '')).strip()[:300]
+    if lean == 'reset':
+        con.execute('DELETE FROM lean_overrides WHERE host=?', (host,))
+    else:
+        if lean is not None:
+            try:
+                if isinstance(lean, bool) or (isinstance(lean, float) and not lean.is_integer()):
+                    raise ValueError
+                lean = int(lean)
+            except (TypeError, ValueError):
+                raise ValueError('Lean must be -2 (left) to 2 (right), none, or reset')
+            if lean not in (-2, -1, 0, 1, 2):
+                raise ValueError('Lean must be -2 (left) to 2 (right), none, or reset')
+        con.execute('INSERT INTO lean_overrides VALUES(?,?,?,?) ON CONFLICT(host) DO UPDATE SET lean=excluded.lean,note=excluded.note,updated=excluded.updated',
+                    (host, lean, note, now))
+    con.commit()
+    return load_overrides(con)
 
 
 def prefs(con) -> dict:
@@ -246,6 +294,7 @@ def stories(entries: list, meaning: dict | None = None) -> dict:
     arts = [e for e in entries if e.get('medium') == 'article']
     meaning = meaning or {}
     key = (len(arts), max((e.get('retrieved') or '' for e in arts), default=''), arts[0]['id'] if arts else '', id(meaning), len(meaning))
+    key = key + (_OVERRIDE_VERSION[0],)
     with LOCK:
         if _STORY_CACHE['key'] == key:
             return _STORY_CACHE['value']

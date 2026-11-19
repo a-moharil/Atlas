@@ -1,0 +1,143 @@
+{
+  "about": "Research radar settings. Lanes are matched by meaning (or by keywords when the language model pack is not installed). Edit freely; restart Atlas after changes.",
+  "arxiv_categories": [
+    "cs.LG",
+    "stat.ML",
+    "cs.AI",
+    "cs.NE",
+    "cs.CL",
+    "cs.SE"
+  ],
+  "first_lookback_days": 14,
+  "phrases_per_query": 4,
+  "per_query": 100,
+  "hf_search_phrases": 8,
+  "openalex_queries": 6,
+  "keep_days": 30,
+  "lanes": [
+    {
+      "key": "automl",
+      "label": "AutoML and pipeline synthesis",
+      "anchor": "automated machine learning, AutoML, machine learning pipeline synthesis and search, hyperparameter optimization, neural architecture search, meta-learning, algorithm selection, learning from OpenML experiments, tabular AutoML benchmarks"
+    },
+    {
+      "key": "dynamics",
+      "label": "Training dynamics and diagnostics",
+      "anchor": "training dynamics of deep neural networks, loss landscape, weight-space and parameter-space analysis, scale invariance, geometry of learning, hyperbolic representations, intrinsic explainability and diagnostics of trained networks, meta-networks over weights"
+    },
+    {
+      "key": "representations",
+      "label": "Transformers and representations",
+      "anchor": "transformer models, large language models, contextual embeddings, representation learning, multimodal foundation models, pre-trained models and transfer learning"
+    },
+    {
+      "key": "se4ml",
+      "label": "Software engineering for ML",
+      "anchor": "software engineering for machine learning, MLOps, mining software repositories, bots in issue trackers and GitHub, developer behaviour, ML systems in production, testing and debugging deep learning code"
+    },
+    {
+      "key": "data",
+      "label": "Data-centric ML and data science",
+      "anchor": "data-centric machine learning, data quality, dataset curation and documentation, tabular data, benchmarks and datasets, data science workflows"
+    }
+  ],
+  "trace": {
+    "name": "Joaquin Vanschoren and the AMOR/e lab",
+    "arxiv_author": "Vanschoren_J",
+    "openalex_author": "Joaquin Vanschoren",
+    "lab_url": "https://amore-labs.github.io",
+    "lab_members": [
+      "Joaquin Vanschoren",
+      "Israel Campero Jurado",
+      "Bram Grooten",
+      "Fangqin Zhou",
+      "Alexis Cvetkov-Iliev",
+      "Anna Vettoruzzo",
+      "Thilina Rajapakse",
+      "Jie Liu",
+      "Bilge Çelik",
+      "Ceren Gök",
+      "Andrei Simion-Constantinescu",
+      "Onur Yildirim",
+      "Prabhant Singh",
+      "Diana-Alexandra Onuțu",
+      "Dalton Harmsen",
+      "Shreya Sajid",
+      "Shawon Ashraf",
+      "Fabian Denoodt",
+      "Qingren Yao",
+      "Luca Mainardi",
+      "Pieter Gijsbers",
+      "Jiarong Pan",
+      "Jos van der Velde",
+      "Subhaditya Mukherjee",
+      "Ivan Slobozhan",
+      "Mohamed Mahmoud",
+      "Omosola Odetunde"
+    ]
+  },
+  "conferences": [
+    {
+      "key": "neurips",
+      "name": "NeurIPS",
+      "file": "AI/nips.yml"
+    },
+    {
+      "key": "icml",
+      "name": "ICML",
+      "file": "AI/icml.yml"
+    },
+    {
+      "key": "iclr",
+      "name": "ICLR",
+      "file": "AI/iclr.yml"
+    },
+    {
+      "key": "kdd",
+      "name": "KDD",
+      "file": "DB/sigkdd.yml"
+    },
+    {
+      "key": "icse",
+      "name": "ICSE",
+      "file": "SE/icse.yml"
+    },
+    {
+      "key": "msr",
+      "name": "MSR",
+      "file": "SE/msr.yml"
+    },
+    {
+      "key": "automl",
+      "name": "AutoML Conference",
+      "link": "https://automl.cc",
+      "note": "Not in the open deadlines dataset. Check the official site for dates."
+    }
+  ],
+  "fingerprint_seed": [
+    {
+      "kind": "title",
+      "ref": "Towards efficient AutoML: a pipeline synthesis approach leveraging pre-trained transformers for multimodal data"
+    },
+    {
+      "kind": "arxiv",
+      "ref": "2407.09585"
+    },
+    {
+      "kind": "title",
+      "ref": "TABASCO: A transformer based contextualization toolkit"
+    },
+    {
+      "kind": "title",
+      "ref": "Between JIRA and GitHub: ASFBot and its Influence on Human Comments in Issue Trackers"
+    },
+    {
+      "kind": "arxiv",
+      "ref": "2610.03000"
+    },
+    {
+      "kind": "doi",
+      "ref": "10.21203/rs.3.rs-11721788/v1"
+    }
+  ]
+}

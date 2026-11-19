@@ -3375,5 +3375,70 @@
       "channel_id": "UChqUTb7kYRX8-EiaN3XFrSQ",
       "fallback_id": ""
     }
-  ]
+  ],
+  "geo_reel": {
+    "note": "Geopolitics reel: uploads from these international news channels, plus the existing channels listed in include, from the last 24 hours. Check the IDs with: python tools/check_geo_channels.py",
+    "include": [
+      "bbc_yt",
+      "dw_yt",
+      "reuters_yt",
+      "wionyt"
+    ],
+    "channels": [
+      {
+        "id": "geo_aje",
+        "name": "Al Jazeera English",
+        "channel_id": "UCNye-wNBqNL5ZzHSJj3l8Bg",
+        "region": "Qatar / World"
+      },
+      {
+        "id": "geo_f24",
+        "name": "France 24 English",
+        "channel_id": "UCQfwfsi5VrQ8yKZ-UWmAEFg",
+        "region": "France / World"
+      },
+      {
+        "id": "geo_sky",
+        "name": "Sky News",
+        "channel_id": "UCoMdktPbSTixAyNGwb-UYkQ",
+        "region": "UK / World"
+      },
+      {
+        "id": "geo_ap",
+        "name": "Associated Press",
+        "channel_id": "UC52X5wxOL_s5yw0dQk7NtgA",
+        "region": "US / World"
+      },
+      {
+        "id": "geo_trt",
+        "name": "TRT World",
+        "channel_id": "UC7fWeaHhqgM4Ry-RMpM2YYw",
+        "region": "Türkiye / World"
+      },
+      {
+        "id": "geo_cna",
+        "name": "CNA",
+        "channel_id": "UC83jt4dlz1Gjl58fzQrrKZg",
+        "region": "Singapore / Asia"
+      },
+      {
+        "id": "geo_euronews",
+        "name": "Euronews English",
+        "channel_id": "UCSrZ3UV4jOidv8ppoVuvW9Q",
+        "region": "Europe"
+      },
+      {
+        "id": "geo_nhk",
+        "name": "NHK World-Japan",
+        "channel_id": "UCSPEjw8F2nQDtmUKPFNF7_A",
+        "region": "Japan / Asia"
+      },
+      {
+        "id": "geo_abcau",
+        "name": "ABC News (Australia)",
+        "channel_id": "UCVgO39Bk5sMo66-6o6Spn6Q",
+        "region": "Australia / Pacific"
+      }
+    ]
+  }
 }

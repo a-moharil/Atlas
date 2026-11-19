@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5 · Source library: every publisher Atlas reads, with its identity, outlet-level
+/* Sanjaya v5 · Source library: every publisher Sanjaya reads, with its identity, outlet-level
    bias rating, factuality, ownership and paywall model. Primary publishers are promoted
    across the desks; blocked publishers are no longer fetched and are hidden everywhere. */
 window.ATLASSources = (() => {
@@ -15,7 +15,7 @@ window.ATLASSources = (() => {
   const groupOf = (p) =>
     p.host.startsWith("feed:") ? "discovery" : p.kind === "government" ? "official" : ["think-tank", "academic", "journal", "community"].includes(p.kind) ? "research" : "news";
   function layout() {
-    return `<div class="heroTitle"><div><h1>Sources</h1><p>Every publisher Atlas reads. Mark the ones you trust as primary and they lead every desk; block one and Atlas stops fetching it and hides its stories everywhere, including the emergency newsroom.</p></div></div>
+    return `<div class="heroTitle"><div><h1>Sources</h1><p>Every publisher Sanjaya reads. Mark the ones you trust as primary and they lead every desk; block one and Sanjaya stops fetching it and hides its stories everywhere, including the emergency newsroom.</p></div></div>
     <div class="srcToolbar"><input id="srcSearch" type="search" placeholder="Find a publisher" value="${esc(st.q)}"><div class="filterTabs" style="margin:0">${GROUPS.map(([k, v]) => `<button class="choice ${st.group === k ? "active" : ""}" data-srcgroup="${k}">${v}</button>`).join("")}</div>
      <select id="srcLean"><option value="all">Any lean</option><option value="left">Left-leaning</option><option value="center">Centre</option><option value="right">Right-leaning</option><option value="none">Not rated</option></select>
      <select id="srcAccess"><option value="all">Any access</option><option value="free">Free</option><option value="metered">Metered or partly paywalled</option><option value="hard">Hard paywall</option></select></div>

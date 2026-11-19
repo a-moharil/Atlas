@@ -71,7 +71,7 @@ def settings(con) -> dict:
 
 
 def set_setting(con, key, value):
-    allowed = {'threshold', 'window_hours', 'labels_enabled', 'ollama_model', 'ollama_url'}
+    allowed = {'threshold', 'window_hours', 'labels_enabled', 'ollama_model', 'ollama_url', 'ask_model'}
     if key not in allowed:
         raise ValueError('Unknown setting')
     if key == 'threshold':
@@ -80,7 +80,7 @@ def set_setting(con, key, value):
         raise ValueError('Window must be 24, 48, 72, 120 or 168 hours')
     if key == 'labels_enabled' and str(value) not in ('0', '1'):
         raise ValueError('labels_enabled must be 0 or 1')
-    if key == 'ollama_model' and not re.fullmatch(r'[A-Za-z0-9._:\-/]{2,80}', str(value)):
+    if key in ('ollama_model', 'ask_model') and not re.fullmatch(r'[A-Za-z0-9._:\-/]{2,80}', str(value)):
         raise ValueError('Invalid model name')
     if key == 'ollama_url' and not re.fullmatch(r'http://(127\.0\.0\.1|localhost)(:\d{2,5})?', str(value)):
         raise ValueError('Ollama must run on this computer (http://127.0.0.1:11434)')
@@ -165,6 +165,30 @@ def embed_pending(db_connect, cache_dir, limit=1500, batch=48) -> int:
                      rate=round(done / max(0.001, time.time() - t0), 1) if done else STATE.get('rate'))
         _cache['key'] = None
     return done
+
+
+_EMBED_LOCK = threading.Lock()
+
+
+def embed_texts(texts, cache_dir=None):
+    """Unit vectors (float32) for arbitrary texts, or None when the model pack is unavailable.
+    Used by the research radar; news grouping does not go through here."""
+    if not available():
+        return None
+    if _model is None and cache_dir is not None:
+        _load_model(cache_dir)
+    if _model is None:
+        return None
+    texts = [str(t or '')[:2000] for t in texts]
+    if not texts:
+        return []
+    with _EMBED_LOCK:
+        raw = list(_model.embed(texts, batch_size=32))
+    out = []
+    for v in raw:
+        v = _np.asarray(v, dtype=_np.float32)
+        out.append(v / (float(_np.linalg.norm(v)) or 1.0))
+    return out
 
 
 def vectors(db_connect, ids) -> dict:

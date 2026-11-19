@@ -42,6 +42,7 @@ SHOTS = [
     ('13-macroeconomics', 'macro', 'Macroeconomics: indicators, trade and energy', 6),
     ('14-article-constellation', 'constellation', 'Article constellation: a 3-D map of retrieved reporting', 10),
     ('15-research-library', 'research', 'Research library: think tanks and scholarly metadata', 6),
+    ('15b-research-radar', 'radar', 'Research radar: new ML papers ranked against your own work', 8),
     ('16-mygov-policy', 'mygov', 'MyGov policy: ministries, schemes and research funding', 6),
     ('17-sources', 'sources', 'Sources: publishers, bias ratings, paywalls, primary and blocked outlets', 6),
     ('18-language-model', 'lm', 'Language model: grouping by meaning and generated labels, all on your computer', 5),

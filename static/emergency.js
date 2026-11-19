@@ -171,7 +171,7 @@
           .filter((p) => p.feeds.length),
       }))
       .filter((f) => f.publishers.length);
-    return `${note("Publishers you block in <b>Sources</b> are removed everywhere, including here. The switches below are an extra, newsroom-only layer.")}${note("These controls affect <b>Emergency Newsroom only</b>. Other ATLAS panels and the underlying archive retain their sources. Parent choices apply to new feeds in that group; a specific publisher or feed can override a parent. Family labels describe source type, not political orientation or factual reliability.")}<div class="nr-grid">${all
+    return `${note("Publishers you block in <b>Sources</b> are removed everywhere, including here. The switches below are an extra, newsroom-only layer.")}${note("These controls affect <b>Emergency Newsroom only</b>. Other Sanjaya panels and the underlying archive retain their sources. Parent choices apply to new feeds in that group; a specific publisher or feed can override a parent. Family labels describe source type, not political orientation or factual reliability.")}<div class="nr-grid">${all
       .map(
         (f) =>
           `<section class="nr-cluster"><strong>${f.enabled} / ${f.total}</strong><h3>${E(f.name)}</h3><small>feeds included · ${f.publishers.length} publisher groups</small><div class="nr-chips">${f.publishers
