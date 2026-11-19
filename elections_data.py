@@ -41,7 +41,7 @@ RAW = DATA / 'raw'
 GEO = DATA / 'geo'
 DB = DATA / 'elections.sqlite3'
 MANIFEST = DATA / 'manifest.json'
-PACK_VERSION = 1
+PACK_VERSION = 2       # 2: countermanded polls folded into their general election
 
 DM = 'https://raw.githubusercontent.com/datameet/maps/master/'
 TCPD = 'https://raw.githubusercontent.com/tcpd/tcpd-ld-data-archive/main/downloads/All_States/'
@@ -203,6 +203,19 @@ def read_results(raw):
             seat_key = (state, no) if kind == 'GE' else no
             groups.setdefault(key, {}).setdefault(seat_key, []).append(r)
             meta.setdefault(key, int(float(r.get('month') or 0)))
+    # A countermanded or adjourned poll held a few months later (Karanpur, Rajasthan, January 2024)
+    # belongs to the general election it was part of, not to an "election" of its own.
+    sizes = {}
+    for (kind, state, year), cons in groups.items():
+        sizes[(kind, state)] = max(sizes.get((kind, state), 0), len(cons))
+    for key in sorted(groups, key=lambda k: k[2]):
+        kind, state, year = key
+        if key in groups and len(groups[key]) < 0.1 * sizes[(kind, state)]:
+            prev = (kind, state, year - 1)
+            host = prev if prev in groups and len(groups[prev]) >= 0.5 * sizes[(kind, state)] else None
+            if host:
+                for sk, rows in groups.pop(key).items():
+                    groups[host].setdefault(sk, rows)
     elections, seats = [], []
     for (kind, state, year), cons in groups.items():
         eid = f'GE-{year}' if kind == 'GE' else f'AE-{state}-{year}'

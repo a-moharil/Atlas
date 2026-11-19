@@ -49,6 +49,8 @@ import wiki
 import ask
 import elections
 import elections_data
+import officials
+import forecast
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -1214,6 +1216,14 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == '/api/elections/result':
                 try:return self.send_payload(elections.result(params.get('id',[''])[0][:80]))
                 except LookupError as e:return self.send_payload({'error':str(e)},404)
+            if parsed.path == '/api/elections/officials':
+                try:scope=officials.parse_scope(params.get('scope',['IN'])[0][:80])[1]
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                return self.send_payload(retrieval_jobs.request('officials:'+scope,lambda:officials.build(scope,lambda u:wiki_get(u,3_000_000)),DB_FILE.parent/'research_cache',params.get('refresh',['0'])[0]=='1',ttl=officials.TTL))
+            if parsed.path == '/api/elections/forecast':
+                st=params.get('state',[''])[0][:60]
+                if not st:return self.send_payload(forecast.national())
+                return self.send_payload(forecast.for_state(st,hidden=elections.hidden_kinds(st)))
             if parsed.path == '/api/elections/geo':
                 try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
                 except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)
