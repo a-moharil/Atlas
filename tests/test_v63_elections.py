@@ -263,6 +263,15 @@ class Wiring(unittest.TestCase):
         self.assertIn('/elections.js', html)
         self.assertIn('/elections.css', html)
 
+    def test_background_refresh_does_not_rebuild_the_page(self):
+        js = (ROOT / 'static' / 'atlas3.js').read_text(encoding='utf-8')
+        hyd = js[js.index('async function hydrate('):js.index('return true;', js.index('async function hydrate('))]
+        self.assertIn('"elections",', hyd)                                  # excluded from the full re-render
+        self.assertIn('window.ATLASElections?.refreshIfStale?.()', hyd)    # refreshed quietly instead
+        el = (ROOT / 'static' / 'elections.js').read_text(encoding='utf-8')
+        self.assertIn('return { layout, mount, destroy, refreshIfStale }', el)
+        self.assertIn('if (changed && document.querySelector(".elPage")) quietDraw();', el)
+
     def test_server_routes(self):
         src = (ROOT / 'server.py').read_text(encoding='utf-8')
         for route in ('/api/elections/catalog', '/api/elections/result', '/api/elections/geo', '/api/elections/download'):
