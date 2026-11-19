@@ -1,6 +1,6 @@
 """ATLAS v5.1 · optional model-written story labels and summaries (local Ollama).
 
-Off by default. When switched on in Language model settings, Atlas asks a small
+Off by default. When switched on in Language model settings, Sanjaya asks a small
 local model (default ``qwen2.5:1.5b``, multilingual and fast on a laptop processor)
 to describe each top story group using only the supplied headlines and excerpts.
 Output is cached per group membership, always shown with a "Generated" tag, and

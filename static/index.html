@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#08141c">
-<title>Atlas · India and world intelligence</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/brand/icon-180.png">
+<title>Sanjaya · India and world intelligence</title>
 <meta name="description" content="Live-source geopolitical, technology, financial and environmental intelligence with auditable refreshes, publisher bias context and real satellite layers.">
 <link rel="preload" href="/fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/atlas3.css">
@@ -16,9 +20,9 @@
 </head>
 <body>
 <script>
-/* Atlas error reporter: any script that fails to load or throws is shown on screen,
+/* Sanjaya error reporter: any script that fails to load or throws is shown on screen,
    so a blank page always comes with a reason. */
-(function(){var shown={};function show(t){if(shown[t])return;shown[t]=1;var b=document.getElementById('atlasErr');if(!b){b=document.createElement('div');b.id='atlasErr';b.setAttribute('role','alert');b.innerHTML='<strong>Atlas found a problem</strong><button aria-label="Dismiss" onclick="this.parentNode.remove()">✕</button><ul></ul>';document.body.appendChild(b);}var li=document.createElement('li');li.textContent=t;b.querySelector('ul').appendChild(li);}
+(function(){var shown={};function show(t){if(shown[t])return;shown[t]=1;var b=document.getElementById('atlasErr');if(!b){b=document.createElement('div');b.id='atlasErr';b.setAttribute('role','alert');b.innerHTML='<strong>Sanjaya found a problem</strong><button aria-label="Dismiss" onclick="this.parentNode.remove()">✕</button><ul></ul>';document.body.appendChild(b);}var li=document.createElement('li');li.textContent=t;b.querySelector('ul').appendChild(li);}
 window.__atlasReport=show;
 window.addEventListener('error',function(e){var t=e.target;if(t&&t!==window&&(t.tagName==='SCRIPT'||t.tagName==='LINK')){show('Could not load '+(t.src||t.href).replace(location.origin,'')+'. Hard-refresh with Ctrl+Shift+R; if it persists the file is missing or blocked by an extension.');return;}if(e.message)show(e.message+(e.filename?' — '+e.filename.replace(location.origin,'')+':'+e.lineno:''));},true);
 window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.name==='AbortError')return;show('Unhandled error: '+(r&&r.message?r.message:String(r)));});})();
@@ -40,6 +44,9 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <symbol id="i-geo" viewBox="0 0 20 20"><circle cx="5" cy="6" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="10" cy="15" r="2"/><path d="m6.8 6.9 2.4 6.3M13.4 6.4l-2.6 6.8M7 5.8l6-.6"/></symbol>
   <symbol id="i-macro" viewBox="0 0 20 20"><path d="M3.5 16.5V9M8 16.5V4M12.5 16.5v-5M17 16.5V7"/></symbol>
   <symbol id="i-constellation" viewBox="0 0 20 20"><circle cx="4.5" cy="13" r="1.4"/><circle cx="9" cy="5" r="1.4"/><circle cx="15.5" cy="8.5" r="1.4"/><circle cx="12.5" cy="15.5" r="1.4"/><path d="m5.3 11.8 3-5.6M10.3 5.7l3.9 2.1M15 9.9l-2 4.3M5.9 13.3l5.2 2"/></symbol>
+  <symbol id="i-about" viewBox="0 0 20 20"><path d="M2.5 10s2.8-5 7.5-5 7.5 5 7.5 5-2.8 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.4"/></symbol>
+  <symbol id="i-wiki" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><path d="M2.8 10h14.4M10 2.8c2 2 3 4.4 3 7.2s-1 5.2-3 7.2c-2-2-3-4.4-3-7.2s1-5.2 3-7.2z"/></symbol>
+  <symbol id="i-radar" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.6"/><path d="M10 10l5.2-5.2"/><circle cx="14.4" cy="7.6" r="1" fill="currentColor"/></symbol>
   <symbol id="i-library" viewBox="0 0 20 20"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3zM12.6 4.2l2.9-.8 3 12.6-2.9.7z"/></symbol>
   <symbol id="i-policy" viewBox="0 0 20 20"><path d="M3 7.5 10 3l7 4.5M4.5 8v7M8 8v7M12 8v7M15.5 8v7M2.5 17h15"/></symbol>
   <symbol id="i-sources" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="11" y="3.5" width="6.5" height="6" rx="1.5"/><rect x="2.5" y="11.5" width="6.5" height="5" rx="1.5"/><path d="M11 13h6.5M11 16h4"/></symbol>
@@ -51,10 +58,10 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
  </defs>
 </svg>
 <div id="appShell">
-<aside id="navSide" aria-label="Atlas navigation">
+<aside id="navSide" aria-label="Sanjaya navigation">
  <div class="brand">
-  <svg class="brandmark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15.5"/><ellipse cx="20" cy="20" rx="6.5" ry="15.5"/><path d="M4.5 20h31"/><circle class="brandSignal" cx="31" cy="9" r="3.2"/></svg>
-  <div class="brandText"><strong>Atlas</strong><small>India and world intelligence</small></div>
+  <img class="brandLogo" src="/brand/sanjaya-mark.png" width="66" height="33" alt="">
+  <div class="brandText"><strong>Sanjaya</strong><small>India and world intelligence</small></div>
  </div>
  <nav id="navigation" aria-label="Primary">
   <div class="navGroup">Monitor</div>
@@ -75,14 +82,18 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   <button class="nav" data-page="macro"><svg><use href="#i-macro"/></svg><span>Macroeconomics</span></button>
   <button class="nav" data-page="constellation"><svg><use href="#i-constellation"/></svg><span>Article constellation</span></button>
   <button class="nav" data-page="research"><svg><use href="#i-library"/></svg><span>Research library</span></button>
+  <button class="nav" data-page="radar"><svg><use href="#i-radar"/></svg><span>Research radar</span><em class="navNew">New</em></button>
+  <button class="nav" data-page="wiki"><svg><use href="#i-wiki"/></svg><span>Wikipedia</span><em class="navNew">New</em></button>
   <button class="nav" data-page="mygov"><svg><use href="#i-policy"/></svg><span>MyGov policy</span></button>
   <div class="navGroup">System</div>
+  <button class="nav" data-page="about"><svg><use href="#i-about"/></svg><span>Why Sanjaya</span></button>
   <button class="nav" data-page="sources"><svg><use href="#i-sources"/></svg><span>Sources</span><em class="navNew">New</em></button>
   <button class="nav" data-page="lm"><svg><use href="#i-lm"/></svg><span>Language model</span><em class="navNew">New</em></button>
   <button class="nav" data-page="coverage"><svg><use href="#i-audit"/></svg><span>Coverage audit</span></button>
   <button class="nav" data-page="ccc"><svg><use href="#i-archive"/></svg><span>CCC archive</span></button>
  </nav>
  <div class="sideBottom">
+  <button class="signLine" data-page="about" title="Why Sanjaya">Sanjaya · by <span>Ambarish Moharil</span></button>
   <div class="monitor"><i id="serverLED" class="led"></i><span id="serverState">Connecting</span></div>
   <small id="lastCycle">Collector not yet checked</small>
  </div>
@@ -104,7 +115,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
   </div>
  </header>
  <main id="main" aria-live="polite"></main>
- <footer>Atlas · India-centred global coverage. Bias and paywall labels describe publishers, not individual articles. Environmental layers belong to their original providers.</footer>
+ <footer>Sanjaya, by Ambarish Moharil · India-centred global coverage. Bias and paywall labels describe publishers, not individual articles. Environmental layers belong to their original providers.</footer>
 </div>
 </div>
 <div id="playerDock" class="playerDock" hidden>
@@ -124,6 +135,15 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&r.
 <script src="/earth_watch.js" defer></script>
 <script src="/sources.js" defer></script>
 <script src="/lm.js" defer></script>
+<script src="/radar.js" defer></script>
+<script src="/coverage_graph.js" defer></script>
+<script src="/find.js" defer></script>
+<script src="/wiki.js" defer></script>
+<script src="/ask.js" defer></script>
+<script src="/calibrate.js" defer></script>
+<script src="/about.js" defer></script>
+<script src="/player.js" defer></script>
+<script src="/reel.js" defer></script>
 <script src="/wall.js" defer></script>
 <script src="/atlas3.js" defer></script>
 </body>

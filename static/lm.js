@@ -1,5 +1,5 @@
 "use strict";
-/* Atlas v5.1 · Language model settings: grouping by meaning (local multilingual
+/* Sanjaya v5.1 · Language model settings: grouping by meaning (local multilingual
    embeddings) and optional model-written labels (local Ollama). */
 window.ATLASLM = (() => {
   const A = () => window.ATLAS;
@@ -12,7 +12,7 @@ window.ATLASLM = (() => {
   };
   const LAB = { ready: ["Ready", "good"], model_missing: ["Model not pulled", "warn"], offline: ["Ollama not running", "bad"], not_checked: ["Not checked", "warn"] };
   function layout() {
-    return `<div class="heroTitle"><div><h1>Language model</h1><p>Atlas can group stories by meaning instead of shared words, across English and Indian languages, using a small model that runs on this computer. It can also write short neutral labels for the top stories. Nothing is sent to an online AI service.</p></div></div><div id="lmBody"><p class="fine">Checking the model…</p></div>`;
+    return `<div class="heroTitle"><div><h1>Language model</h1><p>Sanjaya can group stories by meaning instead of shared words, across English and Indian languages, using a small model that runs on this computer. It can also write short neutral labels for the top stories. Nothing is sent to an online AI service.</p></div></div><div id="lmBody"><p class="fine">Checking the model…</p></div>`;
   }
   const pill = (map, key) => { const [t, c] = map[key] || [key, "warn"]; return `<span class="statusPill ${c === "good" ? "good" : c === "bad" ? "bad" : "unknown"}">${esc(t)}</span>`; };
   function draw() {
@@ -21,7 +21,7 @@ window.ATLASLM = (() => {
     const e = data.embedding, s = data.settings, l = data.labels;
     const pct = e.articles ? Math.round((100 * e.embedded) / e.articles) : 0;
     const install = !e.installed
-      ? `<div class="lmSteps"><b>Install the grouping model (once)</b><ol><li>Close Atlas.</li><li>Double-click <code>install_language_model.bat</code> in the Atlas folder (macOS/Linux: <code>bash install_language_model.sh</code>).</li><li>Start Atlas again. The first start downloads about 220 MB, then it works offline.</li></ol></div>` : "";
+      ? `<div class="lmSteps"><b>Install the grouping model (once)</b><ol><li>Close Sanjaya.</li><li>Double-click <code>install_language_model.bat</code> in the Atlas folder (the repository keeps its original name) (macOS/Linux: <code>bash install_language_model.sh</code>).</li><li>Start Sanjaya again. The first start downloads about 220 MB, then it works offline.</li></ol></div>` : "";
     el.innerHTML = `<div class="twoEqual">
       <section class="panel"><div class="panelHeading"><h2>Grouping by meaning</h2>${pill(EMB, e.status)}</div>
         <p class="fine">${esc(e.model)} · ${e.dimensions} dimensions · multilingual · runs on the processor</p>
@@ -33,7 +33,7 @@ window.ATLASLM = (() => {
         <div class="filters" style="margin-top:12px"><button class="action primary" id="lmSave">Save and regroup</button><button class="action" id="lmRun" ${e.installed ? "" : "disabled"}>Process new articles now</button></div>
         <p class="fine">Used now by the bias gauge, the emergency newsroom and Compare coverage. Articles not yet processed are grouped by keywords and marked as such.</p></section>
       <section class="panel"><div class="panelHeading"><h2>Story labels and summaries</h2>${pill(LAB, l.status)}</div>
-        <p class="fine">A small local model writes a neutral label, a one-to-two sentence summary and a note on how outlets differ, for the top multi-outlet newsroom stories. It only sees the headlines and excerpts Atlas already holds. Everything it writes is marked Generated.</p>
+        <p class="fine">A small local model writes a neutral label, a one-to-two sentence summary and a note on how outlets differ, for the top multi-outlet newsroom stories. It only sees the headlines and excerpts Sanjaya already holds. Everything it writes is marked Generated.</p>
         <label class="lmToggle"><input type="checkbox" id="lmLabels" ${s.labels_enabled === "1" ? "checked" : ""}> Write labels and summaries</label>
         <div class="lmField"><label for="lmModel">Model</label><select id="lmModel">${[["qwen2.5:1.5b", "qwen2.5:1.5b · recommended, about 1 GB, fast"], ["qwen2.5:3b", "qwen2.5:3b · better wording, about 2 GB, slower"], ["llama3.2:3b", "llama3.2:3b · about 2 GB"], ["gemma2:2b", "gemma2:2b · about 1.6 GB"]].map(([v, t]) => `<option value="${v}" ${s.ollama_model === v ? "selected" : ""}>${t}</option>`).join("")}${![
           "qwen2.5:1.5b", "qwen2.5:3b", "llama3.2:3b", "gemma2:2b"].includes(s.ollama_model) ? `<option selected value="${esc(s.ollama_model)}">${esc(s.ollama_model)}</option>` : ""}</select></div>

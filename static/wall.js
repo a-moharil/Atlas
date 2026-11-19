@@ -1,4 +1,4 @@
-/* Atlas wall controls: a dice that re-deals the headlines in a panel, and
+/* Sanjaya wall controls: a dice that re-deals the headlines in a panel, and
    "Remove from wall" for single articles. Removal only hides an article from
    display panels; it stays in the database, in coverage counts and in
    Compare coverage. Shuffles last until the page is reloaded or set back. */
