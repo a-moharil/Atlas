@@ -12,6 +12,7 @@ window.ATLASElections = (() => {
     id: saved.id || "", mapMode: saved.mapMode || "geo", colorBy: saved.colorBy || "party", group: saved.group || "alliance",
     cat: null, res: null, geo: {}, outline: null, states: null, coalition: new Set(), seat: null,
     loading: false, error: "", timer: 0, seq: 0, checked: 0, refreshing: false,
+    off: {}, fc: {}, govTimer: 0,
   };
   const remember = () => { try { localStorage.setItem(KEY, JSON.stringify({ country: S.country, level: S.level, state: S.state, id: S.id, mapMode: S.mapMode, colorBy: S.colorBy, group: S.group })); } catch (e) { /* storage off */ } };
   const $ = (s) => document.querySelector(s);
@@ -64,7 +65,7 @@ window.ATLASElections = (() => {
     } catch (e) { /* a missed background check is not worth interrupting the reader */ }
     S.refreshing = false;
   }
-  function destroy() { clearTimeout(S.timer); hideTip(); }
+  function destroy() { clearTimeout(S.timer); clearTimeout(S.govTimer); hideTip(); }
 
   async function loadCatalog() {
     try { S.cat = await A().api("/api/elections/catalog"); S.error = ""; }
@@ -128,7 +129,7 @@ window.ATLASElections = (() => {
     body.innerHTML = `${blackoutBanner()}<div class="elLevels filterTabs" role="tablist" aria-label="Level">${[["national", "Lok Sabha"], ["state", "State assemblies"], ["municipal", "Municipal corporations"]].map(([k, n]) => `<button class="choice ${S.level === k ? "active" : ""}" data-el-level="${k}" role="tab" aria-selected="${S.level === k}">${n}</button>`).join("")}</div>
       ${!c ? `<div class="pageLoading">${S.error ? esc(S.error) : "Loading the elections index…"}</div>` : picker()}
       ${needsPack() ? packCard() : S.loading && !S.res ? `<div class="pageLoading">Loading results…</div>` : S.error ? `<div class="panel elNote">${esc(S.error)}</div>` : S.res ? view() : ""}`;
-    if (S.res && !needsPack()) wire();
+    if (S.res && !needsPack()) { wire(); loadGov(); }
   }
   const needsPack = () => S.level !== "municipal" && S.cat && !S.cat.pack?.ready;
 
@@ -203,7 +204,103 @@ window.ATLASElections = (() => {
         <div class="panel elBlocs"><h3>${r.alliances?.length && S.group === "alliance" ? "Alliances and parties" : "Parties"}</h3>${blocList(r)}<p class="fine">Click parties to test a coalition against the majority line.</p></div></div>
       ${muni ? municipalNotes(r) : `${mapPanel(r)}${tables(r)}`}
       <p class="fine elAttr">${esc(r.attribution || "")}${r.alliance_source ? ` Alliances: ${esc(r.alliance_source)}.` : ""}</p>
-      <div class="panel elNext"><h3>Polls and projections</h3><p class="fine">Opinion polls, exit polls with each pollster's past record, and Sanjaya's projection ranges come next, before the 2027 round. Each will be hidden automatically during the Election Commission's blackout windows.</p></div>`;
+      <div class="elGov"><section class="panel elForecast" id="elForecast" aria-live="polite">${forecastPanel()}</section>
+        <section class="panel elOfficials" id="elOfficials" aria-live="polite">${officialsPanel()}</section></div>`;
+  }
+
+  // ---------------------------------------------------------------- who governs + next election
+  const scopeOf = () => {
+    const r = S.res; if (!r) return "";
+    if (r.kind === "GE") return "IN";
+    if (r.kind === "AE") return `state:${r.state}`;
+    const city = String(r.id || "").split("-").slice(1, -1).join("-");
+    return city ? `city:${city}` : "";
+  };
+  const fcKey = () => (S.res?.kind === "AE" ? S.res.state : S.res?.kind === "GE" ? "" : null);
+  const longDate = (d) => { if (!d) return ""; const t = new Date(d.length === 7 ? d + "-01" : d); return isNaN(t) ? d : t.toLocaleDateString("en-GB", d.length === 7 ? { month: "long", year: "numeric" } : { day: "numeric", month: "long", year: "numeric" }); };
+  const initials = (n) => String(n || "?").replace(/^(Shri|Smt|Dr)\.?\s+/i, "").split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const groupOf = (p, kind) => {
+    if (p.apolitical) return "Constitutional office";
+    if ((kind === "national" && p.rank === 2) || (kind === "state" && (p.rank === 2 || p.rank === 3))) return "Head of government";
+    if (/^(Mayor|Deputy Mayor)/i.test(p.position)) return "Elected by the corporation";
+    if (p.rank >= 300 && p.rank < 400) return "Ministers of State";
+    if (p.rank >= 400) return "Other offices";
+    return kind === "national" ? "Union Cabinet" : "Council of Ministers";
+  };
+
+  function loadGov() {
+    const scope = scopeOf(), fk = fcKey();
+    clearTimeout(S.govTimer);
+    let again = false;
+    const jobs = [];
+    let slow = false;
+    const off = S.off[scope];
+    if (scope && (!off || off.pending || (off.error && !off.people?.length && Date.now() - (off.at || 0) > 60000))) jobs.push(A().api(`/api/elections/officials?scope=${encodeURIComponent(scope)}`).then((d) => { d.at = Date.now(); S.off[scope] = d; if (d.pending) again = true; else if (d.error && !d.people?.length) slow = true; }).catch((e) => { S.off[scope] = { error: e.message, people: [] }; }));
+    if (fk !== null && (!S.fc[fk] || S.fc[fk].status === "computing")) jobs.push(A().api(`/api/elections/forecast?state=${encodeURIComponent(fk)}`).then((d) => { S.fc[fk] = d; if (d.status === "computing" && !d.error) again = true; }).catch((e) => { S.fc[fk] = { status: "error", message: e.message }; }));
+    if (!jobs.length) return paintGov();
+    Promise.all(jobs).then(() => { if (scopeOf() !== scope) return; paintGov(); if (again || slow) S.govTimer = setTimeout(loadGov, again ? 4000 : 61000); });
+  }
+  function paintGov() {
+    const o = $("#elOfficials"), f = $("#elForecast");
+    if (o) { const top = o.querySelector(".elTimeline")?.scrollTop || 0; o.innerHTML = officialsPanel(); const t = o.querySelector(".elTimeline"); if (t) t.scrollTop = top; }
+    if (f) f.innerHTML = forecastPanel();
+  }
+
+  function officialsPanel() {
+    const scope = scopeOf(), d = S.off[scope];
+    const head = (t) => `<div class="elPanelBar"><h3>In office now</h3>${t ? `<span class="fine">${esc(t)}</span>` : ""}</div>`;
+    if (!scope) return head("") + `<p class="fine">Pick an election to see who governs there.</p>`;
+    if (!d || (d.pending && !d.people?.length)) return head("") + `<p class="fine elWait">Looking up current office-holders on Wikidata…</p>`;
+    const kind = d.kind || (scope === "IN" ? "national" : scope.split(":")[0]);
+    const people = d.people || [];
+    let last = "", rows = "";
+    for (const p of people) {
+      const g = groupOf(p, kind);
+      if (g !== last) { rows += `<li class="elTlGroup">${esc(g)}</li>`; last = g; }
+      const ph = p.photo?.src ? `<img src="${esc(p.photo.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'elAv',textContent:'${esc(initials(p.name))}'}))">` : `<span class="elAv">${esc(initials(p.name))}</span>`;
+      const party = p.apolitical ? `<span class="elTag">Non-party office</span>` : p.party ? `<span class="elTag"><span class="elSw" style="background:${esc(p.party_color || "#8A96A3")}"></span>${esc(p.party)}</span>` : "";
+      const links = (p.contacts || []).map((c) => `<a href="${esc(c.url)}" ${c.url.startsWith("http") ? 'target="_blank" rel="noopener noreferrer"' : ""}>${esc(c.label)}</a>`);
+      if (p.wikipedia) links.push(`<a href="${esc(p.wikipedia)}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`);
+      const credit = p.photo?.credit ? `<a href="${esc(p.photo.credit)}" target="_blank" rel="noopener noreferrer">${esc(p.photo.credit_label || "Photo: Wikimedia Commons")}</a>` : "";
+      const src = p.source_url ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener noreferrer">${esc(p.source || "Source")}</a>` : esc(p.source || "");
+      rows += `<li class="elTlItem"><div class="elPhoto">${ph}</div><div class="elWho"><b>${esc(p.name)}</b><span class="elPos">${esc(p.position)}</span>
+        <div class="elMeta">${party}${p.since ? `<span>Since ${esc(longDate(p.since))}</span>` : ""}</div>
+        ${p.note ? `<p class="fine">${esc(p.note)}</p>` : ""}
+        ${links.length ? `<div class="elLinks">${links.join("")}</div>` : ""}
+        <div class="elCred">${[src, credit].filter(Boolean).join(" · ")}</div></div></li>`;
+    }
+    const offline = d.live_error || d.error;
+    const empty = !people.length && !d.note ? `<p class="fine">${offline ? "Wikidata could not be reached, and Sanjaya's own file has no entry for this place yet. Sanjaya tries again in a minute." : "Wikidata lists no current office-holders for this place yet."}</p>` : "";
+    return head(d.title || "") + (d.note ? `<p class="elOffNote">${esc(d.note)}</p>` : "") + empty +
+      (people.length ? `<ol class="elTimeline">${rows}</ol>` : "") +
+      `<p class="fine elOffFoot">${d.portal ? `<a href="${esc(d.portal.url)}" target="_blank" rel="noopener noreferrer">${esc(d.portal.label)}</a> · ` : ""}${d.as_of ? `Checked ${esc(longDate(d.as_of.slice(0, 10)))}` : "Not checked yet"}${d.live_error && people.length ? " · Wikidata unreachable, showing Sanjaya's reviewed file" : ""}. Official contacts only.</p>`;
+  }
+
+  function forecastPanel() {
+    const r = S.res;
+    const head = (sub) => `<div class="elPanelBar"><h3>Next election</h3>${sub ? `<span class="fine">${esc(sub)}</span>` : ""}</div>`;
+    if (!r) return head("");
+    if (r.kind === "MC") return head("") + `<p class="fine">No forecast for municipal corporations: ward boundaries change between polls, so there is no seat history to learn from.</p>`;
+    const d = S.fc[fcKey()];
+    if (!d) return head("") + `<p class="fine elWait">Checking…</p>`;
+    const when = d.expected ? `Expected around ${longDate(d.expected)}` : "";
+    const foot = `<details class="elMethod"><summary>How this works</summary><p class="fine">${esc(d.method || "")}</p></details><p class="fine elDisc">${esc(d.disclaimer || "")}</p>`;
+    if (d.status !== "ready") {
+      const away = d.months_away != null && d.months_away > 0 ? `<div class="elAway"><b>${d.months_away}</b><span>months to go</span></div>` : "";
+      const step = d.status === "computing" ? `<p class="fine elWait">${esc(d.error ? "The model could not be trained: " + d.error : d.step || "")}</p>` : "";
+      return head(when) + `<div class="elWaitBox">${away}<p>${esc(d.message || "")}</p></div>${step}${foot}`;
+    }
+    const bt = d.backtest || {}, tr = d.trust || {};
+    const total = d.seats_total, maj = d.majority;
+    const x = (v) => (100 * v) / total;
+    const bars = d.ranges.filter((g) => g.hi > 0).map((g) => `<li class="elRange"><span class="elRgName" title="${esc(g.name || g.code)}">${esc(g.code === "OTH" ? "Others" : g.code)}</span>
+        <span class="elRgTrack"><span class="elRgBar" style="left:${x(g.lo)}%;width:${Math.max(0.6, x(g.hi - g.lo))}%;background:${esc(g.color || "#8A96A3")}"></span><span class="elRgMid" style="left:${x(g.median)}%"></span></span>
+        <span class="elRgNum">${g.lo}–${g.hi}</span></li>`).join("");
+    const pctS = (v) => (v == null ? "–" : `${Math.round(v * 100)}%`);
+    return head(when) + `<div class="elTrust elTrust${esc(tr.label || "Low")}"><b>${esc(tr.label || "Low")} trust</b><span>In a backtest on ${bt.elections} assembly elections (${esc(bt.years || "")}), the model picked the right party in ${pctS(bt.call_accuracy)} of seats; simply keeping every seat with its last winner gets ${pctS(bt.baseline_accuracy)}. Actual seat totals fell inside its ranges ${pctS(bt.coverage)} of the time.${tr.state_call_accuracy != null ? ` In ${esc(stateLabel(r.state))} alone: ${pctS(tr.state_call_accuracy)} of seats.` : ""}</span></div>
+      <p class="elRgCap">Seat range for each party, 10th to 90th percentile. The tick is the middle of the simulations; the line is the majority mark, ${maj} of ${total}.</p>
+      <ol class="elRanges" style="--maj:${x(maj)}%">${bars}</ol>
+      <p class="fine">Based on the ${esc((d.previous_two || []).map((x) => x.split("-").pop()).join(" and "))} assembly results${d.lok_sabha_trend ? ` and the ${esc(d.lok_sabha_trend)} Lok Sabha swing` : ""}. Model, not a poll. Alliances are not merged until they are announced.</p>${foot}`;
   }
 
   function blocList(r) {
