@@ -839,6 +839,7 @@ async function hydrate(first = false) {
         "lm",
         "radar",
         "wiki",
+        "elections",
         "about",
       ].includes(ROOT.view)
     )
@@ -852,6 +853,7 @@ async function hydrate(first = false) {
       window.ATLASConstellation?.refreshIfStale();
     else if (ROOT.view === "media") updateLiveStatuses();
     else if (ROOT.view === "sources") window.ATLASSources?.refreshIfStale?.();
+    else if (ROOT.view === "elections") window.ATLASElections?.refreshIfStale?.();
     else if (ROOT.view === "investigate")
       IndiaInvestigation.refreshIfStale(ROOT);
     return true;

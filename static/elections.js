@@ -11,7 +11,7 @@ window.ATLASElections = (() => {
     country: saved.country || "india", level: saved.level || "state", state: saved.state || "Uttar_Pradesh",
     id: saved.id || "", mapMode: saved.mapMode || "geo", colorBy: saved.colorBy || "party", group: saved.group || "alliance",
     cat: null, res: null, geo: {}, outline: null, states: null, coalition: new Set(), seat: null,
-    loading: false, error: "", timer: 0, seq: 0,
+    loading: false, error: "", timer: 0, seq: 0, checked: 0, refreshing: false,
   };
   const remember = () => { try { localStorage.setItem(KEY, JSON.stringify({ country: S.country, level: S.level, state: S.state, id: S.id, mapMode: S.mapMode, colorBy: S.colorBy, group: S.group })); } catch (e) { /* storage off */ } };
   const $ = (s) => document.querySelector(s);
@@ -28,15 +28,52 @@ window.ATLASElections = (() => {
   }
   async function mount() {
     draw();
+    if (S.cat && (S.res || S.level === "municipal")) { refreshIfStale(true); return; }   // coming back: show what we have, check quietly
     await loadCatalog();
     if (S.country === "india") choose();
+  }
+
+  // ---------------------------------------------------------------- silent refresh
+  // Results are re-read in the background. The page is only redrawn when something actually
+  // changed, and then in place: scroll position, selected seat, coalition and map mode are kept.
+  const sig = (x) => JSON.stringify(x);
+  function quietDraw() {
+    const sc = document.scrollingElement, main = $("#main");
+    const y = sc ? sc.scrollTop : 0, my = main ? main.scrollTop : 0;
+    hideTip();
+    draw();
+    if (sc) sc.scrollTop = y;
+    if (main) main.scrollTop = my;
+  }
+  async function refreshIfStale(force = false) {
+    if (S.refreshing || S.loading || (!force && Date.now() - S.checked < 60000)) return;
+    if (!document.querySelector(".elPage")) return;
+    S.refreshing = true; S.checked = Date.now();
+    try {
+      const cat = await A().api("/api/elections/catalog");
+      let changed = sig(cat.national) !== sig(S.cat?.national) || sig(cat.states) !== sig(S.cat?.states) || sig(cat.municipal) !== sig(S.cat?.municipal) || sig(cat.blackout) !== sig(S.cat?.blackout) || cat.pack?.ready !== S.cat?.pack?.ready;
+      S.cat = cat;
+      if (S.id && (S.level === "municipal" || cat.pack?.ready)) {
+        const r = await A().api(`/api/elections/result?id=${encodeURIComponent(S.id)}`);
+        if (sig(r) !== sig(S.res)) {
+          if (S.res && r.map?.available) await loadGeo(r);
+          S.res = r; changed = true;
+        }
+      }
+      if (changed && document.querySelector(".elPage")) quietDraw();
+    } catch (e) { /* a missed background check is not worth interrupting the reader */ }
+    S.refreshing = false;
   }
   function destroy() { clearTimeout(S.timer); hideTip(); }
 
   async function loadCatalog() {
     try { S.cat = await A().api("/api/elections/catalog"); S.error = ""; }
     catch (e) { S.error = `The elections index could not be read: ${e.message}`; }
-    draw();
+    const j = S.cat?.pack?.job, bar = $("#elPackBar");
+    if (bar && j && j.state === "running" && j.total) {                 // progress only: no redraw
+      bar.style.width = `${Math.round((100 * j.done) / j.total)}%`;
+      const step = $("#elPackStep"); if (step) step.textContent = j.step || "";
+    } else draw();
     const job = S.cat?.pack?.job;
     if (job && job.state === "running") { clearTimeout(S.timer); S.timer = setTimeout(loadCatalog, 1500); }
     else if (job && job.state === "done" && S.waitingForPack) { S.waitingForPack = false; choose(); }
@@ -59,7 +96,8 @@ window.ATLASElections = (() => {
   async function load(id) {
     S.id = id; S.seat = null; S.coalition = new Set(); remember();
     const seq = ++S.seq;
-    S.loading = true; S.error = ""; draw();
+    S.loading = true; S.error = "";
+    if (S.res) { const b = $("#elBody"); if (b) b.classList.add("elBusy"); } else draw();
     try {
       const r = await A().api(`/api/elections/result?id=${encodeURIComponent(id)}`);
       if (seq !== S.seq) return;
@@ -68,7 +106,9 @@ window.ATLASElections = (() => {
       if (r.map?.available) await loadGeo(r);
     } catch (e) { if (seq === S.seq) { S.error = e.message; S.res = null; } }
     if (seq !== S.seq) return;
-    S.loading = false; draw();
+    S.loading = false; S.checked = Date.now();
+    $("#elBody")?.classList.remove("elBusy");
+    quietDraw();
   }
   async function loadGeo(r) {
     const key = r.map.layer === "pc" ? "pc" : `ac:${r.map.state}`;
@@ -116,7 +156,7 @@ window.ATLASElections = (() => {
   function packCard() {
     const p = S.cat.pack || {}, j = p.job || {};
     const running = j.state === "running";
-    const bar = running && j.total ? `<div class="elProgress" role="progressbar" aria-valuemin="0" aria-valuemax="${j.total}" aria-valuenow="${j.done}"><i style="width:${Math.round((100 * j.done) / j.total)}%"></i></div><p class="fine">${esc(j.step || "")}</p>` : "";
+    const bar = running && j.total ? `<div class="elProgress" role="progressbar" aria-valuemin="0" aria-valuemax="${j.total}" aria-valuenow="${j.done}"><i id="elPackBar" style="width:${Math.round((100 * j.done) / j.total)}%"></i></div><p class="fine" id="elPackStep">${esc(j.step || "")}</p>` : "";
     return `<div class="panel elPack"><h2>Download the election data</h2>
       <p>Results for the Lok Sabha and every state assembly since 2008, with constituency maps. About ${esc(p.download_mb || 36)} MB, downloaded once and kept on this computer, like the language model. Municipal corporations work without it.</p>
       ${bar}${j.state === "failed" ? `<p class="elError">${esc(j.error)}</p>` : ""}
@@ -426,5 +466,5 @@ window.ATLASElections = (() => {
     if (e.target.id === "elState") { S.state = e.target.value; remember(); choose(); }
   });
 
-  return { layout, mount, destroy };
+  return { layout, mount, destroy, refreshIfStale };
 })();
