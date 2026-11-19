@@ -7,7 +7,7 @@
 
 # Sanjaya
 
-**A grounded news and geopolitics dashboard for India and the world.**
+**A local-first news and geopolitics dashboard for India and the world.**
 
 *To gather, distinguish and present honest accounts of the world.* By Ambarish Moharil.
 
@@ -35,6 +35,16 @@ It runs entirely on your own computer. There is no account, no cloud service and
 ![A story card with its coverage gauge](docs/screenshots/05-story-card.jpg)
 
 **[See every page →](docs/SCREENSHOTS.md)**
+
+<!-- Launch film. When the final cut exists: open this README in GitHub's web editor,
+     drag the MP4 onto the line below the heading, and GitHub inserts a
+     https://github.com/user-attachments/assets/... link that plays inline here.
+     The still is docs/brand/sanjaya-launch-poster.png. Then remove these comment marks.
+
+### Launch film
+
+PASTE-THE-USER-ATTACHMENTS-LINK-HERE
+-->
 
 ---
 
@@ -89,7 +99,7 @@ Across the app:
 
 ## 2. Quick start for experienced Python users
 
-**Requirements:** Python 3.10 or newer (developed and tested on 3.12 and 3.13), internet access for the feeds, and a modern browser. The core app has **no third-party Python dependencies**.
+**Requirements:** Python 3.9 or newer (3.12 recommended; developed and tested on 3.12 and 3.13; current versions of the optional language-model pack need 3.10 or newer), internet access for the feeds, and a modern browser. The core app has **no third-party Python dependencies**.
 
 ```bash
 git clone https://github.com/a-moharil/Atlas.git
@@ -122,15 +132,37 @@ Useful environment variables: `OBS_DB` (database path), `OBS_REFRESH_SECONDS` (m
 
 ## 3. Step-by-step install for people new to Python
 
-You don't need to know how to program. You'll install one free program (Python), download Sanjaya, and double-click a file.
+You don't need to know how to program. There are two ways in:
+
+| | **Choice A: build from the core** | **Choice B: one click (Windows)** |
+|---|---|---|
+| You do | Install Python, then double-click `start_windows.bat` | Double-click `install_sanjaya_windows.bat` |
+| Installs | Nothing beyond Python. The language model is a separate optional step ([section 4](#4-optional-grouping-by-meaning-and-generated-labels)) | Python if it's missing, the language-model pack, Ollama if you agree, and a Sanjaya shortcut |
+| Works on | Windows, macOS and Linux | Windows 10 and 11 |
+| Best for | Seeing exactly what goes on your computer | Getting everything running without typing anything |
+
+Both start the same way: download Sanjaya (3.2).
 
 ### 3.1 What is Python, and why do I need it?
 
 Python is a programming language. Sanjaya is written in it, so your computer needs the Python *interpreter*, the program that reads Sanjaya's code and runs it. Installing Python is like installing a PDF reader so your computer can open PDFs. Sanjaya then runs as a small web server **on your own computer**, and you use it in your normal browser at a local address that only your computer can see.
 
-### 3.2 Install Python
+Sanjaya runs on **Python 3.9 or newer**. Python 3.12 is the recommended version. Current versions of the optional language-model pack need 3.10 or newer.
 
-**Windows**
+### 3.2 Download Sanjaya
+
+There are two ways:
+
+- **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Sanjaya`. Don't run Sanjaya from inside the ZIP.
+- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
+
+The folder keeps the repository's original name, `Atlas` (or `Atlas-main` from a ZIP).
+
+### 3.3 Choice A: build from the core
+
+**1. Install Python**
+
+*Windows*
 
 1. Go to <https://www.python.org/downloads/> and click the yellow **Download Python 3.x** button.
 2. Open the downloaded installer.
@@ -139,18 +171,18 @@ Python is a programming language. Sanjaya is written in it, so your computer nee
 5. Check it worked:
    1. Press the Windows key, type `PowerShell`, and press Enter.
    2. Type `python --version` and press Enter.
-   3. You should see something like `Python 3.13.1`.
+   3. You should see something like `Python 3.12.10`.
 
    If the Microsoft Store opens instead, Windows is using a placeholder. Open **Settings → Apps → Advanced app settings → App execution aliases**, switch off the two *python* entries, and try again.
 
-**macOS**
+*macOS*
 
 1. Go to <https://www.python.org/downloads/> and download the macOS installer.
 2. Open it and follow the steps.
 3. Open **Terminal** (press Cmd+Space, type `Terminal`).
 4. Type `python3 --version`. On macOS the command is `python3`, not `python`.
 
-**Linux (Ubuntu or Debian)**
+*Linux (Ubuntu or Debian)*
 
 Python is usually already installed. Check with `python3 --version`. If it's missing, run:
 
@@ -158,16 +190,9 @@ Python is usually already installed. Check with `python3 --version`. If it's mis
 sudo apt update && sudo apt install python3 python3-venv python3-pip
 ```
 
-### 3.3 Download Sanjaya
+**2. Start Sanjaya**
 
-There are two ways:
-
-- **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Sanjaya`.
-- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
-
-### 3.4 Start Sanjaya
-
-- **Windows:** open the Atlas folder (the repository keeps its original name) and double-click **`start_windows.bat`**. A black window opens and shows the browser address. **Leave that window open**, because it *is* Sanjaya. Closing it stops Sanjaya.
+- **Windows:** open the Sanjaya folder and double-click **`start_windows.bat`**. A black window opens, and your browser opens Sanjaya once it is ready. **Leave that window open**, because it *is* Sanjaya. Closing it stops Sanjaya.
 - **macOS or Linux:** in Terminal, go into the folder and start it:
 
   ```bash
@@ -177,14 +202,51 @@ There are two ways:
 
   If you see "permission denied", run `chmod +x start_linux_macos.sh` once, or use `python3 server.py` instead.
 
-Now open your browser at **<http://127.0.0.1:8765/>**. `127.0.0.1` means "this computer", so nobody else can open it.
+If the browser doesn't open by itself, go to **<http://127.0.0.1:8765/>**. `127.0.0.1` means "this computer", so nobody else can open it.
 
-### 3.5 What to expect the first time
+That is the whole core. To add grouping by meaning and Ask answers later, follow [section 4](#4-optional-grouping-by-meaning-and-generated-labels), or run Choice B, which adds them to the same folder.
+
+### 3.4 Choice B: one-click setup (Windows)
+
+1. Open the Sanjaya folder and double-click **`install_sanjaya_windows.bat`**.
+2. Windows may show **"Windows protected your PC"**, because the file came from the internet and isn't signed with a paid certificate. Click **More info**, then **Run anyway**. (On a work computer, your IT policy may block it; use Choice A.)
+3. A window opens and works through five steps. It asks you one question, whether to install Ollama; press **Enter** for yes, or type **n** for no.
+4. At the end it prints what works on your computer, then starts Sanjaya and opens your browser.
+
+What the five steps do:
+
+| Step | What happens | Download |
+|---|---|---|
+| **1. Python** | Uses Python 3.9 or newer if you have it. If not, installs Python 3.12 for your Windows user only, without administrator rights: first with `winget` (the Windows package manager), otherwise with the official installer from python.org, which is run only if its digital signature is from the Python Software Foundation. | ~25 MB |
+| **2. Private environment** | Creates a `.venv` folder inside Sanjaya, so nothing is installed into your main Python. | – |
+| **3. Language-model pack** | Installs `fastembed` and downloads the multilingual model into `model_cache`. Current versions need Python 3.10 or newer: if the pack won't install on your Python 3.9, the setup offers to add Python 3.12 next to it, just for Sanjaya. | ~250 MB |
+| **4. Ollama** (asked, default yes) | Installs Ollama (by `winget`, or the signed installer from ollama.com) and downloads `qwen2.5:1.5b`. Ollama writes Ask answers and story labels. | ~2 GB |
+| **5. Shortcut** | Puts **Sanjaya**, with the emblem, on your Desktop and in the Start menu. | – |
+
+From then on, start Sanjaya from the shortcut. `start_windows.bat` does the same thing.
+
+- **Run it again at any time.** Finished steps are skipped, so it is also how you add Ollama later or repair a broken install.
+- **Everything is logged** in `setup_log.txt` in the Sanjaya folder, including the full `pip` output. If something fails, that file says why.
+- **Unattended install:** from a Command Prompt in the folder, `install_sanjaya_windows.bat -Yes` accepts every default. Add `-NoOllama` to leave Ollama out, or `-NoShortcut` to skip the shortcuts.
+- **To remove Sanjaya:** delete its folder and the two shortcuts. Python and Ollama are ordinary apps: remove them in **Settings → Apps** if nothing else uses them.
+
+### 3.5 If part of the setup fails
+
+Sanjaya is built so that each piece is optional except Python. What still works:
+
+| Missing | Still works | Not available |
+|---|---|---|
+| **Python** | Nothing. The setup stops and points you to Choice A. | Everything |
+| **Language-model pack** | All pages, feeds, maps and video, keyword search, coverage gauges, the coverage graph, the coverage audit | Grouping and search by meaning, the *% match* in Compare coverage |
+| **Ollama, or its model** | Everything above | Ask answers and generated story labels. Ask's *Open in Google AI Mode* link still works |
+| **Internet** | Sanjaya opens and shows everything it has already stored | New stories, live maps, video and Wikipedia |
+
+### 3.6 What to expect the first time
 
 - The first collection takes **a few minutes**. Desks fill in as feeds respond, and the left sidebar shows *Server connected* and the collection progress.
 - Sanjaya creates a file called `observatory.sqlite3` in its folder. This is **your database**: every article collected, your source choices and your settings. Keep it. Copy it into a new version of Sanjaya to carry your history over.
 - To **stop** Sanjaya, close the black window (Windows) or press **Ctrl+C** in the Terminal.
-- To **start** it again, repeat 3.4. Everything you collected is still there.
+- To **start** it again, use the shortcut or `start_windows.bat` (Windows), or repeat 3.3 step 2. Everything you collected is still there.
 
 ---
 
@@ -194,7 +256,7 @@ Without these, Sanjaya groups stories by **shared headline keywords**, and that 
 
 ### 4.1 Grouping by meaning (recommended)
 
-- **Windows:** double-click **`install_language_model.bat`**.
+- **Windows:** double-click **`install_language_model.bat`**, or run the one-click setup ([3.4](#34-choice-b-one-click-setup-windows)), which does this for you.
 - **macOS or Linux:** run `bash install_language_model.sh`.
 
 The installer:
@@ -622,10 +684,11 @@ atlas/
 │  india_intel.py, article_clusters.py, atlas_plus.py, atlas_v3.py, analysis_api.py
 ├─ migrate_database.py     copy history from an older Sanjaya database
 ├─ install_language_model.(bat|sh), requirements-lm.txt
+├─ install_sanjaya_windows.bat   one-click Windows setup (logic in tools/windows/install_sanjaya.ps1)
 ├─ start_windows.bat, start_linux_macos.sh, Dockerfile, compose.yaml
 ├─ static/                 front end (HTML, CSS, JS modules, fonts, map data)
 ├─ tests/                  unittest suites and Node front-end checks
-├─ tools/                  take_screenshots.py for the README preview
+├─ tools/                  take_screenshots.py for the README preview; windows/ setup script
 ├─ verification/           recorded live-probe results from development
 └─ docs/history/           release notes and test reports for earlier versions
 ```
@@ -636,7 +699,9 @@ atlas/
 
 | Symptom | What to do |
 |---|---|
-| `python` is not recognised (Windows) | Reinstall Python with **Add python.exe to PATH** ticked, or turn off the Store aliases (3.2). |
+| `python` is not recognised (Windows) | Run `install_sanjaya_windows.bat`, or reinstall Python with **Add python.exe to PATH** ticked, or turn off the Store aliases (3.3). |
+| *Windows protected your PC* | Click **More info → Run anyway**. The setup files aren't signed with a paid certificate; you can read them first, they are plain text. |
+| The one-click setup stops or reports `[--]` | Open `setup_log.txt` in the Sanjaya folder: it records every command and its output. Run the setup again once the cause is fixed; finished steps are skipped. |
 | The browser says it can't connect | Is the black window (or Terminal) still open? Sanjaya only runs while it is. Check the port in the window. |
 | `Address already in use` | Sanjaya is already running, or another app uses 8765. Close it, or run `python server.py --port 8800`. |
 | Desks stay empty | Wait for the first collection. Then check **Coverage audit** for failing feeds, and check that your network allows RSS and Google News. |
