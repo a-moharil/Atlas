@@ -14,7 +14,7 @@ def request(key, loader, directory, force=False, ttl=21600):
         if job is None:
             job={'data':None,'checked':0,'running':False,'error':None};JOBS[key]=job
             try:
-                saved=json.loads(path.read_text());job.update(data=saved['data'],checked=saved['checked'])
+                saved=json.loads(path.read_text(encoding='utf-8'));job.update(data=saved['data'],checked=saved['checked'])
             except (OSError,ValueError,KeyError):pass
         due=now-job['checked']>(60 if job['error'] or (job['data'] or {}).get('data_status')=='partial' else ttl)
         if not job['running'] and (force or due):
@@ -31,7 +31,7 @@ def request(key, loader, directory, force=False, ttl=21600):
                         job.update(data=result,checked=time.time(),error=None)
                         try:
                             directory.mkdir(parents=True,exist_ok=True)
-                            temp=path.with_suffix('.tmp');temp.write_text(json.dumps({'data':result,'checked':job['checked']}));temp.replace(path)
+                            temp=path.with_suffix('.tmp');temp.write_text(json.dumps({'data':result,'checked':job['checked']}),encoding='utf-8');temp.replace(path)
                         except OSError:pass
                 except Exception as exc:
                     with LOCK:job.update(error=str(exc)[:400],checked=time.time())
