@@ -93,7 +93,7 @@ Across the app:
 - **Every article can be removed from the wall.** You can undo a removal, and a removed article still counts in coverage statistics.
 - **Primary sources** you choose appear in a compact bar at the top of each desk. Click chips to show several outlets at once, use *Only* for one, or open the searchable list.
 - **Coverage graph** on the Situation room and every desk: the outlets on the page as a network, linked by the stories they share and by how similar their coverage is. **Diffuse** on any article spreads outward from it: its story and sources, related stories on any desk, and outlets that haven't covered it yet. **Search further** fetches more.
-- **Blocked publishers** disappear from every page, including the emergency newsroom and the language model's input.
+- **Blocked publishers** disappear from every page, including the emergency newsroom and the language model's input. When to block: [Cutting through the noise](docs/CUTTING_THROUGH_THE_NOISE.md).
 
 ---
 
@@ -344,6 +344,8 @@ The **Coverage graph** panel on the Situation room, World, India, Technology and
 - **Lists:** stories are numbered as on the map and in the table, most similar first, with eight shown and *Show more* for the rest. Each story shows a small lean gauge; each article shows the outlet's logo, lean label and paywall label. Titles drop the trailing " - Publisher" and prefer a primary or rated outlet's headline; the same headline from the same outlet appears once.
 
 **Search further** sends one open Google News search for the story's key terms, plus one per gap outlet (up to three). New articles join the desk you started from and are processed by the language model in the background, after which the diffusion updates.
+
+> **Spotting an outlet that floods a story.** On the Timeline tab, a long band of dots in one colour, all from one outlet, often means that outlet published the same story many times over. [Cutting through the noise](docs/CUTTING_THROUGH_THE_NOISE.md) walks through a real example, what to check, and when to block.
 
 ### 5.2a Searching a panel
 
