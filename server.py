@@ -47,6 +47,8 @@ import geo_video
 import find
 import wiki
 import ask
+import elections
+import elections_data
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -1207,6 +1209,14 @@ class Handler(BaseHTTPRequestHandler):
                 detail=params.get('detail',[''])[0]
                 return self.send_payload(atlas_v3.shakemap(detail,fetch_bytes))
             if parsed.path == '/api/live-channels': return self.send_payload({'channels':live_channels_state(),'time':utc_now()})
+            if parsed.path == '/api/elections/catalog':
+                return self.send_payload(elections.catalog())
+            if parsed.path == '/api/elections/result':
+                try:return self.send_payload(elections.result(params.get('id',[''])[0][:80]))
+                except LookupError as e:return self.send_payload({'error':str(e)},404)
+            if parsed.path == '/api/elections/geo':
+                try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
+                except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)
             if parsed.path == '/api/wiki/search':
                 try:return self.send_payload(wiki.search(params.get('q',[''])[0],wiki_get,db_connect))
                 except ValueError as e:return self.send_payload({'error':str(e)},400)
@@ -1286,6 +1296,9 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/elections/download':
+                started=elections_data.start(lambda u,timeout=None:fetch_bytes(u,max_bytes=60_000_000,timeout=timeout or 600))
+                return self.send_payload({'started':started,**elections_data.status()})
             if path == '/api/ask':
                 try:return self.send_payload(ask_question(data))
                 except ValueError as e:return self.send_payload({'error':str(e)},400)

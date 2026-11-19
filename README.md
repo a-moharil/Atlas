@@ -80,6 +80,7 @@ PASTE-THE-USER-ATTACHMENTS-LINK-HERE
 | **Earth watch** | Earthquakes, cyclones, floods, wildfires and volcanoes from GDACS, NASA EONET and USGS. Also global temperature and sea-surface anomalies (Copernicus ERA5), and Windy's live wind, rain and temperature map for India. |
 | **Satellite atlas** | Esri, OpenStreetMap and NASA imagery with hazard layers and the official Survey of India boundary. |
 | **India regional map** | Where Indian coverage is concentrated, drawn on the Survey of India state map. |
+| **Elections** | Lok Sabha and state assembly results since 2008, and eight municipal corporations: a parliament chart with seats against votes and a coalition tester, constituency maps inside the Survey of India boundary, equal-area hex maps, closest contests and seats that changed hands. |
 | **Conflict atlas, Geopolitics, Macroeconomics** | Published conflict maps, summit and bloc calendars, and economic indicators with their source links. |
 | **Article constellation** | A 3-D map of retrieved reporting, clustered by shared vocabulary. |
 | **Research library, MyGov policy** | Think-tank analysis, scholarly metadata from OpenAlex, and ministry and scheme updates. |
@@ -399,6 +400,25 @@ The **Geopolitics reel** on *Live TV and video* plays recent news videos from in
 
 When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live stream it asks for a fresh live check and tries the channel's current live stream; if that fails too, it says why and offers *Watch on YouTube*.
 
+### 5.3b Elections
+
+**Elections** (in the sidebar under Monitor) shows results as declared. Sanjaya never calls a winner itself.
+
+- **Levels:** *Lok Sabha* (2009 to 2024), *State assemblies* (every state since the 2008 delimitation, up to the 2026 round) and *Municipal corporations* (Mumbai, Pune, Pimpri-Chinchwad, Nagpur, Delhi, Hyderabad, Chennai and Bengaluru). The *United States* and *Israel* tabs are placeholders for a later release.
+- **Parliament chart:** one dot per seat, grouped by alliance (or by party), with the majority line. The outer arc is each group's share of seats and the inner arc its share of the vote, so first-past-the-post distortions are visible at a glance. Click parties to test whether a coalition reaches a majority.
+- **Map:** constituencies coloured by the winning party, by margin (darker means closer), or by whether the seat changed hands since the previous election. The national map is drawn inside the Survey of India outline and state maps inside the Survey of India state boundary. Hover for the winner and margin; click for the full contest.
+- **Equal-area hexes:** one hexagon per seat, placed near its real location, so a dense city seat weighs as much as a large rural one.
+- **Tables:** parties with seats, vote share and the change from the previous election, the closest contests, and the seats that changed hands.
+
+**The data is downloaded on first use**, like the language model: open Elections and click *Download election data* (about 36 MB, once). Municipal corporations work without it. The download needs GitHub to be reachable.
+
+What it does not do yet:
+- **Polls and projections:** opinion polls, exit polls with each pollster's record, and Sanjaya's projection ranges come next. While the Election Commission's blackout windows are in force (Representation of the People Act 1951, sections 126 and 126A), they will be hidden automatically. Add notified windows to `election_blackout.json`.
+- **Some maps are unavailable:** where constituencies were redrawn after the map data was made (Assam 2026, Jammu and Kashmir 2024), there is no map for that election; the chart and tables are complete. Gujarat's map source lacks 20 city constituencies in Ahmedabad and Surat.
+- **No ward maps:** municipal corporations show seat totals only. The public ward maps don't match the boundaries used in these elections, and ward-level results aren't published in a form Sanjaya can read yet.
+
+Alliances are drawn only where their totals were checked against published figures (Lok Sabha 2024; Uttar Pradesh, Punjab and Goa 2022; Maharashtra 2024). Elsewhere results are shown party by party. Party colours and names are in `election_parties.json`, alliances in `election_alliances.json`, and the municipal results with their sources in `election_municipal.json`.
+
 ### 5.4 Research radar
 
 The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Sanjaya looks each one up on arXiv, Crossref or OpenAlex.
@@ -675,6 +695,9 @@ atlas/
 ├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
 ├─ find.py                 panel search: query syntax, BM25 keywords, meaning blend, web queries
 ├─ wiki.py                 Wikipedia: search, cleaned article HTML, offline cache, passages
+├─ elections.py            Elections: results, alliances, comparisons, maps, ECI blackout windows
+├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)
+├─ election_*.json         party colours, alliances, municipal results, blackout windows
 ├─ (static/calibrate.js)  your lean calibration; (static/about.js) the Why Sanjaya page
 ├─ ask.py                  Ask drawer: retrieval, cited prompt, local Ollama answers, citation check
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
@@ -753,6 +776,8 @@ atlas/
   - [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
+- **Election results:** "TCPD Indian Elections Data v2.0", [Trivedi Centre for Political Data](https://tcpd.ashoka.edu.in), Ashoka University (Lok Dhaba, free and open use with citation), and [in-rolls/eci_results](https://github.com/in-rolls/eci_results) (MIT) for Lok Sabha 2024 and the assemblies from November 2023. Both come from Election Commission of India statistical reports. Municipal results are State Election Commission totals as reported; sources are listed in `election_municipal.json`.
+- **Constituency maps:** [DataMeet](https://github.com/datameet/maps) assembly constituencies (CC BY 2.5 India) and Lok Sabha constituencies, simplified by Arun Ganesh (CC0).
 - **Research metadata:**
   - [OpenAlex](https://openalex.org) (CC0)
   - [Crossref](https://www.crossref.org)
