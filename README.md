@@ -573,6 +573,7 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
 ```
 
 - **Server (`server.py`):** a `ThreadingHTTPServer` serving the static front end and about 40 JSON endpoints. It binds to `127.0.0.1` by default.
+![System Architecture](/docs/images/system-architecture.png)
 - **Collection:**
   - A background thread polls the registry (`source_registry.json`) every `OBS_REFRESH_SECONDS`.
   - Requests run in a bounded thread pool (8 workers) with per-request timeouts.
