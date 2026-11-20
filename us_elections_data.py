@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / 'election_data' / 'us'
 RAW = OUT / 'raw'
 DB = OUT / 'us_elections.sqlite3'
-PACK_VERSION = 1
+PACK_VERSION = 2       # 2: winners on their own ballot line count as independents
 BASE = 'https://raw.githubusercontent.com/fivethirtyeight/election-results/main/'
 SOURCES = [
     ('house.csv', BASE + 'election_results_house.csv', 'FiveThirtyEight House results 1976–2024', 'CC BY 4.0'),
@@ -198,6 +198,8 @@ def _race(office, cycle, st, seat, special, stage, rows, meta):
     for c in cands.values():
         ps = [party_of(p) for p in c['parties']]
         c['party'] = 'D' if 'D' in ps else 'R' if 'R' in ps else 'I' if 'I' in ps else 'O'
+        if c['party'] == 'O' and c['winner'] and office in ('S', 'G', 'H') and c['name'] not in ('Other', 'Blank'):
+            c['party'] = 'I'      # winners on their own ballot line (King 2012, "Connecticut for Lieberman") sit as independents
     total = sum(c['votes'] for c in cands.values())
     ranked = sorted(cands.values(), key=lambda c: (-c['winner'], -c['votes']))
     win = ranked[0] if ranked and (ranked[0]['winner'] or ranked[0]['unopposed']) else None

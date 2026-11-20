@@ -10,6 +10,7 @@ import json
 import sqlite3
 
 import us_elections_data as UD
+import us_ap
 import us_live
 
 LIVE = {'H': [2026], 'S': [2026], 'G': [2026]}
@@ -73,7 +74,8 @@ def _cand(r):
 
 def _seat_of(r):
     return {'state': r['state'], 'seat': r['seat'], 'winner': r['winner'], 'party': r['winner_party'] if r.get('called', 1) and r['winner_party'] else 'U',
-            'leader_party': r['winner_party'], 'runner': r.get('runner'), 'runner_party': r.get('runner_party'),
+            'leader_party': r.get('leader_party') or r['winner_party'], 'leader': r.get('leader') or r['winner'],
+            'counted': r.get('counted_pct'), 'runner': r.get('runner'), 'runner_party': r.get('runner_party'),
             'margin': r.get('margin_pct'), 'called': bool(r.get('called', 1) and r['winner_party']), 'special': bool(r.get('special')),
             'unopposed': bool(r.get('unopposed')), 'cycle': r['cycle'], 'cands': _cand(r), 'origin': r.get('origin'),
             'status': r.get('status_text'), 'source': r.get('source')}
@@ -87,7 +89,7 @@ def _latest(rows):
     return best
 
 
-def result(office, cycle, getter=None, force=False):
+def result(office, cycle, getter=None, force=False, ap_key=None):
     if office not in OFFICES:
         raise ValueError('Unknown office')
     cycle = int(cycle)
@@ -95,8 +97,19 @@ def result(office, cycle, getter=None, force=False):
     rows = _rows(office, [cycle])
     if cycle in LIVE.get(office, []) and getter is not None:
         live = live_races(office, cycle, getter, force)
+        ap = us_ap.request(cycle, ap_key, getter, force) if ap_key else {'races': [], 'enabled': False}
+        ap_races = [dict(r) for r in ap['races'] if r['office'] == office]
+        if office == 'S':
+            hist = [h for h in _rows('S', upto=cycle - 1) if h['cycle'] >= cycle - 8]
+            us_live.assign_senate_classes(ap_races, hist)
+        # AP first; Wikipedia fills races AP has not returned.
+        merged = {r['id']: r for r in live['races']}
+        merged.update({r['id']: r for r in ap_races})
         have = {r['id'] for r in rows}
-        rows += [r for r in live['races'] if r['id'] not in have]
+        rows += [r for k, r in merged.items() if k not in have]
+        live = {**live, 'ap': {'enabled': ap.get('enabled', False), 'error': ap.get('error'), 'fetched': ap.get('fetched'),
+                               'races': len(ap_races)},
+                'wikipedia_races': sum(1 for k in merged if k not in {r['id'] for r in ap_races})}
     f = {'H': house, 'S': senate, 'G': governors, 'P': president}[office]
     out = f(cycle, rows)
     if live and out.get('missing'):
@@ -108,6 +121,27 @@ def result(office, cycle, getter=None, force=False):
         u['seats'] += out['missing']
         out['uncalled'] += out['missing']
         out['notes'] = [f"{out['missing']} race{'s' if out['missing'] != 1 else ''} not found on Wikipedia's page yet."] + out.get('notes', [])
+    # Net change against the previous election of the same kind, so a new year visibly differs from the last.
+    step = 4 if office == 'P' else 2
+    prev_rows = _rows(office, [cycle - step])
+    if prev_rows:
+        try:
+            prev = f(cycle - step, prev_rows)
+            before = {p['code']: p['seats'] for p in prev['parties'] if p['code'] != 'U'}
+            now = {p['code']: p['seats'] for p in out['parties'] if p['code'] != 'U'}
+            out['change'] = {k: now.get(k, 0) - before.get(k, 0) for k in set(before) | set(now) if now.get(k, 0) != before.get(k, 0)}
+            out['previous'] = {'cycle': cycle - step, 'parties': before}
+        except Exception:
+            pass
+    # Lean of races not yet called: who is ahead in the count, never a call.
+    lean = {}
+    for st in out.get('seats', []):
+        if not st['called'] and st.get('up', True):
+            k = st.get('leader_party') or '?'
+            lean[k] = lean.get(k, 0) + 1
+    if out.get('missing') and live:
+        lean['?'] = lean.get('?', 0) + out['missing']
+    out['lean'] = lean
     out.update(office=office, cycle=cycle, label=f'{OFFICES[office]} {cycle}', attribution=UD.ATTRIBUTION,
                live={k: v for k, v in live.items() if k != 'races'} if live else None)
     for p in out['parties']:
@@ -159,8 +193,8 @@ def house(cycle, rows):
 
 
 def _mapval(s):
-    return {'p': s['party'], 'l': s['leader_party'], 'm': s['margin'], 'w': s['winner'], 'r': s['runner'], 'up': s.get('up', True),
-            'c': s['called'], 'sp': s['special']}
+    return {'p': s['party'], 'l': s['leader_party'], 'm': s['margin'], 'w': s['winner'] or s.get('leader'), 'r': s['runner'], 'up': s.get('up', True),
+            'c': s['called'], 'sp': s['special'], 'src': s.get('origin'), 'n': s.get('counted')}
 
 
 def senate(cycle, rows):

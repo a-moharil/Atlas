@@ -6,9 +6,9 @@ window.ATLASElectionsUS = (() => {
   const esc = (s) => A().esc(s);
   const KEY = "atlas.elections.us.v1";
   const saved = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } })();
-  const U = { office: saved.office || "H", cycle: saved.cycle || null, cat: null, res: {}, geo: null, pick: null, scope: saved.scope || "us",
+  const U = { office: saved.office || "H", cycle: saved.cycle || null, mode: saved.mode || "races", cat: null, res: {}, geo: null, pick: null, scope: saved.scope || "us",
     off: {}, timer: 0, offTimer: 0, error: "", body: null, seq: 0 };
-  const remember = () => { try { localStorage.setItem(KEY, JSON.stringify({ office: U.office, cycle: U.cycle, scope: U.scope })); } catch (e) { /* storage off */ } };
+  const remember = () => { try { localStorage.setItem(KEY, JSON.stringify({ office: U.office, cycle: U.cycle, scope: U.scope, mode: U.mode })); } catch (e) { /* storage off */ } };
   const OFF = { H: "House", S: "Senate", G: "Governors", P: "President" };
   const PN = { D: "Democratic", R: "Republican", I: "Independent", O: "Other", U: "Not yet called" };
   const PC = { D: "#3A78D4", R: "#D5483F", I: "#9575CD", O: "#8A96A3", U: "#4B5560" };
@@ -44,9 +44,9 @@ window.ATLASElectionsUS = (() => {
     draw();
   }
 
-  async function load(force = false) {
+  async function load(force = false, tick = false) {
     const k = key(), seq = ++U.seq;
-    if (!U.res[k] || force || U.res[k].live?.pending) {
+    if (!U.res[k] || force || U.res[k].live?.pending || (tick && U.res[k].live)) {
       if (!U.res[k]) draw();
       try {
         const r = await A().api(`/api/us/result?office=${U.office}&cycle=${U.cycle}${force ? "&refresh=1" : ""}`);
@@ -59,6 +59,7 @@ window.ATLASElectionsUS = (() => {
     const r = U.res[k];
     clearTimeout(U.timer);
     if (r?.live?.pending) U.timer = setTimeout(() => { if (key() === k) load(false); }, 2500);   // Wikipedia read still running
+    else if (r?.live) U.timer = setTimeout(() => { if (key() === k && U.body) load(false, true); }, r.live.ap?.enabled ? 125000 : 600000);   // keep counting races fresh
     loadOfficials();
   }
 
@@ -98,12 +99,15 @@ window.ATLASElectionsUS = (() => {
     if (r.up != null && U.office !== "H") stats.push([r.up, U.office === "G" ? "races this round" : "seats up"]);
     if (r.uncalled) stats.push([r.uncalled, "not yet called"]);
     if (r.flips?.length) stats.push([r.flips.length, "changed party"]);
+    const chg = Object.entries(r.change || {}).filter(([c]) => c !== "U").sort((a, b) => "DIOR".indexOf(a[0]) - "DIOR".indexOf(b[0]));
+    if (r.previous) stats.push([chg.length ? chg.map(([c, n]) => `<span style="color:${PC[c]}">${c} ${n > 0 ? "+" : "−"}${Math.abs(n)}</span>`).join(" ") : "±0", `since ${r.previous.cycle}`]);
     return `<section class="elHead"><div><h2>${esc(r.label)}</h2><p class="fine">${U.office === "P" ? lead.map((p) => `${esc(p.candidate || PN[p.code])} (${p.code}) ${p.seats}`).join(" · ") : ""}</p></div>
         <div class="elStats">${stats.map(([v, l]) => `<div><b>${v}</b><span>${esc(l)}</span></div>`).join("")}</div></section>
       ${liveLine(r)}
-      <div class="elTop"><div class="panel elChamber"><h3>${U.office === "P" ? "Electoral votes" : U.office === "G" ? "Governorships" : "Seats"}</h3>${U.office === "P" ? evBar(r) : chamber(r)}</div>
+      <div class="elTop"><div class="panel elChamber"><h3>${U.office === "P" ? "Electoral votes" : U.office === "G" ? "Governorships" : "Seats"}</h3>${U.office === "P" ? evBar(r) : chamber(r)}
+          ${U.office === "S" || U.office === "G" ? `<p class="fine usChamberKey"><span class="usDotSolid"></span>won in ${U.cycle} <span class="usDotHollow"></span>elected earlier, not up${Object.keys(r.lean || {}).length ? ` <span class="usDotLean"></span>not yet called` : ""}</p>` : ""}</div>
         <div class="panel elBlocs"><h3>Parties</h3>${partyList(r)}</div></div>
-      <div class="panel elMap usMap"><div class="elPanelBar"><h3>${U.office === "H" ? "Districts" : "States"}</h3><span class="fine">${U.office === "H" ? "One tile per district, grouped by state. Tiles don't change when district lines are redrawn." : U.office === "P" ? "Shade shows the margin." : "Faded: not up this year. Shade shows the margin."}</span></div>
+      <div class="panel elMap usMap"><div class="elPanelBar"><h3>${U.office === "H" ? "Districts" : "States"}</h3>${U.office === "S" || U.office === "G" ? `<div class="filterTabs elMini" role="tablist" aria-label="What the map shows">${[["races", `${U.cycle} races`], ["whole", U.office === "S" ? "Whole Senate after it" : "All governors after it"]].map(([k, n]) => `<button class="choice ${U.mode === k ? "active" : ""}" data-us-mode="${k}" aria-pressed="${U.mode === k}">${esc(n)}</button>`).join("")}</div>` : `<span class="fine">${U.office === "H" ? "One tile per district, grouped by state. Tiles don't change when district lines are redrawn." : ""}</span>`}</div>
         <div class="usMapWrap">${U.office === "H" ? tileMap(r) : stateMap(r)}</div>${legend(r)}
         <div id="usPick">${pickCard(r)}</div></div>
       ${tables(r)}
@@ -115,20 +119,36 @@ window.ATLASElectionsUS = (() => {
   function liveLine(r) {
     const l = r.live;
     if (!l) return "";
-    const btn = `<button class="choice elRefresh" data-us-refresh ${l.pending ? "disabled" : ""}>${l.pending ? "Reading…" : "Read again"}</button>`;
-    const msg = l.pending ? `${esc(l.step || `Reading Wikipedia: ${l.page}`)}…` : l.error && !r.seats?.length ? `Wikipedia could not be read (${esc(l.error)}).` :
-      `Results as listed on Wikipedia's <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">${esc(l.page)}</a>, read ${esc(ago(l.fetched))}. Counting continues in some states; races Wikipedia does not list as decided are shown as not yet called.`;
-    return `<div class="panel elNote usLive" role="status"><span>${msg}</span>${btn}</div>`;
+    const ap = l.ap || {};
+    const btn = `<button class="choice elRefresh" data-us-refresh ${l.pending ? "disabled" : ""}>${l.pending ? "Reading…" : "Check now"}</button>`;
+    const wp = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`;
+    let apText;
+    if (ap.enabled && !ap.error) apText = `<b>Associated Press:</b> ${ap.races} race${ap.races === 1 ? "" : "s"}, read ${esc(ago(ap.fetched))}; checked again every two minutes while this page is open.`;
+    else if (ap.enabled) apText = `<b>Associated Press:</b> ${esc(ap.error)}${ap.races ? ` Showing the last ${ap.races} races AP returned.` : ""}`;
+    else apText = `<b>Associated Press:</b> not connected. AP's results and race calls need an AP Elections API key, which AP licenses to news organisations; Sanjaya cannot read them without one.`;
+    const wpText = l.pending ? esc(l.step || `Reading ${l.page}`) + "…" : l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
+      `${wp}: ${l.wikipedia_races ?? (r.seats || []).length} race${l.wikipedia_races === 1 ? "" : "s"}${ap.enabled ? " that AP did not return" : ""}, read ${esc(ago(l.fetched))}. Editors update it by hand, so it can trail the count by hours or days.`;
+    const keyForm = ap.enabled ? `<button class="linkButton" data-us-apkey-clear>Remove AP key</button>` :
+      `<form class="usApForm" data-us-apform><label><span>AP Elections API key</span><input type="password" name="k" autocomplete="off" spellcheck="false" placeholder="Paste your key"></label><button class="choice" type="submit">Connect AP</button><a href="https://developer.ap.org/ap-elections-api" target="_blank" rel="noopener noreferrer">How to get one</a></form>`;
+    return `<div class="panel elNote usLive" role="status"><div class="usLiveText"><p>${apText}</p><p><b>Wikipedia:</b> ${wpText}</p>
+      <p class="fine">A race is called only when the source calls it. Until then it is striped toward whoever is ahead. The key is kept on this computer and never shown again.</p>${keyForm}</div>${btn}</div>`;
   }
 
   // ---------------------------------------------------------------- charts
   function order(r) {
-    const seats = [];
-    const sorted = [...r.parties].sort((a, b) => "DIOUR".indexOf(a.code) - "DIOUR".indexOf(b.code));
-    for (const p of sorted) {
-      const up = p.up != null ? p.up : p.seats;
-      for (let i = 0; i < p.seats; i++) seats.push({ code: p.code, faded: U.office !== "H" && p.up != null && i >= up });
+    // Called seats, then seats leaning the same way (not called), from left (D) to right (R); unknown in the middle.
+    const seats = [], lean = r.lean || {};
+    const called = Object.fromEntries(r.parties.filter((p) => p.code !== "U").map((p) => [p.code, p]));
+    const push = (code, n, extra) => { for (let i = 0; i < n; i++) seats.push({ code, ...extra }); };
+    for (const c of ["D", "I", "O"]) {
+      const p = called[c];
+      if (p) { const up = p.up != null ? p.up : p.seats; for (let i = 0; i < p.seats; i++) seats.push({ code: c, faded: U.office !== "H" && p.up != null && i >= up }); }
+      push(c, lean[c] || 0, { lean: true });
     }
+    push("U", lean["?"] || 0, { lean: true });
+    push("R", lean.R || 0, { lean: true });
+    const p = called.R;
+    if (p) { const up = p.up != null ? p.up : p.seats; const f = []; for (let i = 0; i < p.seats; i++) f.push({ code: "R", faded: U.office !== "H" && p.up != null && i >= up }); seats.push(...f.reverse()); }
     return seats;
   }
   function chamber(r) {
@@ -143,9 +163,16 @@ window.ATLASElectionsUS = (() => {
     pts.sort((p, q) => q.a - p.a);
     const dot = Math.max(2.2, Math.min((Math.PI * sum) / N, (R1 - R0) / rows) * 0.42);
     let dots = "";
-    pts.forEach((pt, i) => { const s = seats[i]; if (!s) return; dots += `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${dot.toFixed(2)}" fill="${PC[s.code]}" ${s.faded ? 'opacity=".38"' : ""}><title>${esc(PN[s.code])}${s.faded ? " · not up this year" : ""}</title></circle>`; });
+    pts.forEach((pt, i) => {
+      const s = seats[i]; if (!s) return;
+      dots += s.lean
+        ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${(dot * 0.86).toFixed(2)}" fill="${s.code === "U" ? "none" : `url(#usLean_${s.code})`}" stroke="${PC[s.code]}" stroke-width="1.3" stroke-dasharray="2 1.6"><title>${s.code === "U" ? "Not yet called, no count yet" : `Not yet called, ${esc(PN[s.code])} ahead`}</title></circle>`
+        : s.faded
+          ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${(dot * 0.82).toFixed(2)}" fill="none" stroke="${PC[s.code]}" stroke-width="1.6"><title>${esc(PN[s.code])} · elected earlier, not up in ${U.cycle}</title></circle>`
+          : `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${dot.toFixed(2)}" fill="${PC[s.code]}"><title>${esc(PN[s.code])}${U.office !== "H" ? ` · won in ${U.cycle}` : ""}</title></circle>`;
+    });
     const maj = r.majority;
-    return `<svg class="elHemi" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(r.parties.map((p) => `${PN[p.code]} ${p.seats}`).join(", "))}">${dots}
+    return `<svg class="elHemi" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(r.parties.map((p) => `${PN[p.code]} ${p.seats}`).join(", "))}">${leanDefs()}${dots}
       <line x1="${cx}" y1="${cy - R1 - 22}" x2="${cx}" y2="${cy - R0 + 18}" stroke="rgba(230,240,245,.5)" stroke-dasharray="3 4"/>
       <text x="${cx}" y="${cy + 6}" text-anchor="middle" class="elHemiNum">${maj}</text><text x="${cx}" y="${cy + 26}" text-anchor="middle" class="elHemiLbl">for a majority</text></svg>`;
   }
@@ -159,13 +186,33 @@ window.ATLASElectionsUS = (() => {
       <p class="fine">${r.majority} electoral votes to win.</p></div>`;
   }
   function partyList(r) {
-    return `<ul class="elBlocList">${r.parties.map((p) => `<li><div class="elBlocRow"><span class="elSw" style="background:${PC[p.code]}"></span><b>${esc(p.candidate ? `${p.candidate} (${p.code})` : PN[p.code])}</b><span class="num">${p.seats}</span><span class="num elShare">${p.up != null ? `${p.up} this year` : p.share != null ? `${p.share}%` : ""}</span></div></li>`).join("")}</ul>
+    const lean = r.lean || {};
+    const leanRows = Object.keys(lean).length ? `<li class="usLeanHead">Not yet called</li>${["D", "I", "O", "R", "?"].filter((c) => lean[c]).map((c) => `<li><div class="elBlocRow"><span class="elSw usLeanSw" style="--c:${c === "?" ? PC.U : PC[c]}"></span><b>${c === "?" ? "No count yet" : `${esc(PN[c])} ahead`}</b><span class="num">${lean[c]}</span><span class="num elShare">lean</span></div></li>`).join("")}` : "";
+    const tally = Object.keys(lean).length ? `<p class="fine">${["D", "R"].map((c) => { const p = r.parties.find((x) => x.code === c); return `${PN[c]}: ${p ? p.seats : 0} called${lean[c] ? ` + ${lean[c]} ahead` : ""}`; }).join(" · ")}. ${r.majority} for a majority. Leads are not calls.</p>` : "";
+    return `<ul class="elBlocList">${r.parties.filter((p) => p.code !== "U").map((p) => `<li><div class="elBlocRow"><span class="elSw" style="background:${PC[p.code]}"></span><b>${esc(p.candidate ? `${p.candidate} (${p.code})` : PN[p.code])}</b><span class="num">${p.seats}${r.change && r.change[p.code] ? ` <small class="${r.change[p.code] > 0 ? "up" : "down"}">${r.change[p.code] > 0 ? "+" : "−"}${Math.abs(r.change[p.code])}</small>` : ""}</span><span class="num elShare">${p.up != null ? `${p.up} won in ${U.cycle}` : p.share != null ? `${p.share}%` : ""}</span></div></li>`).join("")}${leanRows}</ul>${tally}
+      ${r.previous ? `<p class="fine">Change is against the ${r.previous.cycle} ${U.office === "P" ? "election" : "result"} (${Object.entries(r.previous.parties).sort((a, b) => "DIOR".indexOf(a[0]) - "DIOR".indexOf(b[0])).map(([c, n]) => `${c} ${n}`).join(", ")}).</p>` : ""}
       ${r.popular_vote && U.office === "H" ? `<p class="fine">Popular vote for the House: ${Object.entries(r.popular_vote).filter(([, v]) => v >= 0.5).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${PN[k]} ${v}%`).join(", ")}. Uncontested seats have no votes counted.</p>` : ""}`;
   }
 
   // ---------------------------------------------------------------- maps
-  const shade = (v) => { if (!v) return "rgba(120,130,140,.25)"; if (!v.c) return v.l ? PC[v.l] : PC.U; return PC[v.p] || PC.O; };
-  const alpha = (v) => { if (!v || !v.c) return 0.35; if (v.m == null) return 0.85; return Math.min(1, 0.42 + Math.min(v.m, 30) / 30 * 0.58); };
+  // One meaning per look:
+  //   solid party colour      won (lighter = closer race: under 5 pts, 5 to 15, over 15)
+  //   party stripes, dashed   not yet called, striped toward whoever is ahead
+  //   slate grey              no race for this office here this year (or, for old years, no data)
+  const SLATE = "#34404C";
+  const mix = (hex, t) => { const n = parseInt(hex.slice(1), 16); const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((x) => Math.round(x + (255 - x) * t)); return `rgb(${c.join(",")})`; };
+  const tint = (code, m) => { const base = PC[code] || PC.O; if (m == null) return base; return m < 5 ? mix(base, 0.45) : m < 15 ? mix(base, 0.22) : base; };
+  const fillFor = (v) => { if (!v) return SLATE; if (!v.c) return leanUrl(v); return tint(v.p, v.m); };
+  const shade = (v) => (v && v.c ? PC[v.p] || PC.O : SLATE);
+  const alpha = () => 1;
+  const splitDefs = () => { const pairs = ["DR", "DI", "IR", "DO", "OR", "IO"]; return `<defs>${pairs.map((p) => `<pattern id="usSplit_${p}" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="10" fill="${PC[p[0]]}"/><rect x="5" width="5" height="10" fill="${PC[p[1]]}"/></pattern>`).join("")}</defs>`; };
+  const wholeFill = (v) => {
+    if (!v) return SLATE;
+    const parts = (v.both || [v.p]).map((x) => (x === "U" ? (v.l || "U") : x));
+    if (U.office === "G" || parts.length < 2 || parts[0] === parts[1]) return v.c || v.up === false ? PC[parts[0]] || PC.O : leanUrl(v);
+    const pair = ["D", "I", "O", "R"].filter((c) => parts.includes(c)).join("");
+    return pair.length === 2 ? `url(#usSplit_${pair})` : PC[parts[0]];
+  };
   function stateMap(r) {
     const g = U.geo; if (!g) return `<p class="fine">Map unavailable.</p>`;
     const vals = r.map.values || {};
@@ -173,14 +220,17 @@ window.ATLASElectionsUS = (() => {
     for (const [st, rings] of Object.entries(g.states)) {
       const v = vals[st];
       const d = rings.map((ring) => { let s = ""; for (let i = 0; i < ring.length; i += 2) s += (i ? "L" : "M") + ring[i] + " " + ring[i + 1]; return s + "Z"; }).join("");
-      const faded = v && v.up === false;
-      const op = v ? (faded ? 0.22 : alpha(v)) : 0.12;
+      const notUp = v && v.up === false;
+      const whole = U.mode === "whole" && (U.office === "S" || U.office === "G");
+      const fill = whole ? wholeFill(v) : notUp ? SLATE : fillFor(v);
+      const uncalled = v && !v.c && !notUp;
       const sel = U.pick === st;
-      paths += `<path d="${d}" fill="${shade(v)}" fill-opacity="${op.toFixed(2)}" stroke="${sel ? "#fff" : "rgba(10,20,30,.9)"}" stroke-width="${sel ? 2 : 0.7}" data-us-state="${st}" ${v && !v.c ? 'stroke-dasharray="3 2"' : ""}><title>${esc(STN[st])}${v ? ` · ${v.c ? PN[v.p] : "not yet called"}${v.m != null ? `, margin ${v.m} pts` : ""}${faded ? " · not up" : ""}` : ""}</title></path>`;
+      const what = !v ? "no data" : notUp ? `no ${U.office === "S" ? "Senate" : "governor"} race in ${U.cycle}${whole ? `; held by ${(v.both || [v.p]).map((x) => PN[x]).join(" and ")}` : ""}` : v.c ? `${PN[v.p]}${v.m != null ? `, margin ${v.m} pts` : ""}` : `not yet called${v.l ? `, ${PN[v.l]} ahead` : ""}`;
+      paths += `<path d="${d}" fill="${fill}" stroke="${sel ? "#fff" : uncalled ? "rgba(235,242,246,.7)" : "rgba(10,20,30,.9)"}" stroke-width="${sel ? 2 : uncalled ? 1 : 0.7}" data-us-state="${st}" ${uncalled ? 'stroke-dasharray="3 2"' : ""}><title>${esc(STN[st])} · ${esc(what)}</title></path>`;
     }
     const dc = vals.DC;
-    if (dc && U.office === "P") paths += `<rect x="895" y="245" width="16" height="16" rx="3" fill="${shade(dc)}" fill-opacity="${alpha(dc)}" data-us-state="DC"><title>District of Columbia</title></rect><text x="918" y="257" class="usMapLbl">DC</text>`;
-    return `<svg viewBox="0 0 ${g.width} ${g.height}" class="usSvg" role="img" aria-label="Map of US states by result">${paths}</svg>`;
+    if (dc && U.office === "P") paths += `<rect x="895" y="245" width="16" height="16" rx="3" fill="${fillFor(dc)}" data-us-state="DC"><title>District of Columbia</title></rect><text x="918" y="257" class="usMapLbl">DC</text>`;
+    return `<svg viewBox="0 0 ${g.width} ${g.height}" class="usSvg" role="img" aria-label="Map of US states by result">${leanDefs()}${splitDefs()}${paths}</svg>`;
   }
   function tileMap(r) {
     const g = U.geo; const t = g?.tiles?.[r.map.era]; if (!t) return `<p class="fine">No tile map for this apportionment.</p>`;
@@ -197,7 +247,7 @@ window.ATLASElectionsUS = (() => {
       const x = 10 + w * (c + (row % 2 ? 0.5 : 0)) + w / 2, y = 10 + rr + row * rr * 1.5;
       (byState[st] = byState[st] || []).push([x, y]);
       const sel = U.pick === k;
-      out += `<polygon points="${hex(x, y)}" fill="${shade(v)}" fill-opacity="${alpha(v).toFixed(2)}" stroke="${sel ? "#fff" : v && !v.c ? "rgba(230,240,245,.55)" : "none"}" stroke-width="${sel ? 2 : 1}" ${v && !v.c ? 'stroke-dasharray="2 2"' : ""} data-us-seat="${k}"><title>${esc(STN[st])} ${k.split("-")[1]}${v ? ` · ${v.c ? `${v.w || PN[v.p]} (${v.p})` : "not yet called"}${v.m != null ? `, ${v.m} pts` : ""}` : ""}</title></polygon>`;
+      out += `<polygon points="${hex(x, y)}" fill="${fillFor(v)}" stroke="${sel ? "#fff" : v && !v.c ? "rgba(230,240,245,.55)" : "none"}" stroke-width="${sel ? 2 : 1}" ${v && !v.c ? 'stroke-dasharray="2 2"' : ""} data-us-seat="${k}"><title>${esc(STN[st])} ${k.split("-")[1]}${v ? ` · ${v.c ? `${v.w || PN[v.p]} (${v.p})` : "not yet called"}${v.m != null ? `, ${v.m} pts` : ""}` : ""}</title></polygon>`;
     }
     let labels = "";
     for (const [st, pts] of Object.entries(byState)) {
@@ -205,12 +255,27 @@ window.ATLASElectionsUS = (() => {
       if (pts.length >= 2) labels += `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" class="usTileLbl">${st}</text>`;
     }
     const W = 20 + w * maxC, H = 20 + rr * (maxR * 1.5 + 0.5);
-    return `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" class="usSvg" role="img" aria-label="House districts as tiles">${out}${labels}</svg>`;
+    return `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" class="usSvg" role="img" aria-label="House districts as tiles">${leanDefs()}${out}${labels}</svg>`;
   }
   function legend(r) {
-    const codes = r.parties.map((p) => p.code);
-    return `<div class="usLegend">${codes.map((c) => `<span><i style="background:${PC[c]}"></i>${esc(PN[c])}</span>`).join("")}<span class="fine">Darker = wider margin${r.uncalled ? "; dashed outline = not yet called (tinted by the leader)" : ""}.</span></div>`;
+    const codes = r.parties.map((p) => p.code).filter((c) => c !== "U");
+    const lean = Object.keys(r.lean || {}).filter((c) => c !== "?");
+    const whole = U.mode === "whole" && (U.office === "S" || U.office === "G");
+    const swatch = (bg, label, cls = "") => `<span><i class="${cls}" style="${bg}"></i>${esc(label)}</span>`;
+    const margin = U.office === "H" || U.office === "P" || !whole ? `<span class="usRamp">${codes.filter((c) => c === "D" || c === "R").map((c) => `<i style="background:${tint(c, 2)}"></i><i style="background:${tint(c, 10)}"></i><i style="background:${tint(c, 30)}"></i>`).join("<b></b>")}<em>closer → wider margin</em></span>` : "";
+    return `<div class="usLegend">${codes.map((c) => swatch(`background:${PC[c]}`, `${PN[c]} ${whole ? "holds" : "won"}`)).join("")}
+      ${whole && U.office === "S" ? swatch("background:repeating-linear-gradient(45deg,#3A78D4 0 4px,#D5483F 4px 8px)", "Split delegation") : ""}
+      ${lean.map((c) => swatch(`--c:${PC[c]}`, `Not yet called, ${PN[c]} ahead`, "usLeanKey")).join("")}
+      ${r.lean?.["?"] ? swatch(`--c:${PC.U}`, "Not yet called, no count yet", "usLeanKey") : ""}
+      ${!whole && (U.office === "S" || U.office === "G") ? swatch(`background:${SLATE}`, `No race in ${U.cycle}`) : ""}
+      ${margin}</div>
+      <p class="fine usLegendNote">${whole ? (U.office === "S" ? `Each state's two senators after the ${U.cycle} election, including those elected earlier. Striped red and blue: one senator from each party.` : `Every governor after the ${U.cycle} round, including those elected earlier.`)
+        : U.office === "S" || U.office === "G" ? `Only the ${U.cycle} races are coloured; grey states had no ${U.office === "S" ? "Senate" : "governor"} race that year. Switch to the other view to see the whole ${U.office === "S" ? "Senate" : "map"}.`
+        : "Solid colour: won. Lighter: a closer race."} Stripes with a dashed edge mean a race is still being counted; they show who is ahead, not a call.</p>`;
   }
+  // Diagonal stripes in a party's colour: the lean of a race that has not been called.
+  const leanDefs = () => `<defs>${["D", "R", "I", "O", "U"].map((c) => `<pattern id="usLean_${c}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${PC[c]}" fill-opacity=".16"/><rect width="2.6" height="6" fill="${PC[c]}" fill-opacity=".85"/></pattern>`).join("")}</defs>`;
+  const leanUrl = (v) => `url(#usLean_${v.l && PC[v.l] ? v.l : "U"})`;
 
   function pickCard(r) {
     if (!U.pick) return `<p class="fine">Click a ${U.office === "H" ? "district" : "state"} for its result${U.office === "H" ? "" : " and to see who represents it below"}.</p>`;
@@ -219,9 +284,10 @@ window.ATLASElectionsUS = (() => {
     return list.map((s) => {
       const c = (s.cands || []).filter((x) => x[0]);
       return `<div class="usPick"><h4>${esc(seatName(s))}${U.office === "S" ? ` <small>Class ${esc(s.seat)}${s.up === false ? `, elected ${s.cycle}` : ""}</small>` : ""}${U.office === "P" && s.ev ? ` <small>${s.ev} electoral vote${s.ev > 1 ? "s" : ""}</small>` : ""}</h4>
-        <p class="fine">${s.called ? `${esc(s.winner || PN[s.party])} (${esc(s.party)})${s.unopposed ? " · unopposed" : s.margin != null ? ` · margin ${s.margin} pts` : ""}${s.previous && s.previous !== s.party ? ` · seat changed from ${esc(PN[s.previous])}` : ""}` : `Not yet called${s.status ? `: ${esc(s.status)}` : ""}`}</p>
+        <p class="fine">${s.called ? `${esc(s.winner || PN[s.party])} (${esc(s.party)})${s.unopposed ? " · unopposed" : s.margin != null ? ` · margin ${s.margin} pts` : ""}${s.previous && s.previous !== s.party ? ` · seat changed from ${esc(PN[s.previous])}` : ""}` :
+          `Not yet called.${s.leader_party ? ` ${esc(s.leader || PN[s.leader_party])} (${esc(s.leader_party)}) is ahead${s.margin != null ? ` by ${s.margin} pts` : ""}.` : ""}${s.counted != null ? ` About ${Math.round(s.counted)}% of the expected vote counted.` : ""}${s.status && s.origin !== "ap" ? ` ${esc(s.status)}.` : s.status && /runoff/i.test(s.status) ? " Heading to a runoff." : ""}`}</p>
         ${c.length ? `<table class="elTable"><tbody>${c.map((x) => `<tr><td><span class="elSw" style="background:${PC[x[1]] || PC.O}"></span>${esc(x[0])} <small>${esc(x[1])}</small>${x[4] ? " ✓" : ""}</td><td class="num">${x[2] ? Number(x[2]).toLocaleString("en-US") : ""}</td><td class="num">${x[3] != null ? `${x[3]}%` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
-        ${s.origin === "wikipedia" ? `<p class="fine">From Wikipedia, as edited when Sanjaya last read it.</p>` : ""}</div>`;
+        ${s.origin === "wikipedia" ? `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it.</p>` : s.origin === "ap" ? `<p class="fine">Source: Associated Press.</p>` : ""}</div>`;
     }).join("");
   }
 
@@ -275,7 +341,7 @@ window.ATLASElectionsUS = (() => {
     b.dataset.usWired = "1";
     b.addEventListener("click", (e) => {
       if (!b.querySelector(".elUS") && !b.querySelector("#usDownload")) return;
-      const t = e.target.closest("[data-us-office],[data-us-cycle],[data-us-state],[data-us-seat],[data-us-go],[data-us-refresh],[data-us-offrefresh],#usDownload");
+      const t = e.target.closest("[data-us-office],[data-us-cycle],[data-us-mode],[data-us-state],[data-us-seat],[data-us-go],[data-us-refresh],[data-us-offrefresh],[data-us-apkey-clear],#usDownload");
       if (!t) return;
       if (t.id === "usDownload") {
         // Show progress at once; the server's own steps replace this within a second.
@@ -287,7 +353,9 @@ window.ATLASElectionsUS = (() => {
       }
       if (t.dataset.usOffice) { U.office = t.dataset.usOffice; const o = U.cat.offices.find((x) => x.office === U.office); if (!o.cycles.includes(Number(U.cycle))) U.cycle = o.cycles[0]; U.pick = null; return load(); }
       if (t.dataset.usCycle) { U.cycle = Number(t.dataset.usCycle); U.pick = null; return load(); }
+      if (t.dataset.usMode) { U.mode = t.dataset.usMode; remember(); return draw(); }
       if (t.hasAttribute("data-us-refresh")) { t.disabled = true; return load(true); }
+      if (t.hasAttribute("data-us-apkey-clear")) { A().api("/api/us/settings", "POST", { ap_key: "" }).then(() => load(true)); return; }
       if (t.hasAttribute("data-us-offrefresh")) { t.disabled = true; return loadOfficials(true); }
       const st = t.dataset.usState || t.dataset.usSeat || t.dataset.usGo;
       if (st) {
@@ -297,6 +365,13 @@ window.ATLASElectionsUS = (() => {
         draw(); loadOfficials();
         $("#usPick")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
+    });
+    b.addEventListener("submit", (e) => {
+      const f = e.target.closest("[data-us-apform]"); if (!f) return;
+      e.preventDefault();
+      const k = f.querySelector("input").value.trim(); if (!k) return;
+      f.querySelector("button").disabled = true;
+      A().api("/api/us/settings", "POST", { ap_key: k }).then(() => load(true)).catch((err) => { f.insertAdjacentHTML("beforeend", `<span class="elError">${esc(err.message)}</span>`); f.querySelector("button").disabled = false; });
     });
     b.addEventListener("change", (e) => {
       if (e.target.id === "usScope") { U.scope = e.target.value; remember(); paintOfficials(); loadOfficials(); }

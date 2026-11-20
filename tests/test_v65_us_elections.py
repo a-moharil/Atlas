@@ -96,6 +96,52 @@ class Live(unittest.TestCase):
         self.assertEqual(L.place('Wyoming at-large'), ('WY', '1'))
 
 
+class AssociatedPress(unittest.TestCase):
+    def payload(self):
+        return json.loads((FIX / 'ap_2026_sample.json').read_text(encoding='utf-8'))
+
+    def test_parse_calls_leads_and_runoffs(self):
+        import us_ap
+        rs = {r['id']: r for r in us_ap.parse(self.payload(), 2026)}
+        al = rs['H-2026-AL-1']
+        self.assertEqual((al['winner'], al['winner_party'], al['called']), ('Jordan Vale', 'R', 1))
+        ak = rs['H-2026-AK-1']                                   # at-large is seat 1; AP has not called it
+        self.assertEqual((ak['called'], ak['winner'], ak['leader_party'], ak['counted_pct']), (0, None, 'D', 82))
+        ga = next(r for r in rs.values() if r['state'] == 'GA')
+        self.assertFalse(ga['called']); self.assertIn('runoff', ga['status_text'])
+        self.assertTrue(any(r['special'] and r['state'] == 'OH' for r in rs.values()))
+        self.assertNotIn('apiKey', json.dumps(list(rs.values())))
+
+    def test_ap_wins_over_wikipedia_and_leads_are_not_calls(self):
+        import us_ap
+        payload = json.dumps(self.payload()).encode()
+        wiki = {'races': L.parse_page('H', 2026, (FIX / 'wp_us_house_2026.html').read_text(encoding='utf-8')),
+                'fetched': 1, 'pending': False, 'step': '', 'error': None, 'page': 'p'}
+        us_ap._cache.clear()
+        with mock.patch.object(UE, 'live_races', return_value=wiki), mock.patch.object(UE, '_rows', return_value=[]), \
+                mock.patch.object(UE, 'house', wraps=UE.house):
+            r = UE.result('H', 2026, getter=lambda url: payload, ap_key='KEY')
+        seats = {f"{s['state']}-{s['seat']}": s for s in r['seats']}
+        self.assertEqual(seats['CA-22']['origin'], 'ap')                 # Wikipedia said called; AP has not called it
+        self.assertFalse(seats['CA-22']['called'])
+        self.assertEqual(seats['CA-22']['leader_party'], 'R')
+        self.assertEqual(seats['CA-4']['origin'], 'wikipedia')           # AP did not return it: Wikipedia fills in
+        self.assertEqual(r['live']['ap']['races'], 3)
+        self.assertEqual(r['lean'].get('R'), 1); self.assertEqual(r['lean'].get('D'), 1)
+        self.assertEqual(sum(p['seats'] for p in r['parties']), 435)
+
+    def test_no_key_no_request(self):
+        import us_ap
+        called = []
+        out = us_ap.request(2026, '', lambda u: called.append(u))
+        self.assertEqual((out['races'], called), ([], []))
+
+    def test_settings_route_keeps_the_key_server_side(self):
+        s = (ROOT / 'server.py').read_text(encoding='utf-8')
+        self.assertIn("'/api/us/settings'", s)
+        self.assertIn("{'ap_key':bool(key)}", s)
+
+
 class Officials(unittest.TestCase):
     def getter(self):
         leg = [{'id': {'bioguide': 'X000001', 'wikipedia': 'Sen One'}, 'name': {'official_full': 'Sen One'},
@@ -149,7 +195,7 @@ class Officials(unittest.TestCase):
             UO.parse_scope('us-state:ZZ')
 
 
-@unittest.skipUnless(UD.DB.exists(), 'US pack not built here')
+@unittest.skipUnless(UD.status()['ready'], 'US results pack not built, or built by an older version (rebuild it from the Elections page)')
 class RealPack(unittest.TestCase):
     def test_known_totals(self):
         h = UE.result('H', 2024)
@@ -158,6 +204,9 @@ class RealPack(unittest.TestCase):
         self.assertEqual({p['code']: p['seats'] for p in s['parties']}, {'D': 45, 'I': 2, 'R': 53})
         g = UE.result('G', 2024)
         self.assertEqual({p['code']: p['seats'] for p in g['parties']}, {'D': 23, 'R': 27})
+        self.assertEqual({p['code']: p['seats'] for p in UE.result('S', 2016)['parties']}, {'D': 46, 'I': 2, 'R': 52})   # King counted as independent
+        self.assertEqual(s['change'], {'R': 4, 'D': -4})                                            # against the Senate after 2022
+        self.assertNotEqual(UE.result('S', 2018)['map'], UE.result('S', 2024)['map'])                # each year draws its own races
         for y, want in ((2024, {'D': 226, 'R': 312}), (2016, {'D': 232, 'R': 306}), (2004, {'D': 252, 'R': 286}), (2000, {'D': 267, 'R': 271})):
             p = UE.result('P', y)
             self.assertEqual({x['code']: x['seats'] for x in p['parties']}, want, y)
@@ -194,6 +243,13 @@ class Wiring(unittest.TestCase):
             UD.build(fetch, raw_dir=d)
         self.assertEqual(seen, list(range(len(UD.SOURCES))))
         self.assertEqual(UD._job['done'], UD.STEPS)
+
+    def test_one_meaning_per_colour(self):
+        js = (ROOT / 'static' / 'elections_us.js').read_text(encoding='utf-8')
+        self.assertIn('data-us-mode', js)                      # this year's races / whole chamber
+        self.assertIn('const SLATE', js)                       # no race this year: neutral, not a faded party colour
+        self.assertNotIn('opacity=".38"', js)                  # seats not up are hollow, not faded
+        self.assertIn('elected earlier, not up', js)
 
     def test_no_model_runs_without_a_request(self):
         js = (ROOT / 'static' / 'elections.js').read_text(encoding='utf-8')
