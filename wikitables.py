@@ -42,6 +42,22 @@ def _title_from_href(href):
     return t
 
 
+CHECK = re.compile(r'(green[ _]?tick|check[ _]?mark|yes[ _]?check|^yes$|^y$|^aye$|\u2713|\u2714|symbol[ _]confirmed)', re.I)
+
+
+def _is_check(a):
+    """A small tick image, e.g. {{Aye}} -> <img alt="Green tick" src=".../Green_check.svg" width="13">."""
+    try:
+        w = int(re.sub(r'\D', '', a.get('width') or '0') or 0)
+    except ValueError:
+        w = 0
+    if w and w >= 30:
+        return False
+    alt = (a.get('alt') or '').strip()
+    src = urllib.parse.unquote(a.get('src') or '').rsplit('/', 1)[-1]
+    return bool(CHECK.search(alt) or re.search(r'(green[_ ]?(check|tick)|yes[_ ]?check|check[_ ]?mark)', src, re.I))
+
+
 class _Parser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
@@ -106,6 +122,8 @@ class _Parser(HTMLParser):
                     self.cell['links'].append(t)
                 elif href.startswith('/wiki/File:') and not self.cell['file']:
                     self.cell['file'] = urllib.parse.unquote(href[6:])
+            elif tag == 'img' and _is_check(a):
+                self.cell['text'].append('\u2713 ')       # Wikipedia's winner tick ({{Aye}}): an image with no text
             elif tag == 'img' and not self.cell['img']:
                 src = a.get('src') or ''
                 if src.startswith('//'):

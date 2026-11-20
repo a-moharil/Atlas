@@ -147,6 +147,16 @@ def result(office, cycle, getter=None, force=False, state_getter=None, force_sta
             now = {p['code']: p['seats'] for p in out['parties'] if p['code'] != 'U'}
             out['change'] = {k: now.get(k, 0) - before.get(k, 0) for k in set(before) | set(now) if now.get(k, 0) != before.get(k, 0)}
             out['previous'] = {'cycle': cycle - step, 'parties': before}
+            if out.get('uncalled') and office != 'P':
+                # While races are still uncalled, "seats now minus seats last time" counts every uncalled seat as a loss.
+                # Count only seats that were called for a different party than last time.
+                net = {}
+                for fl in out.get('flips', []):
+                    if fl.get('from') and fl.get('party') and fl['from'] != fl['party']:
+                        net[fl['party']] = net.get(fl['party'], 0) + 1
+                        net[fl['from']] = net.get(fl['from'], 0) - 1
+                out['change'] = {k: v for k, v in net.items() if v}
+                out['change_basis'] = 'called'
         except Exception:
             pass
     # Lean of races not yet called: who is ahead in the count, never a call.
@@ -195,13 +205,14 @@ def house(cycle, rows):
             if c[2]:
                 votes[c[1]] = votes.get(c[1], 0) + c[2]
     tv = sum(votes.values())
+    counted = sum(1 for r in regular if any(c[2] for c in _cand(r)))
     parties = _parties(seats)
     for p in parties:
         p['share'] = round(100 * votes.get(p['code'], 0) / tv, 1) if tv else None
     era = UD.era_of(cycle)
     return {'seats_total': 435, 'majority': 218, 'parties': parties, 'seats': seats, 'flips': flips, 'closest': _closest(seats),
             'uncalled': sum(1 for s in seats if not s['called']), 'missing': max(0, 435 - len(seats)),
-            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None,
+            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None, 'popular_vote_races': counted,
             'map': {'kind': 'tiles', 'era': str(era), 'values': {f"{s['state']}-{s['seat']}": _mapval(s) for s in seats}},
             'notes': ['Flips compare the same district number with the previous election. Where a state redrew its map in between, '
                       'the same number can cover different places.'] if same_era else
@@ -328,7 +339,7 @@ def president(cycle, rows):
             values.setdefault(s['state'], {}).setdefault('districts', []).append({'d': s['seat'], 'p': s['party']})
     return {'seats_total': sum(ev.values()), 'majority': sum(ev.values()) // 2 + 1, 'parties': parties, 'seats': states,
             'flips': flips, 'closest': _closest(statewide), 'uncalled': 0, 'missing': 0,
-            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None,
+            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None, 'popular_vote_races': counted,
             'map': {'kind': 'states', 'values': values},
             'notes': ['Electoral votes as pledged by each state\'s result; Maine and Nebraska also award one vote per congressional district. '
                       'Faithless electors (2016: seven) are not reflected.']}
