@@ -46,3 +46,27 @@ class HouseCalls(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class EveryOfficeBuilds(unittest.TestCase):
+    """Each office's summary builds without the downloaded results pack (guards against a name used before it is set)."""
+    def test_all_offices(self):
+        import sqlite3
+        from unittest import mock
+        import us_elections as UE
+
+        def con():
+            c = sqlite3.connect(':memory:'); c.row_factory = sqlite3.Row
+            c.execute('CREATE TABLE races (office, cycle, state, seat)')
+            return c
+        base = {'cycle': 2024, 'special': 0, 'called': 1, 'winner': 'A', 'winner_party': 'D', 'runner': 'B', 'runner_party': 'R',
+                'margin_pct': 4.0, 'unopposed': 0, 'cands': json.dumps([['A', 'D', 60, 60.0, 1], ['B', 'R', 40, 40.0, 0]])}
+        with mock.patch.object(UE, '_con', con), mock.patch.object(UE, '_rows', lambda *a, **k: []), \
+                mock.patch.object(UE.UD, 'electoral_votes', lambda ap, cy: {'OH': 17}), \
+                mock.patch.object(UE.UD, 'apportionment', lambda rows: {}):
+            h = UE.house(2024, [{**base, 'state': 'OH', 'seat': '1'}])
+            self.assertEqual(h['popular_vote_races'], 1)
+            self.assertIn('parties', UE.senate(2024, [{**base, 'state': 'OH', 'seat': 'I'}]))
+            self.assertIn('parties', UE.governors(2024, [{**base, 'state': 'OH', 'seat': ''}]))
+            p = UE.president(2024, [{**base, 'state': 'OH', 'seat': ''}])
+            self.assertEqual(p['parties'][0]['seats'], 17)
