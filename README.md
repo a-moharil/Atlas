@@ -155,7 +155,7 @@ Sanjaya runs on **Python 3.9 or newer**. Python 3.12 is the recommended version.
 There are two ways:
 
 - **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Sanjaya`. Don't run Sanjaya from inside the ZIP.
-- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
+- **With Git:** run `git clone https://github.com/a-moharil/Sanjaya.git`. Git makes later updates easier; see [section 5.6](#56-updating).
 
 The folder keeps the repository's original name, `Atlas` (or `Atlas-main` from a ZIP).
 
