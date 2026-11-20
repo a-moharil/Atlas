@@ -17,11 +17,12 @@ sys.path.insert(0, str(ROOT))
 import publishers as P  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
+from tests.tmpdir import TempDir
 
 
 class Calibration(unittest.TestCase):
     def setUp(self):
-        self.td = tempfile.TemporaryDirectory()
+        self.td = TempDir()
         self.con = sqlite3.connect(Path(self.td.name) / 'p.db')
         P.init(self.con)
 
@@ -74,7 +75,7 @@ class Calibration(unittest.TestCase):
 
 class Endpoint(unittest.TestCase):
     def test_http(self):
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), patch.object(semantic, 'ready', lambda: False):
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), patch.object(semantic, 'ready', lambda: False):
             server.init_db()
             srv = ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
             threading.Thread(target=srv.serve_forever, daemon=True).start()

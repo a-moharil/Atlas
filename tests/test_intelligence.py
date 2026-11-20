@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 os.environ['OBS_SKIP_NETWORK']='1'
 import server,atlas_plus
+from tests.tmpdir import TempDir
 
 class IntelligenceTest(unittest.TestCase):
  def test_nasa_event(self):
@@ -35,7 +36,7 @@ class IntelligenceTest(unittest.TestCase):
   self.assertEqual(v['fox_world']['lean'],'Right')
   self.assertNotIn('orf',v)  # not invent an ideological label for an unrated institute
  def test_geo_cache_survives_failure(self):
-  with tempfile.TemporaryDirectory() as tmp:
+  with TempDir() as tmp:
    with patch.object(server,'DB_FILE',Path(tmp)/'test.sqlite'):
     server.init_db()
     payload={'events':[{'id':'F1','title':'Wildfire','link':'https://eonet.gsfc.nasa.gov','geometry':[{'date':'2026-11-16','type':'Point','coordinates':[9,40]}]}]}

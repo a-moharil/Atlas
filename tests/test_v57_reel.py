@@ -16,6 +16,7 @@ import geo_video as G  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
 import video_check  # noqa: E402
+from tests.tmpdir import TempDir
 
 NOW = dt.datetime(2026, 11, 18, 12, tzinfo=dt.timezone.utc)
 iso = lambda h: (NOW - dt.timedelta(hours=h)).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -76,7 +77,7 @@ class Select(unittest.TestCase):
 
 class PlayerErrors(unittest.TestCase):
     def test_report_and_recheck_window(self):
-        with tempfile.TemporaryDirectory() as td, closing(__import__('sqlite3').connect(Path(td) / 'x.db')) as con:
+        with TempDir() as td, closing(__import__('sqlite3').connect(Path(td) / 'x.db')) as con:
             con.row_factory = __import__('sqlite3').Row
             self.assertFalse(video_check.report_player_error(con, 'bad id', 150, iso(0)))
             self.assertTrue(video_check.report_player_error(con, 'abcdefghijk', 150, iso(0)))
@@ -91,7 +92,7 @@ class PlayerErrors(unittest.TestCase):
 
 class Endpoints(unittest.TestCase):
     def test_reel_and_isolation(self):
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
                 patch.object(semantic, 'ready', lambda: False):
             server.init_db()
             now = dt.datetime.now(dt.timezone.utc)

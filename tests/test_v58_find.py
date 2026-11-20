@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import find as F  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
+from tests.tmpdir import TempDir
 
 DOCS = [('a', 'Iran agrees to IAEA nuclear inspections', 'Talks in Vienna ended late on Monday.', 'Reuters'),
         ('b', 'Nuclear power plant opens in France', 'A new reactor joins the grid.', 'France 24'),
@@ -81,7 +82,7 @@ ENTRIES = [{'id': f'n{i}', 'source_id': 'x', 'source': src, 'title': t, 'summary
 
 class Endpoints(unittest.TestCase):
     def test_find_and_fetch(self):
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
                 patch.object(semantic, 'ready', lambda: False), patch.object(server, 'graph_entries', lambda: ENTRIES):
             server.init_db()
             srv = ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)

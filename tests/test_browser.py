@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 os.environ['OBS_SKIP_NETWORK']='1'
 import server,atlas_v3
+from tests.tmpdir import TempDir
 try:from playwright.sync_api import sync_playwright
 except ImportError:sync_playwright=None
 
@@ -20,7 +21,7 @@ class BrowserTest(unittest.TestCase):
     h=re.sub(r'<link rel="stylesheet" href="https://unpkg.com/leaflet[^>]*>', '', h)
     h=re.sub(r'<script src="https://unpkg.com/leaflet[^>]*></script>', '', h)
     h=h.replace('<script src="/atlas3.js" defer></script>','').replace('<script src="/india_investigation.js" defer></script>','')
-    with tempfile.TemporaryDirectory() as td,patch.object(server,'DB_FILE',Path(td)/'observatory.sqlite3'):
+    with TempDir() as td,patch.object(server,'DB_FILE',Path(td)/'observatory.sqlite3'):
         server.init_db()
         # No fake news: one explicitly fictional fixture under a synthetic URL.
         item=dict(id='fictional_1234567890abcde',source_id='bbc_world',source='Synthetic Test News',tier='reporting',region='Global',medium='article',title='India synthetic test of technology supply chains',url='https://example.com/fictional',summary='This is a test fixture, not an actual article.',published='2026-11-16T00:00:00Z',retrieved='2026-11-16T00:01:00Z',author='Test',video_id=None)
