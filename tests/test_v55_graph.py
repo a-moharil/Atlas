@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import coverage_graph as G  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
+from tests.tmpdir import TempDir
 
 
 def art(i, host, story, title, when='2099-01-01T00:00:00Z'):
@@ -85,7 +86,7 @@ class Graph(unittest.TestCase):
 
 class Endpoints(unittest.TestCase):
     def test_http(self):
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
                 patch.object(semantic, 'ready', lambda: False), patch.object(server, 'graph_entries', lambda: ENTRIES):
             server.init_db()
             srv = ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)

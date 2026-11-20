@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 os.environ['OBS_SKIP_NETWORK']='1'
 import server,atlas_v3
+from tests.tmpdir import TempDir
 FEED=b'''<?xml version="1.0"?><rss version="2.0"><channel><title>Example</title>
 <item><title>Published news item about transport</title><link>https://example.com/a</link><description>Officials announced a meeting.</description><pubDate>Mon, 16 Nov 2026 00:00:00 GMT</pubDate></item>
 <item><title>Published financial regulation news</title><link>https://example.com/b</link><description>The central bank published a circular.</description><pubDate>Mon, 16 Nov 2026 00:30:00 GMT</pubDate></item></channel></rss>'''
@@ -16,7 +17,7 @@ class V3(unittest.TestCase):
         self.assertGreaterEqual(len(server.REGISTRY['feeds']),70)
         self.assertTrue({'dw_live','wion_live','cnn_news18_live','ndtv_live','reuters_live'}.issubset({x['id'] for x in server.REGISTRY['live_channels']}))
     def test_actual_attempt_ledger_and_new_vs_returned(self):
-        with tempfile.TemporaryDirectory() as d, patch.object(server,'DB_FILE',Path(d)/'test.sqlite3'):
+        with TempDir() as d, patch.object(server,'DB_FILE',Path(d)/'test.sqlite3'):
             server.init_db()
             feed={'id':'test_ledger','name':'Example Finance','url':'https://example.com/feed.xml','region':'India','tier':'reporting','desk':'Finance'}
             run=atlas_v3.run_start(server.db_connect,server.utc_now)

@@ -14,6 +14,7 @@ from unittest import mock
 
 import forecast as F
 import officials as O
+from tests.tmpdir import TempDir
 
 ROOT = Path(__file__).resolve().parents[1]
 HAS_NUMPY = F.numpy_ok()
@@ -165,7 +166,7 @@ class Trees(unittest.TestCase):
         self.assertEqual(F.trust_label(0.85, 0.4), 'Low')
 
     def test_run_on_synthetic_results(self):
-        with tempfile.TemporaryDirectory() as d:
+        with TempDir() as d:
             db = Path(d) / 'e.sqlite3'; synthetic_db(db)
             out = F.run(db, now=dt.datetime(2026, 11, 19, tzinfo=dt.timezone.utc),
                         bag={'trees': 6, 'depth': 4, 'min_leaf': 20, 'feat_frac': 0.7},
@@ -182,30 +183,42 @@ class Trees(unittest.TestCase):
 
 
 class Gating(unittest.TestCase):
-    def cache(self, expected):
+    """Forecasts are gated by the calendar, and the model only runs when the reader asks for it."""
+    def cache(self):
         return {'model': F.MODEL_VERSION, 'generated': 'x', 'noise': {}, 'backtest': {'label': 'Low'},
-                'states': {'Uttar_Pradesh': {'state': 'Uttar_Pradesh', 'expected': expected, 'seats_total': 403, 'majority': 202,
-                                             'ranges': [{'code': 'BJP', 'lo': 1, 'median': 2, 'hi': 3}], 'trust': {'label': 'Low'}}}}
+                'states': {'Uttar_Pradesh': {'ranges': [{'code': 'BJP', 'lo': 1, 'median': 2, 'hi': 3}], 'trust': {'label': 'Low'}}}}
 
-    def run_for(self, expected, now, hidden=()):
-        with mock.patch.object(F, 'numpy_ok', return_value=True), mock.patch.object(F, 'cached', return_value=self.cache(expected)), \
-                mock.patch.object(Path, 'exists', return_value=True):
-            return F.for_state('Uttar_Pradesh', now=now, hidden=hidden)
+    def run_for(self, expected, now, hidden=(), cache=True, force=False):
+        y, m = (int(x) for x in expected.split('-'))
+        sched = {'last': 'AE-Uttar_Pradesh-2022', 'expected': expected, 'months_away': F._mkey(y, m) - F._mkey(now.year, now.month),
+                 'seats_total': 403, 'majority': 202}
+        with mock.patch.object(F, 'numpy_ok', return_value=True), mock.patch.object(F, 'schedule', return_value=sched), \
+                mock.patch.object(F, 'cached', return_value=self.cache() if cache else None), \
+                mock.patch.object(F, 'start') as start, mock.patch.object(Path, 'exists', return_value=True):
+            d = F.for_state('Uttar_Pradesh', now=now, hidden=hidden, force=force)
+            return d, start
 
-    def test_close_elections_show_ranges_with_a_trust_label(self):
-        d = self.run_for('2027-03', dt.datetime(2026, 11, 19))
+    def test_close_elections_show_saved_ranges_with_a_trust_label(self):
+        d, start = self.run_for('2027-03', dt.datetime(2026, 11, 19))
         self.assertEqual(d['status'], 'ready'); self.assertEqual(d['trust']['label'], 'Low')
+        start.assert_not_called()
 
-    def test_far_elections_wait_for_more_data(self):
-        d = self.run_for('2027-12', dt.datetime(2026, 11, 19))
+    def test_model_runs_only_on_request(self):
+        d, start = self.run_for('2027-03', dt.datetime(2026, 11, 19), cache=False)
+        self.assertEqual(d['status'], 'not_run'); start.assert_not_called()
+        d, start = self.run_for('2027-03', dt.datetime(2026, 11, 19), cache=False, force=True)
+        self.assertEqual(d['status'], 'computing'); start.assert_called_once()
+
+    def test_far_elections_wait_without_any_model(self):
+        d, start = self.run_for('2027-12', dt.datetime(2026, 11, 19), cache=False)
         self.assertEqual(d['status'], 'waiting'); self.assertNotIn('ranges', d)
-        self.assertIn('Wait for more data', d['message'])
+        self.assertIn('Wait for more data', d['message']); start.assert_not_called()
 
     def test_silence_period_hides_projections(self):
-        d = self.run_for('2027-03', dt.datetime(2027, 2, 20), hidden={'projection'})
+        d, _ = self.run_for('2027-03', dt.datetime(2027, 2, 20), hidden={'projection'})
         self.assertEqual(d['status'], 'hidden'); self.assertNotIn('ranges', d)
 
-    def test_municipal_and_national(self):
+    def test_national(self):
         self.assertEqual(F.national(dt.datetime(2026, 11, 19))['status'], 'waiting')
 
 
