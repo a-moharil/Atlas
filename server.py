@@ -52,6 +52,9 @@ import elections_data
 import officials
 import forecast
 import pulse
+import us_elections
+import us_elections_data
+import us_officials
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -1229,6 +1232,21 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == '/api/elections/pulse':
                 st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
                 return self.send_payload(pulse.for_scope(st,news_db=DB_FILE,hidden=elections.hidden_kinds(st or None),force=force))
+            if parsed.path.startswith('/api/us/'):
+                getter=lambda u:wiki_get(u,6_000_000,timeout=60 if 'wikidata' in u else 30)
+                force=params.get('refresh',['0'])[0]=='1'
+                if parsed.path == '/api/us/catalog':return self.send_payload(us_elections.catalog())
+                if parsed.path == '/api/us/geo':
+                    if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
+                    return self.send_payload(us_elections.geo())
+                if parsed.path == '/api/us/result':
+                    if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
+                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,force))
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                if parsed.path == '/api/us/officials':
+                    try:return self.send_payload(us_officials.request(params.get('scope',['us'])[0][:20],getter,DB_FILE.parent/'research_cache',force))
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                return self.send_payload({'error':'Not found'},404)
             if parsed.path == '/api/elections/geo':
                 try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
                 except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)
@@ -1311,6 +1329,9 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/us/download':
+                started=us_elections_data.start(lambda u:fetch_bytes(u,max_bytes=30_000_000,timeout=300))
+                return self.send_payload({'started':started,**us_elections_data.status()})
             if path == '/api/elections/download':
                 started=elections_data.start(lambda u,timeout=None:fetch_bytes(u,max_bytes=60_000_000,timeout=timeout or 600))
                 return self.send_payload({'started':started,**elections_data.status()})
