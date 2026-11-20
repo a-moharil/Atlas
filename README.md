@@ -457,15 +457,18 @@ Choose **United States** at the top of Elections. Results only: Sanjaya never ca
   - The House uses a tile map: one hexagon per district, grouped by state. Tiles don't depend on district lines, which several states redrew in 2025 and 2026.
   - Click a state or a district for its result.
 - **Electoral votes** are as pledged by each state's result. Maine and Nebraska's district votes are counted; faithless electors (2016) are not.
-- **2026 sources:** FiveThirtyEight's archive ends in 2024, so 2026 comes from two live sources.
-  - **Associated Press**, if you connect an AP Elections API key. AP licenses its results and race calls; the key comes from AP (developer.ap.org), not from Sanjaya. Paste it into the field on the 2026 page.
-    - The key is stored in `observatory.sqlite3` on your computer and never sent back to the page.
-    - AP is read first and checked every two minutes while the page is open. A race is called only when AP marks a winner.
-  - **Wikipedia's results pages** fill any race AP has not returned, or all races if no key is connected. Editors update them by hand, so they can trail the count by hours or days.
-  - From Wikipedia, a race counts as decided only when its status says so (hold, gain, elected, defeated).
+- **2026 sources:** FiveThirtyEight's archive ends in 2024, so 2026 comes from two free sources. No news agency's data is used.
+  - **Each state's own count.** Election results are public records, and every state and DC publishes its count on its own results site. `us_official.py` reads them:
+    - Known data files where a state offers one: California's results API, Arizona's JSON export, Minnesota's results text files, Washington's CSV export, North Carolina's results zip and Florida's election-night file.
+    - Every other state starts from its official results page. Sanjaya follows that page's links to the results system behind it (Clarity, Enhanced Voting, or a CSV, JSON or ZIP file dated for this election). If there are none, it reads results tables on the page itself. New Jersey's county-run sites are added together.
+    - All states are read in the background, one at a time, every 30 minutes while a 2026 page is open, or now with **Check now**. One state failing never stops the rest.
+    - **Each state's results site**, under the status line, lists every state as *Read*, *Nothing readable yet* or *Could not be read*, with a link to its official site.
+    - If a state changes its site, correct it without code: put `{"XX": {"page": "...", "feeds": ["..."]}}` in `election_data/us/state_sources.json`.
+    - Counts are unofficial until the state certifies them.
+  - **Wikipedia's results pages** say which races are decided: a race counts as decided only when its status says so (hold, gain, elected, defeated). Editors update them by hand. They are read every six hours, or now with **Check now**.
+  - **A call needs both sources to agree.** A race is shown as won only when Wikipedia lists it as decided and the state's count has the same party ahead. If they disagree, the race stays uncalled and its card says why. A race Wikipedia hasn't listed yet shows from the state's count, uncalled.
   - **Not yet called** races, including ranked-choice counts and runoffs, are **striped in the colour of whoever is ahead**, with a dashed edge, on the maps and in the chamber chart. The party list shows how many lean each way ("46 called + 1 ahead"). A lead is never shown as a win.
-  - Each race card names its source and, from AP, roughly how much of the expected vote is counted.
-  - Wikipedia is read again every six hours, or now with **Check now**.
+  - Each race card names where its count and its call came from, and how many precincts are reporting where the state says.
   - The 2025 New Jersey and Virginia and the 2023 Kentucky, Louisiana and Mississippi governor races come from `us_elections_extra.json`.
 - **In office now:** the President, Vice President and Cabinet. Choose a state, or click it on the map, for its governor, two senators and House delegation.
   - Contacts are official only: office websites, contact forms and Capitol office numbers.
@@ -761,7 +764,7 @@ atlas/
 ├─ us_elections.py         US elections: House, Senate, governors, president
 ├─ us_elections_data.py    US elections: results pack builder, state map projection, House tiles
 ├─ us_live.py              US elections: 2026 results read from Wikipedia
-├─ us_ap.py                US elections: Associated Press results, with your own AP key
+├─ us_official.py          US elections: 2026 vote counts from each state's own results site
 ├─ us_officials.py         US office-holders (congress-legislators, Wikipedia)
 ├─ wikitables.py           Reads Wikipedia tables (rowspans, split headers) for office-holders
 ├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)
@@ -816,7 +819,7 @@ atlas/
 - Sanjaya binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
 - Outbound requests go only to the feeds and data providers listed in this README and in `source_registry.json`, plus Ollama on your own machine if you enable labels.
 - No analytics or telemetry. Your reading, removals, blocks and settings stay in `observatory.sqlite3`, which is excluded from Git.
-- API keys you add (OpenAlex, the AP Elections API) are stored in `observatory.sqlite3` and used only for requests to that provider.
+- API keys you add (OpenAlex) are stored in `observatory.sqlite3` and used only for requests to that provider.
 - The optional cloud analysis (7.5) is the only feature that can send text off your machine. It is inactive without an API key you provide.
 
 ---
@@ -852,7 +855,7 @@ atlas/
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
 - **Election results:** "TCPD Indian Elections Data v2.0", [Trivedi Centre for Political Data](https://tcpd.ashoka.edu.in), Ashoka University (Lok Dhaba, free and open use with citation), and [in-rolls/eci_results](https://github.com/in-rolls/eci_results) (MIT) for Lok Sabha 2024 and the assemblies from November 2023. Both come from Election Commission of India statistical reports. Municipal results are State Election Commission totals as reported; sources are listed in `election_municipal.json`.
-- **US election results:** [FiveThirtyEight election-results](https://github.com/fivethirtyeight/election-results) (CC BY 4.0) through 2024; for 2026, the [AP Elections API](https://developer.ap.org/ap-elections-api) under your own AP licence, and Wikipedia (CC BY-SA). US state outlines: US Census Bureau (public domain), via PublicaMundi. Members of Congress: [unitedstates/congress-legislators](https://github.com/unitedstates/congress-legislators) (CC0) and the public-domain portraits in [unitedstates/images](https://github.com/unitedstates/images).
+- **US election results:** [FiveThirtyEight election-results](https://github.com/fivethirtyeight/election-results) (CC BY 4.0) through 2024; for 2026, each state's and DC's official results site (public records) and Wikipedia (CC BY-SA). US state outlines: US Census Bureau (public domain), via PublicaMundi. Members of Congress: [unitedstates/congress-legislators](https://github.com/unitedstates/congress-legislators) (CC0) and the public-domain portraits in [unitedstates/images](https://github.com/unitedstates/images).
 - **Office-holders:** [Wikipedia](https://en.wikipedia.org) current-office lists and ministry articles (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0), with corrections and sources in `election_officials.json`. Photos: [Wikimedia Commons](https://commons.wikimedia.org), each credited to its file page with its own licence.
 - **Constituency maps:** [DataMeet](https://github.com/datameet/maps) assembly constituencies (CC BY 2.5 India) and Lok Sabha constituencies, simplified by Arun Ganesh (CC0).
 - **Research metadata:**

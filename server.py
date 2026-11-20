@@ -1241,9 +1241,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_payload(us_elections.geo())
                 if parsed.path == '/api/us/result':
                     if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
-                    with closing(db_connect()) as con:
-                        research_radar.init(con);ap_key=str(research_radar.meta(con,'us_ap_key','') or '')
-                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,force,ap_key or None))
+                    state_get=lambda u:fetch_bytes(u,max_bytes=60_000_000,timeout=60)
+                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,force,state_get))
                     except ValueError as e:return self.send_payload({'error':str(e)},400)
                 if parsed.path == '/api/us/officials':
                     try:return self.send_payload(us_officials.request(params.get('scope',['us'])[0][:20],getter,DB_FILE.parent/'research_cache',force))
@@ -1331,12 +1330,6 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
-            if path == '/api/us/settings':
-                key=str(data.get('ap_key','')).strip()
-                if len(key)>200 or (key and not key.replace('-','').replace('_','').isalnum()):return self.send_payload({'error':'That does not look like an AP API key.'},400)
-                with closing(db_connect()) as con:
-                    research_radar.init(con);research_radar.set_meta(con,'us_ap_key',key);con.commit()
-                return self.send_payload({'ap_key':bool(key)})
             if path == '/api/us/download':
                 started=us_elections_data.start(lambda u:fetch_bytes(u,max_bytes=30_000_000,timeout=300))
                 return self.send_payload({'started':started,**us_elections_data.status()})

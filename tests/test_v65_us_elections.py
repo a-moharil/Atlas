@@ -4,7 +4,9 @@ import csv
 import io
 import json
 import tempfile
+import time
 import unittest
+import zipfile
 import urllib.parse
 from pathlib import Path
 from unittest import mock
@@ -13,6 +15,7 @@ import us_elections as UE
 import us_elections_data as UD
 import us_live as L
 import us_officials as UO
+import us_official as SO
 
 ROOT = Path(__file__).resolve().parents[1]
 FIX = ROOT / 'tests' / 'fixtures'
@@ -96,50 +99,170 @@ class Live(unittest.TestCase):
         self.assertEqual(L.place('Wyoming at-large'), ('WY', '1'))
 
 
-class AssociatedPress(unittest.TestCase):
-    def payload(self):
-        return json.loads((FIX / 'ap_2026_sample.json').read_text(encoding='utf-8'))
+class StateCounts(unittest.TestCase):
+    """Each state's own count, read from its results site in whatever format it publishes."""
 
-    def test_parse_calls_leads_and_runoffs(self):
-        import us_ap
-        rs = {r['id']: r for r in us_ap.parse(self.payload(), 2026)}
-        al = rs['H-2026-AL-1']
-        self.assertEqual((al['winner'], al['winner_party'], al['called']), ('Jordan Vale', 'R', 1))
-        ak = rs['H-2026-AK-1']                                   # at-large is seat 1; AP has not called it
-        self.assertEqual((ak['called'], ak['winner'], ak['leader_party'], ak['counted_pct']), (0, None, 'D', 82))
-        ga = next(r for r in rs.values() if r['state'] == 'GA')
-        self.assertFalse(ga['called']); self.assertIn('runoff', ga['status_text'])
-        self.assertTrue(any(r['special'] and r['state'] == 'OH' for r in rs.values()))
-        self.assertNotIn('apiKey', json.dumps(list(rs.values())))
+    def test_contest_titles(self):
+        c = SO.classify
+        self.assertEqual(c('US HOUSE OF REPRESENTATIVES DISTRICT 10', 'NC'), ('H', '10', False))
+        self.assertEqual(c('Congressional District 6 - U.S. Representative', 'WA'), ('H', '6', False))
+        self.assertEqual(c('U. S. REPRESENTATIVE DISTRICT 1', 'TX'), ('H', '1', False))
+        self.assertEqual(c('United States Representative District 12 - Statewide Results', 'CA'), ('H', '12', False))
+        self.assertEqual(c('U.S. Representative', 'WY'), ('H', '1', False))          # at-large state
+        self.assertEqual(c('U.S. Senator (Unexpired Term)', 'OH'), ('S', '', True))
+        self.assertEqual(c('Governor & Lt Governor', 'MN'), ('G', '', False))
+        for other in ('Lieutenant Governor', 'State Senator District 10', 'State Representative District 10A', 'U.S. Senator - Republican Primary'):
+            self.assertIsNone(c(other, 'MN'), other)
+        self.assertEqual([SO.party_code(x) for x in ('(Prefers Democratic Party)', 'DFL', 'REP', 'Rep', 'NPA', 'LIB', '')], list('DRDRIOO'[i] for i in (0, 0, 1, 1, 4, 5, 6)))
 
-    def test_ap_wins_over_wikipedia_and_leads_are_not_calls(self):
-        import us_ap
-        payload = json.dumps(self.payload()).encode()
+    def test_clarity_summary(self):
+        payload = [{'K': 1, 'C': 'U.S. Senator', 'CH': ['Ann Lee', 'Bo Park', 'Write-In'], 'P': ['DEM', 'REP', ''], 'V': [600, 400, 3], 'PR': 90, 'TP': 100},
+                   {'K': 2, 'C': 'County Clerk', 'CH': ['X'], 'P': [''], 'V': [9]}]
+        rs = SO.races_from(SO.contests_from(json.dumps(payload).encode()), 'KY', 2026, 'u')
+        self.assertEqual(len(rs), 1)
+        r = rs[0]
+        self.assertEqual((r['office'], r['leader'], r['leader_party'], r['total'], r['margin_pct'], r['counted_pct'], r['called']),
+                         ('S', 'Ann Lee', 'D', 1000, 20.0, 90.0, 0))
+
+    def test_california_api(self):
+        blob = json.dumps({'raceTitle': 'United States Representative District 22 - Statewide Results', 'Reporting': '98.0% (980 of 1,000) precincts reporting',
+                           'candidates': [{'Name': 'Riley Moss', 'Party': 'Dem', 'Votes': '51,000', 'Percent': '51.0', 'incumbent': False},
+                                          {'Name': 'Sam Cole', 'Party': 'Rep', 'Votes': '49,000', 'Percent': '49.0', 'incumbent': True}]}).encode()
+        r = SO.races_from(SO.contests_from(blob), 'CA', 2026, 'u')[0]
+        self.assertEqual((r['id'], r['leader_party'], r['total'], r['counted_pct'], r['counted_basis']), ('H-2026-CA-22', 'D', 100000, 98.0, 'precincts'))
+
+    def test_nested_json_export(self):
+        blob = json.dumps({'election': {'ballotItems': [{'ballotItemName': 'Governor', 'candidates': [
+            {'candidateName': 'Pat Ruiz', 'party': {'abbreviation': 'REP'}, 'voteCount': 700}, {'candidateName': 'Lee Ho', 'party': {'abbreviation': 'DEM'}, 'voteCount': 650}]}]}}).encode()
+        r = SO.races_from(SO.contests_from(blob), 'AZ', 2026, 'u')[0]
+        self.assertEqual((r['id'], r['leader'], r['leader_party'], r['margin_pct']), ('G-2026-AZ', 'Pat Ruiz', 'R', 3.7))
+
+    def test_washington_csv(self):
+        text = ('"Race","Candidate","Party","Votes","PercentageOfTotalVotes","JurisdictionName"\n'
+                '"Congressional District 3 - U.S. Representative","Ann Ray","(Prefers Democratic Party)",1200,52,"Federal"\n'
+                '"Congressional District 3 - U.S. Representative","Bob Fox","(Prefers Republican Party)",1100,48,"Federal"\n'
+                '"Initiative Measure No. 1","Yes","",5,50,"State"\n')
+        r = SO.races_from(SO.contests_from(text.encode()), 'WA', 2026, 'u')[0]
+        self.assertEqual((r['id'], r['leader_party'], r['total']), ('H-2026-WA-3', 'D', 2300))
+
+    def test_minnesota_county_rows_add_up(self):
+        text = ('MN;01;;0331;Governor & Lt Governor;;0301;A Smith and B Jones;;;R;50;51;600;60.0;1000\n'
+                'MN;01;;0331;Governor & Lt Governor;;0401;C Diaz and D Kim;;;DFL;50;51;400;40.0;1000\n'
+                'MN;02;;0331;Governor & Lt Governor;;0301;A Smith and B Jones;;;R;49;49;300;30.0;1000\n'
+                'MN;02;;0331;Governor & Lt Governor;;0401;C Diaz and D Kim;;;DFL;49;49;700;70.0;1000\n'
+                'MN;02;;0331;Governor & Lt Governor;;9901;WRITE-IN;;;WI;49;49;2;0.1;1000\n')
+        r = SO.races_from(SO.contests_from(text.encode(), SO.MN_COLS), 'MN', 2026, 'u')[0]
+        self.assertEqual((r['leader'], r['leader_party'], r['total'], r['counted_pct']), ('C Diaz and D Kim', 'D', 2000, 99.0))
+
+    def test_north_carolina_precinct_zip(self):
+        hdr = 'County\tElection Date\tPrecinct\tContest Group ID\tContest Type\tContest Name\tChoice\tChoice Party\tVote For\tElection Day\tEarly Voting\tAbsentee by Mail\tProvisional\tTotal Votes\tReal Precinct\n'
+        rows = ''.join(f'WAKE\t11/03/2026\tP{i}\t1\tC\tUS SENATE\t{n}\t{p}\t1\t0\t0\t0\t0\t{v}\tY\n'
+                       for i in range(3) for n, p, v in (('Roy Hale', 'REP', 100), ('Ana Cruz', 'DEM', 120)))
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, 'w') as z:
+            z.writestr('results_pct_20261103.txt', hdr + rows)
+        r = SO.races_from(SO.contests_from(buf.getvalue()), 'NC', 2026, 'u')[0]
+        self.assertEqual((r['office'], r['leader'], r['total']), ('S', 'Ana Cruz', 660))
+
+    def test_florida_named_columns(self):
+        cols = SO.SOURCES['FL']['columns']
+        text = ('ElectionDate\tPartyCode\tPartyName\tRaceCode\tOfficeDesc\tJuris1num\tJuris2num\tPrecincts\tPrecinctsReporting\tCanNameLast\tCanNameFirst\tCanNameMiddle\tCanVotes\n'
+                '11/3/2026\tREP\tRepublican Party\tUSR\tUnited States Representative\t7\t\t100\t100\tStone\tJo\t\t5000\n'
+                '11/3/2026\tDEM\tDemocratic Party\tUSR\tUnited States Representative\t7\t\t100\t100\tBlue\tMo\t\t4000\n')
+        r = SO.races_from(SO.contests_from(text.encode(), cols), 'FL', 2026, 'u')[0]
+        self.assertEqual((r['id'], r['leader'], r['leader_party']), ('H-2026-FL-7', 'Jo Stone', 'R'))
+
+    def test_results_page_tables(self):
+        page = ('<h1>Election Results - Tuesday, November 3, 2026</h1><p>U. S. SENATOR</p><p>Polling Locations Reporting: 97%</p>'
+                '<table><tr><th>Party</th><th>Candidate</th><th>Ballots Cast</th></tr><tr><td>REP</td><td>KEN PAXTON</td><td>1,000</td></tr>'
+                '<tr><td>DEM</td><td>JAMES TALARICO</td><td>1,100</td></tr></table>'
+                '<p>RAILROAD COMMISSIONER</p><table><tr><th>Candidate</th><th>Votes</th></tr><tr><td>X</td><td>5</td></tr></table>')
+        rs = SO.races_from(SO.contests_from(page.encode()), 'TX', 2026, 'u')
+        self.assertEqual([(r['id'], r['leader_party'], r['counted_pct']) for r in rs], [('S-2026-TX-', 'D', 97.0)])
+
+    def test_discover_links_on_a_state_page(self):
+        page = ('<a href="https://results.enr.clarityelections.com/KY/120000/">2025</a><a href="https://results.enr.clarityelections.com/KY/127500/web.345435/#/summary">2026</a>'
+                '<a href="https://results.enr.clarityelections.com/KY/Fayette/127501/">county</a>'
+                '<a href="/files/results_20261103.csv">now</a><a href="/files/results_20241105.csv">old</a>'
+                '<script>u="https://app.enhancedvoting.com/cdn/results/Georgia/export-110326GeneralElection.json"</script>')
+        got = SO.discover(page, 'https://elect.ky.gov/results/', 2026)
+        self.assertIn(('clarity', 'https://results.enr.clarityelections.com/KY/127500/'), got)
+        self.assertNotIn(('clarity', 'https://results.enr.clarityelections.com/KY/Fayette/127501/'), got)   # statewide already totals it
+        self.assertIn(('file', 'https://elect.ky.gov/files/results_20261103.csv'), got)
+        self.assertNotIn(('file', 'https://elect.ky.gov/files/results_20241105.csv'), got)
+        self.assertIn(('file', 'https://app.enhancedvoting.com/cdn/results/Georgia/export-110326GeneralElection.json'), got)
+
+    def test_county_sites_add_up(self):
+        page = ''.join(f'<a href="https://results.enr.clarityelections.com/NJ/{c}/{e}/web.345435/#/summary">{c}</a>' for c, e in (('Essex', 127486), ('Mercer', 127554)))
+        summ = {'Essex': [{'C': 'U.S. House of Representatives 10th Congressional District', 'CH': ['A', 'B'], 'P': ['DEM', 'REP'], 'V': [300, 100]}],
+                'Mercer': [{'C': 'U.S. House of Representatives 10th Congressional District', 'CH': ['A', 'B'], 'P': ['DEM', 'REP'], 'V': [50, 250]}]}
+
+        def getter(u):
+            if u.endswith('current_ver.txt'):
+                return b'42'
+            for c, v in summ.items():
+                if f'/{c}/' in u:
+                    return json.dumps(v).encode()
+            return page.encode()
+        res = SO.read_state('NJ', 2026, getter, {'page': 'https://www.nj.gov/x.shtml'})
+        r = res['races'][0]
+        self.assertEqual((res['status'], r['id'], r['total'], r['leader'], r['margin_pct']), ('read', 'H-2026-NJ-10', 700, 'A', 0.0))
+
+    def test_one_state_failing_does_not_stop_the_rest(self):
+        def getter(u):
+            if 'alaska' in u:
+                raise OSError('timed out')
+            return b'<html>nothing here</html>'
+        SO._jobs.clear()
+        with mock.patch.object(SO, '_file', return_value=Path(tempfile.gettempdir()) / 'sanjaya_state_counts_test.json'):
+            SO.request(2026, getter, force=True, only={'AK', 'AL'})
+            for _ in range(200):
+                out = SO.request(2026, getter)
+                if not out['pending']:
+                    break
+                time.sleep(0.02)
+        self.assertEqual((out['states']['AK']['status'], out['states']['AL']['status']), ('failed', 'none'))
+        SO._jobs.clear()
+
+    def test_calls_need_the_count_to_agree(self):
+        wiki = L.parse_page('H', 2026, (FIX / 'wp_us_house_2026.html').read_text(encoding='utf-8'))
+        def st(rid, state, seat, rows):
+            c = {'title': '', 'cands': {(n, p): v for n, p, v in rows}, 'reporting': None, 'pct': None}
+            r = SO.races_from([dict(c, title=f'U.S. Representative District {seat}')], state, 2026, 'https://state.example')[0]
+            self.assertEqual(r['id'], rid)
+            return r
+        state = [st('H-2026-AL-1', 'AL', 1, [('Jordan Vale', 'R', 900), ('Kim Low', 'D', 100)]),       # agrees with Wikipedia
+                 st('H-2026-CA-22', 'CA', 22, [('Sam Cole', 'R', 510), ('Riley Moss', 'D', 490)]),      # count disagrees
+                 st('H-2026-NV-3', 'NV', 3, [('Una Bell', 'D', 10), ('Vic Ode', 'R', 9)])]               # Wikipedia has no row yet
+        m = {r['id']: r for r in SO.merge(wiki, state)}
+        self.assertTrue(m['H-2026-AL-1']['called']); self.assertEqual(m['H-2026-AL-1']['origin'], 'wikipedia+state')
+        self.assertEqual(json.loads(m['H-2026-AL-1']['cands'])[0][4], 1)
+        self.assertFalse(m['H-2026-CA-22']['called']); self.assertIn('Shown as not called', m['H-2026-CA-22']['status_text'])
+        self.assertEqual((m['H-2026-NV-3']['origin'], m['H-2026-NV-3']['called'], m['H-2026-NV-3']['leader_party']), ('state', 0, 'D'))
+        self.assertEqual(m['H-2026-AK-1']['origin'], 'wikipedia')
+
+    def test_result_uses_state_counts(self):
         wiki = {'races': L.parse_page('H', 2026, (FIX / 'wp_us_house_2026.html').read_text(encoding='utf-8')),
                 'fetched': 1, 'pending': False, 'step': '', 'error': None, 'page': 'p'}
-        us_ap._cache.clear()
+        c = {'title': 'U.S. Representative District 22', 'cands': {('Sam Cole', 'R'): 510, ('Riley Moss', 'D'): 490}, 'reporting': (9, 10), 'pct': None}
+        counts = {'races': SO.races_from([c], 'CA', 2026, 'https://ca.example'), 'states': {'CA': {'status': 'read', 'races': 1}},
+                  'pending': False, 'step': '', 'fetched': 2, 'enabled': True}
         with mock.patch.object(UE, 'live_races', return_value=wiki), mock.patch.object(UE, '_rows', return_value=[]), \
-                mock.patch.object(UE, 'house', wraps=UE.house):
-            r = UE.result('H', 2026, getter=lambda url: payload, ap_key='KEY')
+                mock.patch.object(SO, 'request', return_value=counts):
+            r = UE.result('H', 2026, getter=lambda u: b'', state_getter=lambda u: b'')
         seats = {f"{s['state']}-{s['seat']}": s for s in r['seats']}
-        self.assertEqual(seats['CA-22']['origin'], 'ap')                 # Wikipedia said called; AP has not called it
-        self.assertFalse(seats['CA-22']['called'])
-        self.assertEqual(seats['CA-22']['leader_party'], 'R')
-        self.assertEqual(seats['CA-4']['origin'], 'wikipedia')           # AP did not return it: Wikipedia fills in
-        self.assertEqual(r['live']['ap']['races'], 3)
-        self.assertEqual(r['lean'].get('R'), 1); self.assertEqual(r['lean'].get('D'), 1)
+        self.assertEqual((seats['CA-22']['origin'], seats['CA-22']['called'], seats['CA-22']['leader_party'], seats['CA-22']['counted']),
+                         ('wikipedia+state', False, 'R', 90.0))
+        self.assertEqual(r['live']['states']['read'], 1)
         self.assertEqual(sum(p['seats'] for p in r['parties']), 435)
 
-    def test_no_key_no_request(self):
-        import us_ap
-        called = []
-        out = us_ap.request(2026, '', lambda u: called.append(u))
-        self.assertEqual((out['races'], called), ([], []))
-
-    def test_settings_route_keeps_the_key_server_side(self):
-        s = (ROOT / 'server.py').read_text(encoding='utf-8')
-        self.assertIn("'/api/us/settings'", s)
-        self.assertIn("{'ap_key':bool(key)}", s)
+    def test_every_state_has_a_source_and_ap_is_gone(self):
+        self.assertEqual(set(SO.SOURCES), set(UD.STATES))
+        self.assertTrue(all(v['page'].startswith('https://') for v in SO.SOURCES.values()))
+        self.assertFalse((ROOT / 'us_ap.py').exists())
+        for f in ('server.py', 'us_elections.py', 'static/elections_us.js'):
+            t = (ROOT / f).read_text(encoding='utf-8')
+            self.assertNotIn('ap_key', t, f); self.assertNotIn('/api/us/settings', t, f); self.assertNotIn('Associated Press', t, f)
 
 
 class Officials(unittest.TestCase):
