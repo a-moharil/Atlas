@@ -684,7 +684,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # ~129 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # 239 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -696,7 +696,9 @@ Browser tests (`test_browser.py`, `test_india_browser.py`, `test_v33_browser.py`
 pip install playwright && python -m playwright install chromium
 ```
 
-The language model tests use a stand-in for Ollama. They don't need the real model.
+The language model tests use a stand-in for Ollama. They don't need the real model. The election tests use a small synthetic results database and copies of Wikipedia pages in `tests/fixtures/`, so they don't need the results pack or a network; the forecast and pulse tests are skipped when numpy isn't installed.
+
+On Windows, tests that create a temporary database use `tests/tmpdir.py`, because Windows won't delete a file that is still open. Lines such as `ResourceWarning: unclosed socket` and the Hugging Face symlink notice are warnings, not failures: only the final `OK` or `FAILED` counts.
 
 **Updating the screenshots.** With Sanjaya running and some news collected, run `pip install playwright` then `python tools/take_screenshots.py`. It uses Microsoft Edge or Google Chrome, captures every page into `docs/screenshots/`, and rewrites `docs/SCREENSHOTS.md`.
 
@@ -762,6 +764,9 @@ atlas/
 | Geopolitics reel is empty | Press *Refresh feeds*, wait a few minutes for YouTube's playability check, or switch to *All news*. Run `python tools/check_geo_channels.py` to see which channels answer. |
 | Research radar sources fail | Run `python tools/check_radar_sources.py`. A firewall or proxy may block arXiv, Hugging Face or OpenAlex. *OpenAlex: daily budget used up* means adding a free OpenAlex key. |
 | Map tiles fail | Use **Test tiles** on the Satellite atlas. Tile providers must be reachable from the server. |
+| Elections page asks to download data again | The results pack format changed (it does after some updates). Press **Download election data**: files already downloaded are reused, so it takes seconds. |
+| *In office now* is short or empty | The progress list shows which source answered. Press **Refresh**. If Wikipedia or Wikidata can't be reached, the last good copy is shown; to correct a person, edit `election_officials.json`. |
+| *Next election* says forecasts need numpy | Install the language-model pack, or just `python -m pip install numpy`. |
 
 ---
 
@@ -782,6 +787,7 @@ atlas/
 - **Grouping:** grouping by meaning can still occasionally join separate events or split one. The borderline-pairs view exists to help you calibrate.
 - **Generated labels:** small local models can make mistakes. Labels are aids for scanning, not summaries to cite.
 - **Earth watch:** hazard and climate data depend on provider uptime and update schedules.
+- **Elections:** results come from TCPD and in-rolls (2008 onward) and municipal totals as reported; Assam 2026 and Jammu and Kashmir 2024 have no constituency map yet. Office-holders come from Wikipedia and Wikidata, which are volunteer-edited and can lag a reshuffle by hours or days. The seat model and the pulse are labelled **Low** trust because their backtests are barely better than "nothing changes"; they show ranges, never winners, and know nothing about candidates, alliances or campaigns.
 - **Single user:** Sanjaya is designed for one reader on one machine.
 
 ---
