@@ -448,16 +448,24 @@ Choose **United States** at the top of Elections. Results only: Sanjaya never ca
 
 - **Offices:** *House* (435 seats; 1976 to 1980 and 1992 to 2026), *Senate* and *Governors* (2000 to 2026), and *President* (electoral votes by state, 2000 to 2024).
 - **Each election shows:**
-  - The chamber chart with the majority line. For the Senate and governors, seats not up that year are faded.
+  - The chamber chart with the majority line. For the Senate and governors, seats won that year are solid dots and seats elected earlier are hollow rings.
   - The parties with seats won that year, the popular vote, and the seats that changed party.
   - The closest races.
-  - A map. Senate, governors and president use a state map with Alaska and Hawaii as insets; the shade shows the margin.
+  - A map. Senate, governors and president use a state map with Alaska and Hawaii as insets. For the Senate and governors, choose **<year> races** (only that year's races coloured, grey where there was none) or **Whole Senate / All governors after it** (every seat, with split Senate delegations striped in both colours).
+  - **Colours have one meaning each.** Solid party colour means won, and lighter means a closer race (under 5 points, 5 to 15, over 15). Party stripes with a dashed edge mean not yet called, striped toward whoever is ahead. Slate grey means no race for that office there that year.
+  - The net change against the previous election ("R +4 since 2022") is shown at the top and beside each party.
   - The House uses a tile map: one hexagon per district, grouped by state. Tiles don't depend on district lines, which several states redrew in 2025 and 2026.
   - Click a state or a district for its result.
 - **Electoral votes** are as pledged by each state's result. Maine and Nebraska's district votes are counted; faithless electors (2016) are not.
-- **2026:** FiveThirtyEight's archive ends in 2024, so the 2026 midterms are read from Wikipedia's results pages while counting finishes.
-  - A race counts as decided only when Wikipedia's status says so (hold, gain, elected, defeated). Others, including ranked-choice counts and runoffs, are shown as **not yet called**, tinted by the leader and outlined with dashes.
-  - The page is read again every six hours, or now with **Read again**.
+- **2026 sources:** FiveThirtyEight's archive ends in 2024, so 2026 comes from two live sources.
+  - **Associated Press**, if you connect an AP Elections API key. AP licenses its results and race calls; the key comes from AP (developer.ap.org), not from Sanjaya. Paste it into the field on the 2026 page.
+    - The key is stored in `observatory.sqlite3` on your computer and never sent back to the page.
+    - AP is read first and checked every two minutes while the page is open. A race is called only when AP marks a winner.
+  - **Wikipedia's results pages** fill any race AP has not returned, or all races if no key is connected. Editors update them by hand, so they can trail the count by hours or days.
+  - From Wikipedia, a race counts as decided only when its status says so (hold, gain, elected, defeated).
+  - **Not yet called** races, including ranked-choice counts and runoffs, are **striped in the colour of whoever is ahead**, with a dashed edge, on the maps and in the chamber chart. The party list shows how many lean each way ("46 called + 1 ahead"). A lead is never shown as a win.
+  - Each race card names its source and, from AP, roughly how much of the expected vote is counted.
+  - Wikipedia is read again every six hours, or now with **Check now**.
   - The 2025 New Jersey and Virginia and the 2023 Kentucky, Louisiana and Mississippi governor races come from `us_elections_extra.json`.
 - **In office now:** the President, Vice President and Cabinet. Choose a state, or click it on the map, for its governor, two senators and House delegation.
   - Contacts are official only: office websites, contact forms and Capitol office numbers.
@@ -711,7 +719,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # 251 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # 259 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -753,6 +761,7 @@ atlas/
 ├─ us_elections.py         US elections: House, Senate, governors, president
 ├─ us_elections_data.py    US elections: results pack builder, state map projection, House tiles
 ├─ us_live.py              US elections: 2026 results read from Wikipedia
+├─ us_ap.py                US elections: Associated Press results, with your own AP key
 ├─ us_officials.py         US office-holders (congress-legislators, Wikipedia)
 ├─ wikitables.py           Reads Wikipedia tables (rowspans, split headers) for office-holders
 ├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)
@@ -807,6 +816,7 @@ atlas/
 - Sanjaya binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
 - Outbound requests go only to the feeds and data providers listed in this README and in `source_registry.json`, plus Ollama on your own machine if you enable labels.
 - No analytics or telemetry. Your reading, removals, blocks and settings stay in `observatory.sqlite3`, which is excluded from Git.
+- API keys you add (OpenAlex, the AP Elections API) are stored in `observatory.sqlite3` and used only for requests to that provider.
 - The optional cloud analysis (7.5) is the only feature that can send text off your machine. It is inactive without an API key you provide.
 
 ---
@@ -842,7 +852,7 @@ atlas/
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
 - **Election results:** "TCPD Indian Elections Data v2.0", [Trivedi Centre for Political Data](https://tcpd.ashoka.edu.in), Ashoka University (Lok Dhaba, free and open use with citation), and [in-rolls/eci_results](https://github.com/in-rolls/eci_results) (MIT) for Lok Sabha 2024 and the assemblies from November 2023. Both come from Election Commission of India statistical reports. Municipal results are State Election Commission totals as reported; sources are listed in `election_municipal.json`.
-- **US election results:** [FiveThirtyEight election-results](https://github.com/fivethirtyeight/election-results) (CC BY 4.0) through 2024; Wikipedia (CC BY-SA) for 2026. US state outlines: US Census Bureau (public domain), via PublicaMundi. Members of Congress: [unitedstates/congress-legislators](https://github.com/unitedstates/congress-legislators) (CC0) and the public-domain portraits in [unitedstates/images](https://github.com/unitedstates/images).
+- **US election results:** [FiveThirtyEight election-results](https://github.com/fivethirtyeight/election-results) (CC BY 4.0) through 2024; for 2026, the [AP Elections API](https://developer.ap.org/ap-elections-api) under your own AP licence, and Wikipedia (CC BY-SA). US state outlines: US Census Bureau (public domain), via PublicaMundi. Members of Congress: [unitedstates/congress-legislators](https://github.com/unitedstates/congress-legislators) (CC0) and the public-domain portraits in [unitedstates/images](https://github.com/unitedstates/images).
 - **Office-holders:** [Wikipedia](https://en.wikipedia.org) current-office lists and ministry articles (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0), with corrections and sources in `election_officials.json`. Photos: [Wikimedia Commons](https://commons.wikimedia.org), each credited to its file page with its own licence.
 - **Constituency maps:** [DataMeet](https://github.com/datameet/maps) assembly constituencies (CC BY 2.5 India) and Lok Sabha constituencies, simplified by Arun Ganesh (CC0).
 - **Research metadata:**
