@@ -236,6 +236,10 @@
 .usStates table{margin-top:6px;font-size:.8rem}
 .usStates .usSt_failed td:nth-child(2),.usStates .usSt_none td:nth-child(2){color:var(--muted)}
 .usStates small{color:var(--muted)}
+.usStates td details{font-size:.76rem;margin-top:2px}
+.usStates td details summary{color:var(--muted)}
+.usStates td ul{margin:4px 0 0;padding-left:16px;max-width:520px;overflow-wrap:anywhere}
+.usLiveBtns{display:grid;gap:6px;flex:none}
 .usLeanHead{margin-top:8px;color:var(--muted);font-size:.78rem;font-weight:600;list-style:none}
 .usLeanSw,.usLeanKey{background:repeating-linear-gradient(45deg,var(--c) 0 2px,transparent 2px 5px)!important;outline:1px dashed var(--c);outline-offset:-1px}
 .usLeanKey{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-2px}

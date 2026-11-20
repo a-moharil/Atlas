@@ -256,6 +256,74 @@ class StateCounts(unittest.TestCase):
         self.assertEqual(r['live']['states']['read'], 1)
         self.assertEqual(sum(p['seats'] for p in r['parties']), 435)
 
+    def test_enhanced_voting_api_and_certification(self):
+        data = {'ballotItems': [
+            {'id': 1, 'name': 'U.S. Representative District 3', 'ballotOptions': [{'name': 'Ann Ray', 'politicalParty': 'Democratic', 'voteCount': 1200},
+                                                                               {'name': 'Bob Fox', 'politicalParty': 'Republican', 'voteCount': 1100}]},
+            {'id': 9, 'parentId': 1, 'name': 'U.S. Representative District 3', 'ballotOptions': [{'name': 'Ann Ray', 'politicalParty': 'Democratic', 'voteCount': 50},
+                                                                                              {'name': 'Bob Fox', 'politicalParty': 'Republican', 'voteCount': 40}]}]}
+        calls = []
+
+        def getter(u):
+            calls.append(u)
+            if u.endswith('/elections/washington'):
+                return b'[{"id": "20261103"}, {"id": "20260804"}]'
+            if u.endswith('/20261103/data'):
+                return json.dumps(data).encode()
+            if u.endswith('/20261103'):
+                return b'{"asOf": "2026-11-20", "isOfficialResults": true}'
+            raise OSError('HTTP 404 Not Found')
+        res = SO.read_state('WA', 2026, getter, SO.SOURCES['WA'])
+        r = res['races'][0]
+        self.assertEqual((res['status'], res['certified'], r['id'], r['total'], r['certified']), ('read', True, 'H-2026-WA-3', 2300, 1))  # county copy skipped
+        self.assertIn('https://results.votewa.gov/results/public/api/elections/washington/20261103/data', calls)
+        wiki = [{'id': 'H-2026-WA-3', 'called': 1, 'winner': 'Bob Fox', 'winner_party': 'R', 'state': 'WA', 'cands': '[]', 'origin': 'wikipedia'}]
+        m = SO.merge(wiki, res['races'])[0]
+        self.assertEqual((m['called'], m['winner'], m['winner_party']), (1, 'Ann Ray', 'D'))     # the certified count wins
+
+    def test_failures_are_explained_per_address(self):
+        def getter(u):
+            if 'alaska' in u:
+                raise OSError('HTTP 403 Forbidden')
+            return b'<html><head><script>app()</script></head><body><div id="root"></div></body></html>'
+        ak = SO.read_state('AK', 2026, getter)
+        self.assertEqual((ak['status'], ak['error']), ('failed', 'HTTP 403 Forbidden'))
+        self.assertEqual(ak['tried'][0]['url'], SO.SOURCES['AK']['page'])
+        al = SO.read_state('AL', 2026, getter)
+        self.assertEqual(al['status'], 'none'); self.assertIn('JavaScript', al['error'])
+
+    def test_missing_county_sites_mark_counts_partial(self):
+        page = ''.join(f'<a href="https://results.enr.clarityelections.com/NJ/{c}/{e}/">{c}</a>' for c, e in (('Essex', 127486), ('Mercer', 127554)))
+
+        def getter(u):
+            if '/Mercer/' in u:
+                raise OSError('HTTP 503 Service Unavailable')
+            if u.endswith('current_ver.txt'):
+                return b'7'
+            if '/Essex/' in u:
+                return json.dumps([{'C': 'U.S. House of Representatives 10th Congressional District', 'CH': ['A', 'B'], 'P': ['DEM', 'REP'], 'V': [3, 1], 'PR': 1, 'TP': 1}]).encode()
+            return page.encode()
+        res = SO.read_state('NJ', 2026, getter, {'page': 'https://www.nj.gov/x.shtml'})
+        self.assertEqual((res['status'], res['counties'], res['races'][0]['counted_pct']), ('partial', {'found': 2, 'read': 1}, None))
+        self.assertIn('1 of 2 county sites', res['races'][0]['status_text'])
+
+    def test_utf16_and_nul_bytes(self):
+        text = 'Contest Name\tChoice\tChoice Party\tTotal Votes\nUS SENATE\tAna Cruz\tDEM\t5\nUS SENATE\tRoy Hale\tREP\t4\n'
+        for blob in (text.encode('utf-16'), text.replace('Ana', 'A\x00na').encode()):
+            r = SO.races_from(SO.contests_from(blob), 'NC', 2026, 'u')[0]
+            self.assertEqual((r['office'], r['total']), ('S', 9))
+
+    def test_public_record_fetcher(self):
+        s = (ROOT / 'server.py').read_text(encoding='utf-8')
+        self.assertIn('def fetch_public_record', s); self.assertIn("raise OSError(f'HTTP {exc.code}", s)
+        self.assertIn("which in ('1','wiki')", s); self.assertIn("force_states=which in ('1','states')", s)
+        import server
+        self.assertRaises(ValueError, server.validate_external_url, 'http://93.184.216.34/x')
+        self.assertEqual(server.validate_external_url('http://93.184.216.34/x', allow_http=True), 'http://93.184.216.34/x')
+        self.assertRaises(ValueError, server.validate_external_url, 'http://127.0.0.1/x', allow_http=True)
+        js = (ROOT / 'static' / 'elections_us.js').read_text(encoding='utf-8')
+        self.assertIn('data-us-refresh="wiki"', js); self.assertIn('data-us-refresh="states"', js)
+
     def test_every_state_has_a_source_and_ap_is_gone(self):
         self.assertEqual(set(SO.SOURCES), set(UD.STATES))
         self.assertTrue(all(v['page'].startswith('https://') for v in SO.SOURCES.values()))
