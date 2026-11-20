@@ -68,7 +68,8 @@ def party_of(code):
 
 # ------------------------------------------------------------------ download job
 _lock = threading.Lock()
-_job = {'state': 'idle', 'step': '', 'done': 0, 'total': len(SOURCES), 'error': None}
+STEPS = len(SOURCES) + 2          # each download, then the database, then the map
+_job = {'state': 'idle', 'step': '', 'done': 0, 'total': STEPS, 'error': None}
 
 
 def manifest():
@@ -88,7 +89,7 @@ def start(fetch_bytes):
     with _lock:
         if _job['state'] == 'running':
             return False
-        _job.update(state='running', step='Starting', done=0, error=None)
+        _job.update(state='running', step='Starting the download', done=0, total=STEPS, error=None)
 
     def work():
         try:
@@ -107,6 +108,7 @@ def build(fetch_bytes=None, raw_dir=None):
         _job.update(step=f'Downloading {what}', done=i)
         p = raw / name
         if p.exists() and p.stat().st_size > 0:
+            _job.update(step=f'Already downloaded: {what}', done=i + 1)
             continue
         if fetch_bytes is None:
             raise FileNotFoundError(f'{name} is missing and no downloader was given')
@@ -114,18 +116,19 @@ def build(fetch_bytes=None, raw_dir=None):
         if data[:200].lstrip().lower().startswith(b'<!doctype html') or data[:200].lstrip().lower().startswith(b'<html'):
             raise ValueError(f'{name}: got a web page instead of data')
         p.write_bytes(data)
-    _job.update(step='Building the results database', done=len(SOURCES) - 1)
+        _job.update(done=i + 1)
+    _job.update(step='Building the results database', done=len(SOURCES))
     races = read_races(raw)
     races += extra_races()
     OUT.mkdir(parents=True, exist_ok=True)
     write_db(races, OUT / 'us_elections.tmp.sqlite3')
     (OUT / 'us_elections.tmp.sqlite3').replace(DB)
-    _job.update(step='Projecting the map')
+    _job.update(step='Drawing the state map and House tiles', done=len(SOURCES) + 1)
     geo = build_geo(raw, races)
     (OUT / 'geo.json').write_text(json.dumps(geo, separators=(',', ':')), encoding='utf-8')
     (OUT / 'manifest.json').write_text(json.dumps({'version': PACK_VERSION, 'built': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
                                                    'races': len(races), 'attribution': ATTRIBUTION}), encoding='utf-8')
-    _job.update(done=len(SOURCES))
+    _job.update(done=STEPS)
 
 
 # ------------------------------------------------------------------ reading FiveThirtyEight

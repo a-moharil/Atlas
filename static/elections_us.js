@@ -65,6 +65,7 @@ window.ATLASElectionsUS = (() => {
   // ---------------------------------------------------------------- page
   function draw() {
     const b = U.body; if (!b) return;
+    wire();                       // every view, including the download card, needs its click handler
     if (U.error && !U.cat) { b.innerHTML = `<div class="panel elNote">${esc(U.error)}</div>`; return; }
     if (!U.cat) { b.innerHTML = `<div class="pageLoading">Loading the US elections index…</div>`; return; }
     if (!U.cat.pack.ready) { b.innerHTML = packCard(); return; }
@@ -78,12 +79,14 @@ window.ATLASElectionsUS = (() => {
     wire();
   }
 
+  const pctDone = (j) => Math.min(100, Math.round((100 * (j.done || 0)) / (j.total || 1)));
   function packCard() {
     const p = U.cat.pack || {}, j = p.job || {};
     const running = j.state === "running";
     return `<div class="panel elPack"><h2>Download the US results</h2>
       <p>Every House race since 1976 and every Senate, governor and presidential race since the late 1990s, with a map of the states. About ${esc(p.download_mb || 9)} MB, downloaded once and kept on this computer. Results after 2024 are read from Wikipedia when you look.</p>
-      ${running ? `<div class="elProgress" role="progressbar" aria-valuemin="0" aria-valuemax="${j.total}" aria-valuenow="${j.done}"><i style="width:${Math.round((100 * j.done) / (j.total || 1))}%"></i></div><p class="fine">${esc(j.step || "")}</p>` : ""}
+      ${running ? `<div class="elProgress usProgress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone(j)}" aria-label="Download progress"><i style="width:${Math.max(4, pctDone(j))}%"></i></div>
+        <p class="usProgressText"><b>${pctDone(j)}%</b> <span>${esc(j.step || "Working…")}</span> <small>step ${Math.min((j.done || 0) + 1, j.total || 1)} of ${j.total || 1}</small></p>` : ""}
       ${j.state === "failed" ? `<p class="elError">${esc(j.error)}</p>` : ""}
       <button class="action primary" id="usDownload" ${running ? "disabled" : ""}>${running ? "Downloading…" : j.state === "failed" ? "Try again" : "Download US results"}</button>
       <details class="elSources"><summary>Sources and licences</summary><ul>${(p.sources || []).map((s) => `<li>${esc(s.what)}: ${esc(s.licence)}</li>`).join("")}</ul></details></div>`;
@@ -113,7 +116,7 @@ window.ATLASElectionsUS = (() => {
     const l = r.live;
     if (!l) return "";
     const btn = `<button class="choice elRefresh" data-us-refresh ${l.pending ? "disabled" : ""}>${l.pending ? "Reading…" : "Read again"}</button>`;
-    const msg = l.pending ? `Reading Wikipedia: ${esc(l.step || l.page)}…` : l.error && !r.seats?.length ? `Wikipedia could not be read (${esc(l.error)}).` :
+    const msg = l.pending ? `${esc(l.step || `Reading Wikipedia: ${l.page}`)}…` : l.error && !r.seats?.length ? `Wikipedia could not be read (${esc(l.error)}).` :
       `Results as listed on Wikipedia's <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">${esc(l.page)}</a>, read ${esc(ago(l.fetched))}. Counting continues in some states; races Wikipedia does not list as decided are shown as not yet called.`;
     return `<div class="panel elNote usLive" role="status"><span>${msg}</span>${btn}</div>`;
   }
@@ -274,7 +277,14 @@ window.ATLASElectionsUS = (() => {
       if (!b.querySelector(".elUS") && !b.querySelector("#usDownload")) return;
       const t = e.target.closest("[data-us-office],[data-us-cycle],[data-us-state],[data-us-seat],[data-us-go],[data-us-refresh],[data-us-offrefresh],#usDownload");
       if (!t) return;
-      if (t.id === "usDownload") { t.disabled = true; A().api("/api/us/download", "POST", {}).then(() => loadCatalog()).catch((err) => { U.error = err.message; draw(); }); return; }
+      if (t.id === "usDownload") {
+        // Show progress at once; the server's own steps replace this within a second.
+        U.cat.pack.job = { state: "running", step: "Starting the download", done: 0, total: (U.cat.pack.job?.total || 8) };
+        draw();
+        A().api("/api/us/download", "POST", {}).then(() => loadCatalog())
+          .catch((err) => { U.cat.pack.job = { state: "failed", error: `The download could not start: ${err.message}` }; draw(); });
+        return;
+      }
       if (t.dataset.usOffice) { U.office = t.dataset.usOffice; const o = U.cat.offices.find((x) => x.office === U.office); if (!o.cycles.includes(Number(U.cycle))) U.cycle = o.cycles[0]; U.pick = null; return load(); }
       if (t.dataset.usCycle) { U.cycle = Number(t.dataset.usCycle); U.pick = null; return load(); }
       if (t.hasAttribute("data-us-refresh")) { t.disabled = true; return load(true); }
