@@ -6,12 +6,15 @@ Wikipedia's results tables (see us_live) and are kept only when the state's coun
 
 States publish in different ways, so each entry in SOURCES says where to look:
   feeds  data files whose format is known (California's API, Arizona's JSON export, Minnesota's text files,
-         Washington's CSV export, North Carolina's results zip, Florida's election-night file);
+         North Carolina's results zip, Florida's election-night file);
   page   the state's official results page. When a feed is missing or fails, the page is read for links to
          the results system behind it (Clarity, Enhanced Voting, or a CSV/JSON/ZIP file for this election),
          and as a last resort for results tables on the page itself.
 A state whose page offers nothing readable is listed as "open the state's page" with a link.
 
+  ev     Enhanced Voting's public results API (Washington, Utah, Virginia, Georgia, Arizona):
+         <site>/results/public/api/elections/<state>/<yyyymmdd>/data, whose metadata also says whether the
+         results are official (certified).
 Any entry can be corrected without code: put {"XX": {"page": "...", "feeds": ["..."]}} in
 election_data/us/state_sources.json.
 
@@ -43,7 +46,7 @@ CA_HOUSE = 52
 SOURCES = {
     'AL': {'page': 'https://www.sos.alabama.gov/alabama-votes/voter/election-information'},
     'AK': {'page': 'https://www.elections.alaska.gov/election-results/'},
-    'AZ': {'page': 'https://azsos.gov/pressazsosgov',
+    'AZ': {'page': 'https://azsos.gov/pressazsosgov', 'ev': ['https://results.arizona.vote', 'arizona'],
            'feeds': ['https://app.enhancedvoting.com/cdn/results/Arizona/export-{mmddyy}GeneralElection.json']},
     'AR': {'page': 'https://www.sos.arkansas.gov/elections/research/election-results'},
     'CA': {'page': 'https://electionresults.sos.ca.gov/',
@@ -57,7 +60,7 @@ SOURCES = {
            'feeds': ['https://fldoselectionfiles.elections.myflorida.com/enightfilespublic/{yyyymmdd}_ElecResultsFL.txt'],
            'columns': {'contest': 'OfficeDesc', 'district': 'Juris1num', 'first': 'CanNameFirst', 'last': 'CanNameLast',
                        'party': 'PartyCode', 'votes': 'CanVotes', 'reporting': 'PrecinctsReporting', 'precincts': 'Precincts'}},
-    'GA': {'page': 'https://results.sos.ga.gov/',
+    'GA': {'page': 'https://results.sos.ga.gov/', 'ev': ['https://results.sos.ga.gov', 'georgia'],
            'feeds': ['https://app.enhancedvoting.com/cdn/results/Georgia/export-{mmddyy}GeneralElection.json']},
     'HI': {'page': 'https://elections.hawaii.gov/election-results/'},
     'ID': {'page': 'https://voteidaho.gov/election-results/'},
@@ -97,12 +100,10 @@ SOURCES = {
     'SD': {'page': 'https://electionresults.sd.gov/'},
     'TN': {'page': 'https://sos.tn.gov/elections/results'},
     'TX': {'page': 'https://electionresults.sos.state.tx.us/results.html'},
-    'UT': {'page': 'https://electionresults.utah.gov/'},
+    'UT': {'page': 'https://electionresults.utah.gov/', 'ev': ['https://electionresults.utah.gov', 'utah']},
     'VT': {'page': 'https://electionarchive.vermont.gov/'},
-    'VA': {'page': 'https://enr.elections.virginia.gov/'},
-    'WA': {'page': 'https://results.vote.wa.gov/results/{yyyymmdd}/export.html',
-           'feeds': ['https://results.vote.wa.gov/results/{yyyymmdd}/export/{yyyymmdd}_AllState.csv',
-                     'https://results.vote.wa.gov/results/{yyyymmdd}/export/{yyyymmdd}_Congressional.csv']},
+    'VA': {'page': 'https://enr.elections.virginia.gov/', 'ev': ['https://enr.elections.virginia.gov', 'virginia']},
+    'WA': {'page': 'https://results.votewa.gov/', 'ev': ['https://results.votewa.gov', 'washington']},
     'WV': {'page': 'https://sos.wv.gov/elections/Pages/ElectionResults.aspx'},
     'WI': {'page': 'https://elections.wi.gov/elections/election-results'},
     'WY': {'page': 'https://sos.wyo.gov/Elections/State/Results.aspx'},
@@ -271,6 +272,7 @@ def _find(header, *pats):
 
 def read_table(text, columns=None):
     """Delimited text with one row per candidate (per county or precinct, summed here)."""
+    csv.field_size_limit(50_000_000)
     lines = text.splitlines()
     if not lines:
         return []
@@ -399,7 +401,11 @@ def contests_from(blob, columns=None):
                 if info.filename.lower().endswith(('.txt', '.csv', '.tsv', '.json')) and info.file_size < 400_000_000:
                     out += contests_from(z.read(info), columns)
         return out
-    text = blob.decode('utf-8-sig', errors='replace')
+    if blob[:2] in (b'\xff\xfe', b'\xfe\xff') or blob[1:200:2].count(0) > 50:
+        text = blob.decode('utf-16', errors='replace')
+    else:
+        text = blob.decode('utf-8-sig', errors='replace')
+    text = text.replace('\x00', '')
     s = text.lstrip()[:1]
     if s in '{[':
         try:
@@ -464,6 +470,41 @@ def _clarity_contests(base, getter):
     return read_clarity(json.loads(getter(f'{base}{ver}/json/en/summary.json').decode('utf-8')))
 
 
+EV_LINK = re.compile(r'(https?://[a-z0-9.\-]+)/results/public/(?:api/elections/)?([a-z][a-z\-]+)', re.I)
+
+
+def _ev_contests(base, slug, cycle, getter):
+    """Enhanced Voting: <base>/results/public/api/elections/<slug>/<election>/data. Returns (contests, certified)."""
+    root = f"{base.rstrip('/')}/results/public/api/elections/{slug}"
+    d = DATES[cycle].replace('-', '')
+    keys = [d]
+    try:
+        listing = json.loads(getter(root).decode('utf-8'))
+        for k in re.findall(r'"(?:id|key|slug|electionId|electionKey|electionDate|date)"\s*:\s*"([^"]+)"', json.dumps(listing)):
+            if any(t in k for t in (d, DATES[cycle], d[4:] + d[2:4])) and k not in keys:
+                keys.append(k)
+    except Exception:
+        pass
+    last = None
+    for k in keys:
+        try:
+            data = json.loads(getter(f'{root}/{k}/data').decode('utf-8'))
+        except Exception as exc:
+            last = exc
+            continue
+        certified = None
+        try:
+            meta = json.loads(getter(f'{root}/{k}').decode('utf-8'))
+            certified = bool(meta.get('isOfficialResults')) if isinstance(meta, dict) else None
+        except Exception:
+            pass
+        items = data.get('ballotItems', data) if isinstance(data, dict) else data
+        if isinstance(items, list):            # county-local copies of statewide contests carry a parentId: skip them
+            items = [b for b in items if not (isinstance(b, dict) and b.get('parentId'))]
+        return read_json(items), certified
+    raise last or LookupError('no election found')
+
+
 def discover(page_html, page_url, cycle):
     """Links on a state's results page that lead to this election's data."""
     links = []
@@ -478,6 +519,9 @@ def discover(page_html, page_url, cycle):
             continue                            # the state's own site already totals its counties
         links.append(('clarity', f"https://results.enr.clarityelections.com/{st}/{county + '/' if county else ''}{eid}/"))
     links += [('file', u) for u in dict.fromkeys(ENHANCED.findall(page_html))]
+    for base, slug in dict.fromkeys(EV_LINK.findall(page_html)):
+        if slug.lower() not in ('api', 'elections'):
+            links.append(('ev', f'{base}|{slug.lower()}'))
     d = DATES[cycle].replace('-', '')
     tokens = (d, DATES[cycle], d[4:] + d[2:4], d[4:] + d[:4], DATES[cycle].replace('-', '_'))
     for href in DATAFILE.findall(page_html):
@@ -494,19 +538,38 @@ def discover(page_html, page_url, cycle):
 def read_state(state, cycle, getter, spec=None):
     spec = spec or SOURCES[state]
     page = _fill(spec['page'], cycle)
-    contests, used, errors = [], [], []
+    contests, used, tried = [], [], []
     counties = {}                               # county-run sites (New Jersey): their counts add up
+    county_sites = {'found': 0, 'read': 0}
+    certified = [None]
+
+    def note(url, outcome):
+        tried.append({'url': url.split('|')[0], 'result': outcome[:160]})
 
     def take(kind, url):
+        county = kind == 'clarity' and CLARITY.match(url).group(2)
+        if county:
+            county_sites['found'] += 1
         try:
-            got = _clarity_contests(url, getter) if kind == 'clarity' else contests_from(getter(url), spec.get('columns'))
+            if kind == 'clarity':
+                got = _clarity_contests(url, getter)
+            elif kind == 'ev':
+                base, slug = url.split('|')
+                got, cert = _ev_contests(base, slug, cycle, getter)
+                if cert is not None:
+                    certified[0] = cert
+            else:
+                got = contests_from(getter(url), spec.get('columns'))
         except Exception as exc:
-            errors.append(f'{type(exc).__name__}: {exc}'[:160])
+            note(url, str(exc) or type(exc).__name__)
             return
         if not any(classify(c['title'], state) for c in got):
+            note(url, 'read, but no House, Senate or governor contests in it')
             return
-        used.append(url)
-        if kind == 'clarity' and CLARITY.match(url).group(2):
+        note(url, 'read')
+        used.append(url.split('|')[0])
+        if county:
+            county_sites['read'] += 1
             for c in got:
                 acc = counties.setdefault(c['title'], _contest(c['title']))
                 for k, v in c['cands'].items():
@@ -514,25 +577,42 @@ def read_state(state, cycle, getter, spec=None):
         else:
             contests.extend(got)
 
-    for f in spec.get('feeds', []):
-        take('file', _fill(f, cycle))
+    if spec.get('ev'):
+        take('ev', '|'.join(spec['ev']))
     if not used:
+        for f in spec.get('feeds', []):
+            take('file', _fill(f, cycle))
+    if not used:
+        text = ''
         try:
-            body = getter(page)
-            text = body.decode('utf-8', 'replace')
+            text = getter(page).decode('utf-8', 'replace')
         except Exception as exc:
-            errors.append(f'{type(exc).__name__}: {exc}'[:160])
-            text = ''
-        for kind, url in discover(text, page, cycle) if text else []:
+            note(page, str(exc) or type(exc).__name__)
+        found = discover(text, page, cycle) if text else []
+        for kind, url in found:
             take(kind, url)
-        if not used and text and re.search(str(cycle), text):
-            got = read_html(text)
+        if not used and text:
+            got = read_html(text) if re.search(str(cycle), text) else []
             if any(classify(c['title'], state) for c in got):
-                contests += got; used.append(page)
+                contests += got; used.append(page); note(page, 'read (tables on the page)')
+            else:
+                note(page, 'opened, but it links to no results data Sanjaya can read' +
+                     (' (the page is probably built by JavaScript)' if len(re.sub(r'<script.*?</script>|<[^>]+>', '', text, flags=re.S).split()) < 400 else ''))
+    partial = county_sites['found'] and county_sites['read'] < county_sites['found']
     races = races_from(contests + list(counties.values()), state, cycle, used[0] if used else page)
-    status = 'read' if races else ('failed' if errors and not used else 'none')
-    return {'state': state, 'status': status, 'races': races, 'page': page, 'used': used[:5],
-            'error': errors[-1] if errors and not races else None, 'fetched': time.time()}
+    for r in races:
+        if certified[0]:
+            r['certified'] = 1
+            r['status_text'] = f"{STATES.get(state, state)}'s certified result"
+        if partial and r['source'] and CLARITY.match(r['source'] or ''):
+            r['counted_pct'], r['counted_basis'] = None, None
+            r['status_text'] = f"Partial: {county_sites['read']} of {county_sites['found']} county sites read"
+    reached = any(t['result'].startswith(('read', 'opened')) for t in tried)
+    status = 'partial' if races and partial else 'read' if races else ('none' if reached else 'failed')
+    err = next((t['result'] for t in reversed(tried) if not t['result'].startswith('read')), None)
+    return {'state': state, 'status': status, 'races': races, 'page': page, 'used': used[:5], 'tried': tried[-12:],
+            'error': None if races and not partial else err, 'certified': bool(certified[0]) if races else False,
+            'counties': county_sites if county_sites['found'] else None, 'fetched': time.time()}
 
 
 # ------------------------------------------------------------------ all states, in the background
@@ -546,7 +626,7 @@ def sources():
         extra = json.loads((OUT / 'state_sources.json').read_text(encoding='utf-8'))
         for st, v in extra.items():
             if st in out and isinstance(v, dict):
-                out[st].update({k: v[k] for k in ('page', 'feeds', 'columns') if k in v})
+                out[st].update({k: v[k] for k in ('page', 'feeds', 'columns', 'ev') if k in v})
     except (OSError, ValueError):
         pass
     return out
@@ -584,7 +664,7 @@ def request(cycle, getter, force=False, only=None):
                         try:
                             res = read_state(st, cycle, getter, spec)
                         except Exception as exc:          # one state never stops the rest
-                            res = {'state': st, 'status': 'failed', 'races': [], 'page': spec.get('page'), 'used': [],
+                            res = {'state': st, 'status': 'failed', 'races': [], 'page': spec.get('page'), 'used': [], 'tried': [],
                                    'error': f'{type(exc).__name__}: {exc}'[:160], 'fetched': time.time()}
                         with _lock:
                             job['states'][st] = res
@@ -604,7 +684,7 @@ def request(cycle, getter, force=False, only=None):
         states = {k: dict(v) for k, v in job['states'].items()}
         out = {'pending': job['running'], 'step': job['step'] if job['running'] else '', 'fetched': job['t'] or None, 'enabled': True}
     out['races'] = [dict(r) for v in states.values() for r in v.get('races', [])]
-    out['states'] = {k: {x: v.get(x) for x in ('status', 'page', 'used', 'error', 'fetched')} | {'races': len(v.get('races', []))}
+    out['states'] = {k: {x: v.get(x) for x in ('status', 'page', 'used', 'error', 'fetched', 'tried', 'certified', 'counties')} | {'races': len(v.get('races', []))}
                      for k, v in states.items()}
     return out
 
@@ -615,7 +695,7 @@ def merge(wiki, state, name_of=lambda s: STATES.get(s, s)):
     for s in state:
         w = by.get(s['id'])
         if not w:
-            by[s['id']] = dict(s)
+            by[s['id']] = _certify(dict(s))
             continue
         m = dict(w)
         for k in ('leader', 'leader_party', 'runner', 'runner_party', 'winner_votes', 'runner_votes', 'total', 'margin_pct',
@@ -629,8 +709,22 @@ def merge(wiki, state, name_of=lambda s: STATES.get(s, s)):
                     c[4] = int(c[1] == w['winner_party'] and c[0] == s['leader'])
                 m['cands'] = json.dumps(cands)
             else:
-                m.update(called=0, winner=None, winner_party=None,
+                m.update(called=0, winner=None, winner_party=None, certified=s.get('certified'),
                          status_text=f"Wikipedia lists {w.get('winner') or 'a winner'} ({w['winner_party']}), but {name_of(s['state'])}'s count "
                                      f"has {s.get('leader')} ({s.get('leader_party')}) ahead. Shown as not called until they agree")
+        m['certified'] = s.get('certified')
+        if s.get('certified'):
+            m = _certify(m)                     # the certified count is the legal result, whatever Wikipedia says
         by[s['id']] = m
     return list(by.values())
+
+
+def _certify(r):
+    """A state's certified result is the official outcome: the leader in the certified count is the winner."""
+    if r.get('certified') and r.get('leader_party') and r.get('total'):
+        cands = json.loads(r['cands'])
+        for c in cands:
+            c[4] = int(c[0] == r['leader'] and c[1] == r['leader_party'])
+        r.update(called=1, winner=r['leader'], winner_party=r['leader_party'], cands=json.dumps(cands),
+                 status_text=f"{STATES.get(r['state'], r['state'])} certified the result")
+    return r
