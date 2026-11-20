@@ -234,12 +234,12 @@ PROXY_PROVIDER_HOSTS={urllib.parse.urlparse(f.get('url','')).hostname for f in R
  'eonet.gsfc.nasa.gov','earthquake.usgs.gov','api.open-meteo.com',
  'public.api.bsky.app','static.geodataviewer.com'}
 
-def validate_external_url(url):
+def validate_external_url(url, allow_http=False):
     """Disallow local/private target URLs for user-defined RSS and redirects."""
     p = urllib.parse.urlparse(url)
-    if p.scheme != 'https' or not p.hostname or p.username or p.password:
+    if p.scheme not in (('https', 'http') if allow_http else ('https',)) or not p.hostname or p.username or p.password:
         raise ValueError('A public HTTPS feed URL is required.')
-    if p.port not in (None, 443):
+    if p.port not in (None, 443, 80 if allow_http else 443):
         raise ValueError('Only standard HTTPS ports are allowed.')
     host = p.hostname.lower()
     if host in ('localhost', 'localhost.localdomain') or host.endswith(('.local', '.internal', '.test')):
@@ -261,6 +261,34 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         validate_external_url(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+class PublicRecordRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_external_url(newurl, allow_http=True)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+STATE_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 '
+            'Sanjaya/6.5 (+https://github.com/a-moharil/Atlas)')
+
+
+def fetch_public_record(url, max_bytes=60_000_000, timeout=45):
+    """State election results sites: many sit behind firewalls that refuse requests without browser-like headers,
+    and a few still serve plain HTTP. Same public-address checks as every other fetch; errors name the HTTP status."""
+    validate_external_url(url, allow_http=True)
+    req = urllib.request.Request(url, headers={'User-Agent': STATE_UA, 'Accept-Language': 'en-US,en;q=0.9',
+                                               'Accept': 'text/html,application/xhtml+xml,application/json,text/csv,text/plain,*/*;q=0.8'})
+    try:
+        with urllib.request.build_opener(PublicRecordRedirectHandler()).open(req, timeout=timeout) as res:
+            block = res.read(max_bytes + 1)
+    except urllib.error.HTTPError as exc:
+        raise OSError(f'HTTP {exc.code} {exc.reason or ""}'.strip()) from None
+    except urllib.error.URLError as exc:
+        raise OSError(f'not reachable ({exc.reason})') from None
+    if len(block) > max_bytes:
+        raise ValueError('response larger than 60 MB')
+    return block
 
 
 def fetch_bytes(url, max_bytes=MAX_XML_BYTES, timeout=None):
@@ -1241,8 +1269,9 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_payload(us_elections.geo())
                 if parsed.path == '/api/us/result':
                     if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
-                    state_get=lambda u:fetch_bytes(u,max_bytes=60_000_000,timeout=60)
-                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,force,state_get))
+                    which=params.get('refresh',[''])[0]
+                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,
+                                                                     which in ('1','wiki'),fetch_public_record,force_states=which in ('1','states')))
                     except ValueError as e:return self.send_payload({'error':str(e)},400)
                 if parsed.path == '/api/us/officials':
                     try:return self.send_payload(us_officials.request(params.get('scope',['us'])[0][:20],getter,DB_FILE.parent/'research_cache',force))

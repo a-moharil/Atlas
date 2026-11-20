@@ -49,7 +49,7 @@ window.ATLASElectionsUS = (() => {
     if (!U.res[k] || force || U.res[k].live?.pending || (tick && U.res[k].live)) {
       if (!U.res[k]) draw();
       try {
-        const r = await A().api(`/api/us/result?office=${U.office}&cycle=${U.cycle}${force ? "&refresh=1" : ""}`);
+        const r = await A().api(`/api/us/result?office=${U.office}&cycle=${U.cycle}${force ? `&refresh=${force === true ? 1 : encodeURIComponent(force)}` : ""}`);
         if (seq !== U.seq && k !== key()) return;
         U.res[k] = r;
       } catch (e) { U.error = e.message; }
@@ -59,7 +59,7 @@ window.ATLASElectionsUS = (() => {
     const r = U.res[k];
     clearTimeout(U.timer);
     if (r?.live?.pending) U.timer = setTimeout(() => { if (key() === k) load(false); }, 2500);   // Wikipedia read still running
-    else if (r?.live) U.timer = setTimeout(() => { if (key() === k && U.body) load(false, true); }, r.live.ap?.enabled ? 125000 : 600000);   // keep counting races fresh
+    else if (r?.live) U.timer = setTimeout(() => { if (key() === k && U.body) load(false, true); }, 600000);   // keep counting races fresh
     loadOfficials();
   }
 
@@ -120,19 +120,27 @@ window.ATLASElectionsUS = (() => {
     const l = r.live;
     if (!l) return "";
     const st = l.states || {};
-    const btn = `<button class="choice elRefresh" data-us-refresh ${l.pending ? "disabled" : ""}>${l.pending ? "Reading…" : "Check now"}</button>`;
+    const wpBusy = !!l.wiki_pending, stBusy = !!st.pending;
+    const btnW = `<button class="choice elRefresh" data-us-refresh="wiki" ${wpBusy ? "disabled" : ""}>${wpBusy ? "Reading Wikipedia…" : "Re-read Wikipedia"}</button>`;
+    const btnS = `<button class="choice elRefresh" data-us-refresh="states" ${stBusy ? "disabled" : ""}>${stBusy ? "Reading state sites…" : "Re-read state sites"}</button>`;
     const wp = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`;
     const list = Object.entries(st.list || {}).sort((a, b) => (STN[a[0]] || a[0]).localeCompare(STN[b[0]] || b[0]));
-    const label = { read: "Read", none: "Nothing readable yet", failed: "Could not be read" };
-    const stText = st.pending ? `${esc(st.step || "Reading state results sites")}…${st.read ? ` ${st.read} read so far.` : ""}` : !list.length ? "not read yet." :
-      `${st.read} of ${list.length} states read, ${st.races} race${st.races === 1 ? "" : "s"} for this office, read ${esc(ago(st.fetched))}. Counts come from each state's own results site and stay unofficial until the state certifies.`;
-    const wpText = l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
+    const label = { read: "Read", partial: "Partly read", none: "Nothing readable yet", failed: "Could not be reached" };
+    const stText = stBusy ? `${esc(st.step || "Reading state results sites")}…${st.read ? ` ${st.read} read so far.` : ""}` : !list.length ? "not read yet." :
+      `${st.read} of ${list.length} states read${st.certified ? `, ${st.certified} certified` : ""}, ${st.races} race${st.races === 1 ? "" : "s"} for this office, read ${esc(ago(st.fetched))}. Counts are unofficial until a state certifies them.`;
+    const wpText = wpBusy ? "reading…" : l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
       `${wp}: ${l.wikipedia_races ?? 0} race${l.wikipedia_races === 1 ? "" : "s"}, read ${esc(ago(l.fetched))}. Its results tables say which races are decided; editors update them by hand.`;
-    const table = list.length ? `<details class="usStates"><summary>Each state's results site</summary><table class="elTable"><thead><tr><th>State</th><th>Status</th><th class="num">Races</th><th>Official site</th></tr></thead><tbody>${list.map(([k, v]) =>
-      `<tr class="usSt_${esc(v.status || "none")}"><td>${esc(STN[k] || k)}</td><td>${esc(label[v.status] || v.status || "")}${v.error && v.status !== "read" ? ` <small title="${esc(v.error)}">(${esc(v.error.split(":")[0])})</small>` : ""}</td><td class="num">${v.races || ""}</td><td>${v.page ? `<a href="${esc((v.used && v.used[0]) || v.page)}" target="_blank" rel="noopener noreferrer">Open</a>` : ""}</td></tr>`).join("")}</tbody></table>
+    const why = (v) => {
+      if (v.status === "read" || v.status === "partial") return v.status === "partial" && v.counties ? `${v.counties.read} of ${v.counties.found} county sites` : v.certified ? "certified" : "";
+      return esc(v.error || "");
+    };
+    const tried = (v) => (v.tried || []).length ? `<details><summary>${v.tried.length} address${v.tried.length === 1 ? "" : "es"} tried</summary><ul>${v.tried.map((t) => `<li><a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">${esc(t.url.replace(/^https?:\/\//, "").slice(0, 70))}</a>: ${esc(t.result)}</li>`).join("")}</ul></details>` : "";
+    const table = list.length ? `<details class="usStates"><summary>Each state's results site</summary><table class="elTable"><thead><tr><th>State</th><th>Status</th><th class="num">Races</th><th>Details</th><th>Official site</th></tr></thead><tbody>${list.map(([k, v]) =>
+      `<tr class="usSt_${esc(v.status || "none")}"><td>${esc(STN[k] || k)}</td><td>${esc(label[v.status] || v.status || "")}</td><td class="num">${v.races || ""}</td><td><small>${why(v)}</small>${tried(v)}</td><td>${v.page ? `<a href="${esc((v.used && v.used[0]) || v.page)}" target="_blank" rel="noopener noreferrer">Open</a>` : ""}</td></tr>`).join("")}</tbody></table>
       <p class="fine">Where a state's site can't be read automatically, open it with the link. Its races still show from Wikipedia.</p></details>` : "";
     return `<div class="panel elNote usLive" role="status"><div class="usLiveText"><p><b>State counts:</b> ${stText}</p><p><b>Wikipedia:</b> ${wpText}</p>
-      <p class="fine">A race counts as called only when Wikipedia lists it as decided and the state's count has the same party ahead. Until then it is striped toward whoever is ahead in the count.</p>${table}</div>${btn}</div>`;
+      <p class="fine">A race counts as called when the state certifies it, or when Wikipedia lists it as decided and the state's count has the same party ahead. Until then it is striped toward whoever is ahead in the count.</p>${table}</div>
+      <div class="usLiveBtns">${btnS}${btnW}</div></div>`;
   }
 
   // ---------------------------------------------------------------- charts
@@ -281,6 +289,7 @@ window.ATLASElectionsUS = (() => {
   function srcLine(s) {
     const o = s.origin || "";
     const site = s.source ? `<a href="${esc(s.source)}" target="_blank" rel="noopener noreferrer">${esc(STN[s.state] || s.state)}'s results site</a>` : "the state's results site";
+    if (s.certified) return `<p class="fine">Count and result: ${site}, certified.${o === "wikipedia+state" ? " Wikipedia also lists this race." : ""}</p>`;
     if (o === "wikipedia+state") return `<p class="fine">Count: ${site}. Call: Wikipedia${s.wiki_status ? ` (${esc(s.wiki_status)})` : ""}.</p>`;
     if (o === "state") return `<p class="fine">Count: ${site}. Wikipedia has not listed this race yet.</p>`;
     if (o === "wikipedia") return `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it. The state's own count could not be read for this race.</p>`;
@@ -364,7 +373,7 @@ window.ATLASElectionsUS = (() => {
       if (t.dataset.usOffice) { U.office = t.dataset.usOffice; const o = U.cat.offices.find((x) => x.office === U.office); if (!o.cycles.includes(Number(U.cycle))) U.cycle = o.cycles[0]; U.pick = null; return load(); }
       if (t.dataset.usCycle) { U.cycle = Number(t.dataset.usCycle); U.pick = null; return load(); }
       if (t.dataset.usMode) { U.mode = t.dataset.usMode; remember(); return draw(); }
-      if (t.hasAttribute("data-us-refresh")) { t.disabled = true; return load(true); }
+      if (t.hasAttribute("data-us-refresh")) { t.disabled = true; return load(t.dataset.usRefresh || true); }
       if (t.hasAttribute("data-us-offrefresh")) { t.disabled = true; return loadOfficials(true); }
       const st = t.dataset.usState || t.dataset.usSeat || t.dataset.usGo;
       if (st) {
