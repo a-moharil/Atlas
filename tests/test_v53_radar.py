@@ -18,6 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import radar_fixtures as F  # noqa: E402
+from tmpdir import TempDir  # noqa: E402
 import research_radar as R  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
@@ -31,7 +32,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.t = patch.object(R, 'arxiv_get', _no_wait)  # skip arXiv's 3 s pacing in tests
         self.t.start()
-        self.td = tempfile.TemporaryDirectory()
+        self.td = TempDir()
         self.p = patch.object(server, 'DB_FILE', Path(self.td.name) / 'observatory.sqlite3')
         self.p.start()
         server.init_db()
@@ -233,6 +234,7 @@ class Endpoints(Base):
                 self.assertEqual(e.exception.code, 400)
         finally:
             srv.shutdown()
+            srv.server_close()
 
 
 if __name__ == '__main__':

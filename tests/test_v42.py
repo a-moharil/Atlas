@@ -1,6 +1,9 @@
 import unittest,tempfile,threading,time,sys,json
 from pathlib import Path
 from unittest.mock import patch
+from contextlib import closing
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from tmpdir import TempDir
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import content_cleanup as cc,retrieval_jobs as jobs,tile_gateway as tiles,server,atlas_v3
 class Reliability(unittest.TestCase):
@@ -34,7 +37,7 @@ class Reliability(unittest.TestCase):
    out=jobs.request('stale-test',bad,td)
    self.assertEqual(out['points'],[1]);self.assertEqual(out['data_status'],'stale');self.assertIn('timeout',out['error'])
  def test_live_run_and_minute_buckets(self):
-  with tempfile.TemporaryDirectory() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'):
+  with TempDir() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'):
    server.init_db();r=atlas_v3.run_start(server.db_connect,server.utc_now)
    for minute in ['10','11']:
     atlas_v3.record(server.db_connect,r,'bbc_world','2026-11-16T10:00:00Z',f'2026-11-16T10:{minute}:00Z',True,2,1,'',50)
@@ -48,9 +51,9 @@ class Reliability(unittest.TestCase):
    self.assertEqual(fetch.call_count,1)
   tiles.FAILED.clear()
  def test_crime_migration_and_restore(self):
-  with tempfile.TemporaryDirectory() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'):
+  with TempDir() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'):
    server.init_db()
-   with server.db_connect() as con:
+   with closing(server.db_connect()) as con,con:
     cc.apply(con,['crime'],server.utc_now());self.assertIn('crime',cc.active(con))
     cc.apply(con,[],server.utc_now());self.assertNotIn('crime',cc.active(con))
 if __name__=='__main__':unittest.main()
