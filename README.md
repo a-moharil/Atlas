@@ -557,6 +557,11 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
 
 ### 6.2 Architecture
 
+![System architecture: feeds flow into server.py, which collects, cleans and stores them in SQLite, adds optional embeddings and labels, and serves a JSON API to the vanilla-JavaScript front end](docs/images/system-architecture.png)
+
+<details>
+<summary>Text version of the diagram</summary>
+
 ```
             ┌──────────────────────────── your computer ────────────────────────────┐
  Feeds ───► │  server.py  (ThreadingHTTPServer, stdlib)                              │
@@ -572,8 +577,10 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
             └──────────────────────────────── browser ───────────────────────────────┘
 ```
 
+</details>
+
 - **Server (`server.py`):** a `ThreadingHTTPServer` serving the static front end and about 40 JSON endpoints. It binds to `127.0.0.1` by default.
-![System Architecture](/docs/images/system-architecture.png)
+
 - **Collection:**
   - A background thread polls the registry (`source_registry.json`) every `OBS_REFRESH_SECONDS`.
   - Requests run in a bounded thread pool (8 workers) with per-request timeouts.
