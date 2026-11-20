@@ -1,0 +1,101 @@
+{
+  "_about": "Corrections and additions to the live Wikidata list of office-holders, per scope (IN, state:<State_key>, city:<City>). 'people' adds entries; an entry replaces any live entry for the same position unless it says \"fallback\": true, in which case it is used only when Wikidata has nobody for that office. 'hide' drops live entries by name or position; 'edit' changes fields of a live entry, keyed by name or position. Contacts must be official channels (office website, government email or switchboard). Never add personal numbers, residences or photo URLs: photos come from Wikimedia Commons at view time. Reviewed 19 November 2026.",
+  "scopes": {
+    "IN": {
+      "title": "Union of India",
+      "portal": {"label": "Union Council of Ministers (PM India)", "url": "https://www.pmindia.gov.in/en/council-of-ministers/"},
+      "people": [
+        {"name": "Droupadi Murmu", "position": "President of India", "since": "2022-07-25", "fallback": true,
+         "contacts": [{"label": "Office website", "url": "https://rashtrapatibhavan.gov.in/"}]},
+        {"name": "C. P. Radhakrishnan", "position": "Vice President of India", "since": "2025-09-12", "fallback": true,
+         "contacts": [{"label": "Office website", "url": "https://vicepresidentofindia.nic.in/"}],
+         "source_url": "https://vicepresidentofindia.nic.in/"},
+        {"name": "Narendra Modi", "position": "Prime Minister of India", "since": "2014-05-26", "party": "Bharatiya Janata Party", "fallback": true,
+         "contacts": [{"label": "Office website", "url": "https://www.pmindia.gov.in/"}]}
+      ]
+    },
+    "city:Mumbai": {
+      "title": "Brihanmumbai Municipal Corporation",
+      "portal": {"label": "BMC", "url": "https://portal.mcgm.gov.in/"},
+      "people": [
+        {"name": "Ritu Tawde", "position": "Mayor of Mumbai", "since": "2026-02-11", "party": "Bharatiya Janata Party",
+         "note": "Elected unopposed; the first BJP mayor in 44 years.",
+         "contacts": [{"label": "BMC website", "url": "https://portal.mcgm.gov.in/"}],
+         "source_url": "https://telanganatoday.com/ritu-tawde-becomes-mumbais-78th-mayor"},
+        {"name": "Sanjay Ghadi", "position": "Deputy Mayor of Mumbai", "since": "2026-02-11", "party": "Shiv Sena",
+         "contacts": [{"label": "BMC website", "url": "https://portal.mcgm.gov.in/"}],
+         "source_url": "https://telanganatoday.com/ritu-tawde-becomes-mumbais-78th-mayor"}
+      ]
+    },
+    "city:Pune": {
+      "title": "Pune Municipal Corporation",
+      "portal": {"label": "PMC", "url": "https://www.pmc.gov.in/en"},
+      "people": [
+        {"name": "Manjusha Nagpure", "position": "Mayor of Pune", "since": "2026-02-09", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "PMC website", "url": "https://www.pmc.gov.in/en"}],
+         "source_url": "https://www.punekarnews.in/?p=227956"},
+        {"name": "Parshuram Wadekar", "position": "Deputy Mayor of Pune", "since": "2026-02-09", "party": "Republican Party of India (Athawale)",
+         "contacts": [{"label": "PMC website", "url": "https://www.pmc.gov.in/en"}],
+         "source_url": "https://www.punekarnews.in/?p=227956"}
+      ]
+    },
+    "city:Pimpri_Chinchwad": {
+      "title": "Pimpri-Chinchwad Municipal Corporation",
+      "portal": {"label": "PCMC", "url": "https://www.pcmcindia.gov.in/"},
+      "people": [
+        {"name": "Ravi Landge", "position": "Mayor of Pimpri-Chinchwad", "since": "2026-02-06", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "PCMC website", "url": "https://www.pcmcindia.gov.in/"}],
+         "source_url": "https://www.freepressjournal.in/pune/daily-water-is-my-guarantee-newly-elected-mayor-ravi-landge-assures-end-to-six-year-alternate-day-water-supply-in-pimpri-chinchwad"},
+        {"name": "Sharmila Babar", "position": "Deputy Mayor of Pimpri-Chinchwad", "since": "2026-02-06", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "PCMC website", "url": "https://www.pcmcindia.gov.in/"}],
+         "source_url": "https://www.freepressjournal.in/pune/daily-water-is-my-guarantee-newly-elected-mayor-ravi-landge-assures-end-to-six-year-alternate-day-water-supply-in-pimpri-chinchwad"}
+      ]
+    },
+    "city:Nagpur": {
+      "title": "Nagpur Municipal Corporation",
+      "portal": {"label": "NMC", "url": "https://www.nmcnagpur.gov.in/"},
+      "people": [
+        {"name": "Neeta Thakre", "position": "Mayor of Nagpur", "since": "2026-02-06", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "NMC website", "url": "https://www.nmcnagpur.gov.in/"}],
+         "source_url": "https://www.thehitavada.com/Encyc/2026/2/7/bjps-neeta-thakre-elected-55th-mayor-of-nagpur-city.html"},
+        {"name": "Leela Hathibed", "position": "Deputy Mayor of Nagpur", "since": "2026-02-06",
+         "contacts": [{"label": "NMC website", "url": "https://www.nmcnagpur.gov.in/"}],
+         "source_url": "https://www.thehitavada.com/Encyc/2026/2/7/bjps-neeta-thakre-elected-55th-mayor-of-nagpur-city.html"}
+      ]
+    },
+    "city:Delhi": {
+      "title": "Municipal Corporation of Delhi",
+      "portal": {"label": "MCD", "url": "https://mcdonline.nic.in/"},
+      "note": "Delhi's mayor is elected by the corporation each April for a one-year term.",
+      "people": [
+        {"name": "Pravesh Wahi", "position": "Mayor of Delhi", "since": "2026-04-29", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "MCD website", "url": "https://mcdonline.nic.in/"}],
+         "source_url": "https://newsonair.gov.in/bjps-pravesh-wahi-becomes-new-mayor-of-delhi-in-mcd-polls/"},
+        {"name": "Monika Pant", "position": "Deputy Mayor of Delhi", "since": "2026-04-29", "party": "Bharatiya Janata Party",
+         "contacts": [{"label": "MCD website", "url": "https://mcdonline.nic.in/"}],
+         "source_url": "https://newsonair.gov.in/bjps-pravesh-wahi-becomes-new-mayor-of-delhi-in-mcd-polls/"}
+      ]
+    },
+    "city:Chennai": {
+      "title": "Greater Chennai Corporation",
+      "portal": {"label": "GCC", "url": "https://chennaicorporation.gov.in/"},
+      "people": [
+        {"name": "R. Priya", "position": "Mayor of Chennai", "since": "2022-03-04", "party": "Dravida Munnetra Kazhagam",
+         "contacts": [{"label": "GCC website", "url": "https://chennaicorporation.gov.in/"}],
+         "source_url": "https://theprint.in/india/all-dmk-mayoral-candidates-emerge-victorious-in-indirect-polls/858266/"}
+      ]
+    },
+    "city:Hyderabad": {
+      "title": "Greater Hyderabad",
+      "wikidata": false,
+      "portal": {"label": "GHMC", "url": "https://www.ghmc.gov.in/"},
+      "note": "The elected council's term ended on 10 February 2026 and the corporation has since been split in three. There is no elected mayor until the new corporations vote."
+    },
+    "city:Bengaluru": {
+      "title": "Greater Bengaluru",
+      "wikidata": false,
+      "portal": {"label": "Greater Bengaluru Authority", "url": "https://bbmp.gov.in/"},
+      "note": "Bengaluru has had no elected council since 2020. The Greater Bengaluru Authority's five corporations are due to elect councils by 31 December 2026; until then they are run by administrators."
+    }
+  }
+}

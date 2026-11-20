@@ -1,0 +1,38 @@
+{
+  "_about": "Pre-poll alliances as they contested, by election id. Only elections where the alliance totals were checked against published figures are listed; every other election is shown party by party. 'unopposed' adds seats decided without a poll, which have no rows in the ECI statistical reports.",
+  "GE-2024": {
+    "source": "Seat totals check: NDA 293, INDIA 234 (ECI results, June 2024)",
+    "alliances": {
+      "NDA": {"color": "#F28C28", "parties": ["BJP", "TDP", "JD(U)", "SHS", "LJPRV", "JD(S)", "JnP", "RLD", "UPPL", "AGP", "HAMS", "AJSUP", "NCP", "SKM", "ADAL"]},
+      "INDIA": {"color": "#19AAED", "parties": ["INC", "SP", "AITC", "DMK", "SHSUBT", "NCPSP", "RJD", "CPM", "JMM", "IUML", "AAAP", "CPI(ML)(L)", "JKN", "VCK", "CPI", "KEC", "RSP", "MDMK", "RaLtP", "BHRTADVSIP"]}
+    },
+    "unopposed": [{"state": "Gujarat", "no": 24, "name": "SURAT", "party": "BJP"}]
+  },
+  "AE-Uttar_Pradesh-2022": {
+    "source": "Seat totals check: NDA 273, SP-led alliance 125 (ECI results, March 2022)",
+    "alliances": {
+      "NDA": {"color": "#F28C28", "parties": ["BJP", "ADS", "NINSHAD"]},
+      "SP alliance": {"color": "#E3262E", "parties": ["SP", "RLD", "SBSP"]}
+    }
+  },
+  "AE-Punjab-2022": {
+    "source": "SAD contested with BSP (ECI results, March 2022)",
+    "alliances": {
+      "SAD-BSP": {"color": "#1F3A93", "parties": ["SAD", "BSP"]}
+    }
+  },
+  "AE-Goa-2022": {
+    "source": "INC contested with GFP; MGP with AITC (ECI results, March 2022)",
+    "alliances": {
+      "INC-GFP": {"color": "#19AAED", "parties": ["INC", "GFP"]},
+      "MGP-AITC": {"color": "#FF6F61", "parties": ["MAG", "AITC"]}
+    }
+  },
+  "AE-Maharashtra-2024": {
+    "source": "Seat totals check: Mahayuti 230, MVA 46 (ECI results, November 2024)",
+    "alliances": {
+      "Mahayuti": {"color": "#F28C28", "parties": ["BJP", "SHS", "NCP"]},
+      "MVA": {"color": "#19AAED", "parties": ["INC", "SHSUBT", "NCPSP"]}
+    }
+  }
+}

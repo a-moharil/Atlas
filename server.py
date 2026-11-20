@@ -47,6 +47,11 @@ import geo_video
 import find
 import wiki
 import ask
+import elections
+import elections_data
+import officials
+import forecast
+import pulse
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -622,11 +627,11 @@ def _single(e):
 WIKI_UA = 'Sanjaya/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
 
 
-def wiki_get(url, max_bytes=2_000_000):
+def wiki_get(url, max_bytes=2_000_000, timeout=20):
     """Wikipedia asks API clients for an identifying User-Agent."""
     validate_external_url(url)
     req = urllib.request.Request(url, headers={'User-Agent': WIKI_UA, 'Accept': 'application/json, text/html'})
-    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=20) as res:
+    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=timeout) as res:
         block = res.read(max_bytes + 1)
     if len(block) > max_bytes:
         raise ValueError('Wikipedia response exceeded size limit')
@@ -1207,6 +1212,26 @@ class Handler(BaseHTTPRequestHandler):
                 detail=params.get('detail',[''])[0]
                 return self.send_payload(atlas_v3.shakemap(detail,fetch_bytes))
             if parsed.path == '/api/live-channels': return self.send_payload({'channels':live_channels_state(),'time':utc_now()})
+            if parsed.path == '/api/elections/catalog':
+                return self.send_payload(elections.catalog())
+            if parsed.path == '/api/elections/result':
+                try:return self.send_payload(elections.result(params.get('id',[''])[0][:80]))
+                except LookupError as e:return self.send_payload({'error':str(e)},404)
+            if parsed.path == '/api/elections/officials':
+                try:scope=officials.parse_scope(params.get('scope',['IN'])[0][:80])[1]
+                except ValueError as e:return self.send_payload({'error':str(e)},400)
+                getter=lambda u:wiki_get(u,6_000_000,timeout=60 if 'wikidata' in u else 30)
+                return self.send_payload(officials.request(scope,getter,DB_FILE.parent/'research_cache',params.get('refresh',['0'])[0]=='1'))
+            if parsed.path == '/api/elections/forecast':
+                st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
+                if not st:return self.send_payload(forecast.national())
+                return self.send_payload(forecast.for_state(st,hidden=elections.hidden_kinds(st),force=force))
+            if parsed.path == '/api/elections/pulse':
+                st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
+                return self.send_payload(pulse.for_scope(st,news_db=DB_FILE,hidden=elections.hidden_kinds(st or None),force=force))
+            if parsed.path == '/api/elections/geo':
+                try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
+                except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)
             if parsed.path == '/api/wiki/search':
                 try:return self.send_payload(wiki.search(params.get('q',[''])[0],wiki_get,db_connect))
                 except ValueError as e:return self.send_payload({'error':str(e)},400)
@@ -1286,6 +1311,9 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/elections/download':
+                started=elections_data.start(lambda u,timeout=None:fetch_bytes(u,max_bytes=60_000_000,timeout=timeout or 600))
+                return self.send_payload({'started':started,**elections_data.status()})
             if path == '/api/ask':
                 try:return self.send_payload(ask_question(data))
                 except ValueError as e:return self.send_payload({'error':str(e)},400)

@@ -1,0 +1,78 @@
+{
+  "_about": "Municipal corporations shown on the Elections page. Seat tallies are the final declared results as reported by the State Election Commission and checked against at least one news report; each tally sums to the council size. Ward-level results and ward maps are not included yet: the public ward boundary files do not match the delimitation used in these elections.",
+  "corporations": [
+    {
+      "id": "MC-Mumbai-2026", "name": "Brihanmumbai Municipal Corporation", "short": "BMC", "city": "Mumbai", "state": "Maharashtra",
+      "seats": 227, "majority": 114, "polled": "2026-01-15", "counted": "2026-01-16", "turnout": 52.94,
+      "authority": "Maharashtra State Election Commission",
+      "parties": [["BJP", 89], ["SHSUBT", 65], ["SHS", 29], ["INC", 24], ["AIMIM", 8], ["MNS", 6], ["NCP", 3], ["SP", 2], ["NCPSP", 1]],
+      "alliances": {"Mahayuti": {"color": "#F28C28", "parties": ["BJP", "SHS"]}, "Shiv Sena (UBT)-MNS": {"color": "#E75480", "parties": ["SHSUBT", "MNS"]}},
+      "previous": {"year": 2017, "note": "Undivided Shiv Sena 84, BJP 82, INC 31, MNS 7"},
+      "sources": ["https://www.freepressjournal.in/mumbai/mumbai-bmc-elections-2026-results-bjp-emerges-largest-party-with-89-wins-sena-ubt-follows-with-65-final-numbers-of-party-wise-victories-declared"]
+    },
+    {
+      "id": "MC-Pune-2026", "name": "Pune Municipal Corporation", "short": "PMC", "city": "Pune", "state": "Maharashtra",
+      "seats": 165, "majority": 83, "polled": "2026-01-15", "counted": "2026-01-16", "turnout": 52.42,
+      "authority": "Maharashtra State Election Commission",
+      "parties": [["BJP", 119], ["NCP", 27], ["INC", 15], ["NCPSP", 3], ["SHSUBT", 1]],
+      "alliances": {"NCP-NCP(SP)": {"color": "#00A2A8", "parties": ["NCP", "NCPSP"]}},
+      "previous": {"year": 2017, "note": "BJP 97, NCP 39, Shiv Sena 10, INC 9, MNS 2, AIMIM 1, others 4"},
+      "sources": ["https://www.indiatvnews.com/news/india/pune-municipal-corporation-election-results-2026-saffron-wave-bjp-is-leading-in-32-seats-2026-01-16-1025885", "https://www.freepressjournal.in/pune/pcmc-elections-2026-results-ajit-pawar-congratulates-bjp-after-ncp-ncpsp-alliance-defeat-in-pune"]
+    },
+    {
+      "id": "MC-Pimpri_Chinchwad-2026", "name": "Pimpri-Chinchwad Municipal Corporation", "short": "PCMC", "city": "Pimpri-Chinchwad", "state": "Maharashtra",
+      "seats": 128, "majority": 65, "polled": "2026-01-15", "counted": "2026-01-16", "turnout": 57.71,
+      "authority": "Maharashtra State Election Commission",
+      "parties": [["BJP", 84], ["NCP", 37], ["SHS", 6], ["IND", 1]],
+      "alliances": {"NCP-NCP(SP)": {"color": "#00A2A8", "parties": ["NCP", "NCPSP"]}},
+      "note": "Two BJP candidates were elected unopposed; 126 seats went to the poll.",
+      "sources": ["https://www.freepressjournal.in/pune/pcmc-results-2026-28-former-corporators-lose-in-pimpri-chinchwad-as-64-new-faces-set-to-lead-civic-body"]
+    },
+    {
+      "id": "MC-Nagpur-2026", "name": "Nagpur Municipal Corporation", "short": "NMC", "city": "Nagpur", "state": "Maharashtra",
+      "seats": 151, "majority": 76, "polled": "2026-01-15", "counted": "2026-01-16",
+      "authority": "Maharashtra State Election Commission",
+      "parties": [["BJP", 102], ["INC", 34], ["AIMIM", 6], ["IUML", 4], ["SHSUBT", 2], ["SHS", 1], ["NCP", 1], ["BSP", 1]],
+      "alliances": {"BJP-Shiv Sena": {"color": "#F28C28", "parties": ["BJP", "SHS"]}},
+      "previous": {"year": 2017, "note": "BJP 108, INC 28, BSP 10, undivided Shiv Sena 2, undivided NCP 1"},
+      "sources": ["https://www.indiatvnews.com/maharashtra/nagpur-election-results-complete-list-of-winners-bjp-shiv-sena-congress-fadnavis-thackeray-shinde-maharashtra-municipal-corporation-2026-polls-2026-01-16-1025236"]
+    },
+    {
+      "id": "MC-Delhi-2022", "name": "Municipal Corporation of Delhi", "short": "MCD", "city": "Delhi", "state": "Delhi",
+      "seats": 250, "majority": 126, "polled": "2022-12-04", "counted": "2022-12-07",
+      "authority": "State Election Commission, Delhi",
+      "parties": [["AAAP", 134], ["BJP", 104], ["INC", 9], ["IND", 3]],
+      "note": "First election after the three Delhi corporations were merged into one in 2022.",
+      "sources": ["https://theprint.in/politics/aap-bags-majority-in-delhi-mcd-polls-with-134-seats-breaks-bjps-winning-streak/1252173"]
+    },
+    {
+      "id": "MC-Hyderabad-2020", "name": "Greater Hyderabad Municipal Corporation", "short": "GHMC", "city": "Hyderabad", "state": "Telangana",
+      "seats": 150, "majority": 76, "polled": "2020-12-01", "counted": "2020-12-04",
+      "authority": "Telangana State Election Commission",
+      "parties": [["TRS", 56], ["BJP", 48], ["AIMIM", 44], ["INC", 2]],
+      "note": "Includes Neredmet, declared on 10 December 2020 after a dispute over ballot markings. TRS is now Bharat Rashtra Samithi (BRS).",
+      "status": "The council's term ended on 10 February 2026. Telangana has since split GHMC into three corporations (GHMC, Cyberabad and Malkajgiri); the next election had not been scheduled as of November 2026.",
+      "sources": ["https://www.tribuneindia.com/news/nation/trs-wins-neredmet-ghmc-division-takes-its-tally-to-56-182436", "https://www.siasat.com/elections-for-ghmc-local-bodies-likely-in-december-2027-3530593/"]
+    },
+    {
+      "id": "MC-Chennai-2022", "name": "Greater Chennai Corporation", "short": "GCC", "city": "Chennai", "state": "Tamil Nadu",
+      "seats": 200, "majority": 101, "polled": "2022-02-19", "counted": "2022-02-22",
+      "authority": "Tamil Nadu State Election Commission",
+      "parties": [["DMK", 153], ["ADMK", 15], ["INC", 13], ["CPM", 4], ["VCK", 4], ["MDMK", 2], ["CPI", 1], ["IUML", 1], ["BJP", 1], ["AMMK", 1], ["IND", 5]],
+      "alliances": {"Secular Progressive Alliance": {"color": "#C1121F", "parties": ["DMK", "INC", "CPM", "VCK", "MDMK", "CPI", "IUML"]}},
+      "sources": ["https://en.wikipedia.org/wiki/2022_Tamil_Nadu_local_elections", "https://amp.scroll.in/latest/1017946/scroll_in"]
+    },
+    {
+      "id": "MC-Bengaluru-2015", "name": "Bruhat Bengaluru Mahanagara Palike", "short": "BBMP", "city": "Bengaluru", "state": "Karnataka",
+      "seats": 198, "majority": 100, "polled": "2015-08-22", "counted": "2015-08-25",
+      "authority": "Karnataka State Election Commission",
+      "parties": [["BJP", 100], ["INC", 76], ["JD(S)", 14], ["IND", 7], ["SDPI", 1]],
+      "status": "BBMP was dissolved in September 2025 and replaced by the Greater Bengaluru Authority with five city corporations (369 wards: Central 63, North 72, South 72, East 50, West 112). Their first elections are due by 31 December 2026; polling dates had not been announced as of November 2026.",
+      "sources": ["https://www.business-standard.com/article/news-ians/congress-grabs-bengaluru-mayor-post-from-bjp-115091101579_1.html", "https://en.wikipedia.org/wiki/2026_Greater_Bengaluru_Authority_elections"]
+    }
+  ],
+  "extra_parties": {
+    "AMMK": {"name": "Amma Makkal Munnetra Kazhagam", "color": "#4B0082"},
+    "SDPI": {"name": "Social Democratic Party of India", "color": "#2F855A"}
+  }
+}

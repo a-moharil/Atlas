@@ -1,0 +1,5 @@
+{
+  "_about": "Election Commission of India blackout windows (Representation of the People Act 1951: Section 126A for exit polls, Section 126(1)(b) for the 48 hours before polling ends). Add each window when the ECI notifies it. While a window is active, Sanjaya hides the matching polls and projections for that state. Times are ISO 8601 with offset (IST is +05:30). state is the key used on the Elections page (Uttar_Pradesh), IN for a Lok Sabha election, or * for everywhere.",
+  "example": {"state": "Uttar_Pradesh", "kind": "exit_poll", "start": "2027-02-10T07:00:00+05:30", "end": "2027-03-07T18:30:00+05:30", "source": "ECI press note"},
+  "windows": []
+}

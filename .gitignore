@@ -28,3 +28,6 @@ Thumbs.db
 # Windows one-click setup
 .sanjaya_python.txt
 setup_log.txt
+
+# Elections data pack (downloaded on first use)
+election_data/
