@@ -119,19 +119,20 @@ window.ATLASElectionsUS = (() => {
   function liveLine(r) {
     const l = r.live;
     if (!l) return "";
-    const ap = l.ap || {};
+    const st = l.states || {};
     const btn = `<button class="choice elRefresh" data-us-refresh ${l.pending ? "disabled" : ""}>${l.pending ? "Reading…" : "Check now"}</button>`;
     const wp = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`;
-    let apText;
-    if (ap.enabled && !ap.error) apText = `<b>Associated Press:</b> ${ap.races} race${ap.races === 1 ? "" : "s"}, read ${esc(ago(ap.fetched))}; checked again every two minutes while this page is open.`;
-    else if (ap.enabled) apText = `<b>Associated Press:</b> ${esc(ap.error)}${ap.races ? ` Showing the last ${ap.races} races AP returned.` : ""}`;
-    else apText = `<b>Associated Press:</b> not connected. AP's results and race calls need an AP Elections API key, which AP licenses to news organisations; Sanjaya cannot read them without one.`;
-    const wpText = l.pending ? esc(l.step || `Reading ${l.page}`) + "…" : l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
-      `${wp}: ${l.wikipedia_races ?? (r.seats || []).length} race${l.wikipedia_races === 1 ? "" : "s"}${ap.enabled ? " that AP did not return" : ""}, read ${esc(ago(l.fetched))}. Editors update it by hand, so it can trail the count by hours or days.`;
-    const keyForm = ap.enabled ? `<button class="linkButton" data-us-apkey-clear>Remove AP key</button>` :
-      `<form class="usApForm" data-us-apform><label><span>AP Elections API key</span><input type="password" name="k" autocomplete="off" spellcheck="false" placeholder="Paste your key"></label><button class="choice" type="submit">Connect AP</button><a href="https://developer.ap.org/ap-elections-api" target="_blank" rel="noopener noreferrer">How to get one</a></form>`;
-    return `<div class="panel elNote usLive" role="status"><div class="usLiveText"><p>${apText}</p><p><b>Wikipedia:</b> ${wpText}</p>
-      <p class="fine">A race is called only when the source calls it. Until then it is striped toward whoever is ahead. The key is kept on this computer and never shown again.</p>${keyForm}</div>${btn}</div>`;
+    const list = Object.entries(st.list || {}).sort((a, b) => (STN[a[0]] || a[0]).localeCompare(STN[b[0]] || b[0]));
+    const label = { read: "Read", none: "Nothing readable yet", failed: "Could not be read" };
+    const stText = st.pending ? `${esc(st.step || "Reading state results sites")}…${st.read ? ` ${st.read} read so far.` : ""}` : !list.length ? "not read yet." :
+      `${st.read} of ${list.length} states read, ${st.races} race${st.races === 1 ? "" : "s"} for this office, read ${esc(ago(st.fetched))}. Counts come from each state's own results site and stay unofficial until the state certifies.`;
+    const wpText = l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
+      `${wp}: ${l.wikipedia_races ?? 0} race${l.wikipedia_races === 1 ? "" : "s"}, read ${esc(ago(l.fetched))}. Its results tables say which races are decided; editors update them by hand.`;
+    const table = list.length ? `<details class="usStates"><summary>Each state's results site</summary><table class="elTable"><thead><tr><th>State</th><th>Status</th><th class="num">Races</th><th>Official site</th></tr></thead><tbody>${list.map(([k, v]) =>
+      `<tr class="usSt_${esc(v.status || "none")}"><td>${esc(STN[k] || k)}</td><td>${esc(label[v.status] || v.status || "")}${v.error && v.status !== "read" ? ` <small title="${esc(v.error)}">(${esc(v.error.split(":")[0])})</small>` : ""}</td><td class="num">${v.races || ""}</td><td>${v.page ? `<a href="${esc((v.used && v.used[0]) || v.page)}" target="_blank" rel="noopener noreferrer">Open</a>` : ""}</td></tr>`).join("")}</tbody></table>
+      <p class="fine">Where a state's site can't be read automatically, open it with the link. Its races still show from Wikipedia.</p></details>` : "";
+    return `<div class="panel elNote usLive" role="status"><div class="usLiveText"><p><b>State counts:</b> ${stText}</p><p><b>Wikipedia:</b> ${wpText}</p>
+      <p class="fine">A race counts as called only when Wikipedia lists it as decided and the state's count has the same party ahead. Until then it is striped toward whoever is ahead in the count.</p>${table}</div>${btn}</div>`;
   }
 
   // ---------------------------------------------------------------- charts
@@ -277,6 +278,15 @@ window.ATLASElectionsUS = (() => {
   const leanDefs = () => `<defs>${["D", "R", "I", "O", "U"].map((c) => `<pattern id="usLean_${c}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${PC[c]}" fill-opacity=".16"/><rect width="2.6" height="6" fill="${PC[c]}" fill-opacity=".85"/></pattern>`).join("")}</defs>`;
   const leanUrl = (v) => `url(#usLean_${v.l && PC[v.l] ? v.l : "U"})`;
 
+  function srcLine(s) {
+    const o = s.origin || "";
+    const site = s.source ? `<a href="${esc(s.source)}" target="_blank" rel="noopener noreferrer">${esc(STN[s.state] || s.state)}'s results site</a>` : "the state's results site";
+    if (o === "wikipedia+state") return `<p class="fine">Count: ${site}. Call: Wikipedia${s.wiki_status ? ` (${esc(s.wiki_status)})` : ""}.</p>`;
+    if (o === "state") return `<p class="fine">Count: ${site}. Wikipedia has not listed this race yet.</p>`;
+    if (o === "wikipedia") return `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it. The state's own count could not be read for this race.</p>`;
+    return "";
+  }
+
   function pickCard(r) {
     if (!U.pick) return `<p class="fine">Click a ${U.office === "H" ? "district" : "state"} for its result${U.office === "H" ? "" : " and to see who represents it below"}.</p>`;
     const list = U.office === "H" ? r.seats.filter((s) => `${s.state}-${s.seat}` === U.pick) : r.seats.filter((s) => s.state === U.pick && (U.office !== "S" || true));
@@ -285,9 +295,9 @@ window.ATLASElectionsUS = (() => {
       const c = (s.cands || []).filter((x) => x[0]);
       return `<div class="usPick"><h4>${esc(seatName(s))}${U.office === "S" ? ` <small>Class ${esc(s.seat)}${s.up === false ? `, elected ${s.cycle}` : ""}</small>` : ""}${U.office === "P" && s.ev ? ` <small>${s.ev} electoral vote${s.ev > 1 ? "s" : ""}</small>` : ""}</h4>
         <p class="fine">${s.called ? `${esc(s.winner || PN[s.party])} (${esc(s.party)})${s.unopposed ? " · unopposed" : s.margin != null ? ` · margin ${s.margin} pts` : ""}${s.previous && s.previous !== s.party ? ` · seat changed from ${esc(PN[s.previous])}` : ""}` :
-          `Not yet called.${s.leader_party ? ` ${esc(s.leader || PN[s.leader_party])} (${esc(s.leader_party)}) is ahead${s.margin != null ? ` by ${s.margin} pts` : ""}.` : ""}${s.counted != null ? ` About ${Math.round(s.counted)}% of the expected vote counted.` : ""}${s.status && s.origin !== "ap" ? ` ${esc(s.status)}.` : s.status && /runoff/i.test(s.status) ? " Heading to a runoff." : ""}`}</p>
+          `Not yet called.${s.leader_party ? ` ${esc(s.leader || PN[s.leader_party])} (${esc(s.leader_party)}) is ahead${s.margin != null ? ` by ${s.margin} pts` : ""}.` : ""}${s.counted != null ? (s.counted_basis === "precincts" ? ` ${Math.round(s.counted)}% of precincts reporting.` : ` About ${Math.round(s.counted)}% of the expected vote counted.`) : ""}${s.status && !/count$/.test(s.status) ? ` ${esc(s.status)}.` : ""}`}</p>
         ${c.length ? `<table class="elTable"><tbody>${c.map((x) => `<tr><td><span class="elSw" style="background:${PC[x[1]] || PC.O}"></span>${esc(x[0])} <small>${esc(x[1])}</small>${x[4] ? " ✓" : ""}</td><td class="num">${x[2] ? Number(x[2]).toLocaleString("en-US") : ""}</td><td class="num">${x[3] != null ? `${x[3]}%` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
-        ${s.origin === "wikipedia" ? `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it.</p>` : s.origin === "ap" ? `<p class="fine">Source: Associated Press.</p>` : ""}</div>`;
+        ${srcLine(s)}</div>`;
     }).join("");
   }
 
@@ -341,7 +351,7 @@ window.ATLASElectionsUS = (() => {
     b.dataset.usWired = "1";
     b.addEventListener("click", (e) => {
       if (!b.querySelector(".elUS") && !b.querySelector("#usDownload")) return;
-      const t = e.target.closest("[data-us-office],[data-us-cycle],[data-us-mode],[data-us-state],[data-us-seat],[data-us-go],[data-us-refresh],[data-us-offrefresh],[data-us-apkey-clear],#usDownload");
+      const t = e.target.closest("[data-us-office],[data-us-cycle],[data-us-mode],[data-us-state],[data-us-seat],[data-us-go],[data-us-refresh],[data-us-offrefresh],#usDownload");
       if (!t) return;
       if (t.id === "usDownload") {
         // Show progress at once; the server's own steps replace this within a second.
@@ -355,7 +365,6 @@ window.ATLASElectionsUS = (() => {
       if (t.dataset.usCycle) { U.cycle = Number(t.dataset.usCycle); U.pick = null; return load(); }
       if (t.dataset.usMode) { U.mode = t.dataset.usMode; remember(); return draw(); }
       if (t.hasAttribute("data-us-refresh")) { t.disabled = true; return load(true); }
-      if (t.hasAttribute("data-us-apkey-clear")) { A().api("/api/us/settings", "POST", { ap_key: "" }).then(() => load(true)); return; }
       if (t.hasAttribute("data-us-offrefresh")) { t.disabled = true; return loadOfficials(true); }
       const st = t.dataset.usState || t.dataset.usSeat || t.dataset.usGo;
       if (st) {
@@ -365,13 +374,6 @@ window.ATLASElectionsUS = (() => {
         draw(); loadOfficials();
         $("#usPick")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-    });
-    b.addEventListener("submit", (e) => {
-      const f = e.target.closest("[data-us-apform]"); if (!f) return;
-      e.preventDefault();
-      const k = f.querySelector("input").value.trim(); if (!k) return;
-      f.querySelector("button").disabled = true;
-      A().api("/api/us/settings", "POST", { ap_key: k }).then(() => load(true)).catch((err) => { f.insertAdjacentHTML("beforeend", `<span class="elError">${esc(err.message)}</span>`); f.querySelector("button").disabled = false; });
     });
     b.addEventListener("change", (e) => {
       if (e.target.id === "usScope") { U.scope = e.target.value; remember(); paintOfficials(); loadOfficials(); }

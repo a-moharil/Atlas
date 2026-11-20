@@ -1,8 +1,9 @@
 """US elections for the Elections page: House, Senate, governors and president.
 
 Results only: who won each race as recorded (FiveThirtyEight through 2024, a reviewed file for off-year
-governor races, Wikipedia for 2026 while counting finishes). Sanjaya never calls a race; races Wikipedia
-does not yet list as decided are shown as uncalled.
+governor races; for 2026, each state's own count from its results site and Wikipedia's results tables).
+Sanjaya never calls a race: a race is decided only when Wikipedia lists it as decided and the state's count
+has the same party ahead.
 """
 from __future__ import annotations
 
@@ -10,8 +11,8 @@ import json
 import sqlite3
 
 import us_elections_data as UD
-import us_ap
 import us_live
+import us_official
 
 LIVE = {'H': [2026], 'S': [2026], 'G': [2026]}
 OFFICES = {'H': 'House of Representatives', 'S': 'Senate', 'G': 'Governors', 'P': 'President'}
@@ -78,7 +79,8 @@ def _seat_of(r):
             'counted': r.get('counted_pct'), 'runner': r.get('runner'), 'runner_party': r.get('runner_party'),
             'margin': r.get('margin_pct'), 'called': bool(r.get('called', 1) and r['winner_party']), 'special': bool(r.get('special')),
             'unopposed': bool(r.get('unopposed')), 'cycle': r['cycle'], 'cands': _cand(r), 'origin': r.get('origin'),
-            'status': r.get('status_text'), 'source': r.get('source')}
+            'status': r.get('status_text'), 'source': r.get('source'), 'counted_basis': r.get('counted_basis'),
+            'wiki_status': r.get('wiki_status')}
 
 
 def _latest(rows):
@@ -89,7 +91,7 @@ def _latest(rows):
     return best
 
 
-def result(office, cycle, getter=None, force=False, ap_key=None):
+def result(office, cycle, getter=None, force=False, state_getter=None):
     if office not in OFFICES:
         raise ValueError('Unknown office')
     cycle = int(cycle)
@@ -97,19 +99,19 @@ def result(office, cycle, getter=None, force=False, ap_key=None):
     rows = _rows(office, [cycle])
     if cycle in LIVE.get(office, []) and getter is not None:
         live = live_races(office, cycle, getter, force)
-        ap = us_ap.request(cycle, ap_key, getter, force) if ap_key else {'races': [], 'enabled': False}
-        ap_races = [dict(r) for r in ap['races'] if r['office'] == office]
+        st = us_official.request(cycle, state_getter, force) if state_getter else {'races': [], 'states': {}, 'enabled': False}
+        st_races = [dict(r) for r in st['races'] if r['office'] == office]
         if office == 'S':
             hist = [h for h in _rows('S', upto=cycle - 1) if h['cycle'] >= cycle - 8]
-            us_live.assign_senate_classes(ap_races, hist)
-        # AP first; Wikipedia fills races AP has not returned.
-        merged = {r['id']: r for r in live['races']}
-        merged.update({r['id']: r for r in ap_races})
+            us_live.assign_senate_classes(st_races, hist)
+        merged = us_official.merge(live['races'], st_races)
         have = {r['id'] for r in rows}
-        rows += [r for k, r in merged.items() if k not in have]
-        live = {**live, 'ap': {'enabled': ap.get('enabled', False), 'error': ap.get('error'), 'fetched': ap.get('fetched'),
-                               'races': len(ap_races)},
-                'wikipedia_races': sum(1 for k in merged if k not in {r['id'] for r in ap_races})}
+        rows += [r for r in merged if r['id'] not in have]
+        live = {**live, 'pending': live.get('pending') or st.get('pending', False),
+                'states': {'enabled': st.get('enabled', False), 'pending': st.get('pending', False), 'step': st.get('step', ''),
+                           'fetched': st.get('fetched'), 'list': st.get('states', {}),
+                           'races': len(st_races), 'read': sum(1 for v in st.get('states', {}).values() if v.get('status') == 'read')},
+                'wikipedia_races': len(live['races'])}
     f = {'H': house, 'S': senate, 'G': governors, 'P': president}[office]
     out = f(cycle, rows)
     if live and out.get('missing'):
@@ -120,7 +122,7 @@ def result(office, cycle, getter=None, force=False, ap_key=None):
             out['parties'].insert(len([p for p in out['parties'] if ORDER.index(p['code']) < ORDER.index('U')]), u)
         u['seats'] += out['missing']
         out['uncalled'] += out['missing']
-        out['notes'] = [f"{out['missing']} race{'s' if out['missing'] != 1 else ''} not found on Wikipedia's page yet."] + out.get('notes', [])
+        out['notes'] = [f"{out['missing']} race{'s' if out['missing'] != 1 else ''} not found on Wikipedia or the state results sites yet."] + out.get('notes', [])
     # Net change against the previous election of the same kind, so a new year visibly differs from the last.
     step = 4 if office == 'P' else 2
     prev_rows = _rows(office, [cycle - step])
