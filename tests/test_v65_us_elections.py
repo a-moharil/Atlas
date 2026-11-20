@@ -174,6 +174,27 @@ class Wiring(unittest.TestCase):
         self.assertIn('ATLASElectionsUS.mount', js)
         self.assertIn('elections_data/', (ROOT / '.gitignore').read_text(encoding='utf-8').replace('election_data/', 'elections_data/'))
 
+    def test_download_card_is_clickable_and_reports_progress(self):
+        js = (ROOT / 'static' / 'elections_us.js').read_text(encoding='utf-8')
+        draw = js[js.index('  function draw() {'):js.index('  const pctDone')]
+        self.assertLess(draw.index('wire();'), draw.index('packCard()'))    # the handler exists before the card is shown
+        self.assertIn('Starting the download', js)
+        self.assertIn('role="progressbar"', js)
+        self.assertEqual(UD.STEPS, len(UD.SOURCES) + 2)
+
+    def test_download_steps_advance(self):
+        seen = []
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(UD, 'read_races', return_value=[]), \
+                mock.patch.object(UD, 'write_db'), mock.patch.object(UD, 'build_geo', return_value={}), \
+                mock.patch.object(UD, 'OUT', Path(d)), mock.patch.object(UD, 'DB', Path(d) / 'x.sqlite3'):
+            Path(d, 'us_elections.tmp.sqlite3').write_text('')
+            def fetch(url):
+                seen.append(UD._job['done'])
+                return b'a,b\n'
+            UD.build(fetch, raw_dir=d)
+        self.assertEqual(seen, list(range(len(UD.SOURCES))))
+        self.assertEqual(UD._job['done'], UD.STEPS)
+
     def test_no_model_runs_without_a_request(self):
         js = (ROOT / 'static' / 'elections.js').read_text(encoding='utf-8')
         self.assertIn('Run forecast', js); self.assertIn('Run pulse', js)
