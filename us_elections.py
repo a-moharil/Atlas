@@ -339,7 +339,7 @@ def president(cycle, rows):
             values.setdefault(s['state'], {}).setdefault('districts', []).append({'d': s['seat'], 'p': s['party']})
     return {'seats_total': sum(ev.values()), 'majority': sum(ev.values()) // 2 + 1, 'parties': parties, 'seats': states,
             'flips': flips, 'closest': _closest(statewide), 'uncalled': 0, 'missing': 0,
-            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None, 'popular_vote_races': counted,
+            'popular_vote': {k: round(100 * v / tv, 1) for k, v in votes.items()} if tv else None,
             'map': {'kind': 'states', 'values': values},
             'notes': ['Electoral votes as pledged by each state\'s result; Maine and Nebraska also award one vote per congressional district. '
                       'Faithless electors (2016: seven) are not reflected.']}
