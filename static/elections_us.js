@@ -123,24 +123,32 @@ window.ATLASElectionsUS = (() => {
     const wpBusy = !!l.wiki_pending, stBusy = !!st.pending;
     const btnW = `<button class="choice elRefresh" data-us-refresh="wiki" ${wpBusy ? "disabled" : ""}>${wpBusy ? "Reading Wikipedia…" : "Re-read Wikipedia"}</button>`;
     const btnS = `<button class="choice elRefresh" data-us-refresh="states" ${stBusy ? "disabled" : ""}>${stBusy ? "Reading state sites…" : "Re-read state sites"}</button>`;
+    const cv = l.coverage || {};
+    const cvBusy = !!cv.pending;
+    const btnC = cv.enabled ? `<button class="choice elRefresh" data-us-refresh="coverage" ${cvBusy ? "disabled" : ""}>${cvBusy ? "Searching coverage…" : "Search news coverage"}</button>` : "";
     const wp = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(l.page.replace(/ /g, "_"))}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`;
     const list = Object.entries(st.list || {}).sort((a, b) => (STN[a[0]] || a[0]).localeCompare(STN[b[0]] || b[0]));
-    const label = { read: "Read", partial: "Partly read", none: "Nothing readable yet", failed: "Could not be reached" };
+    const label = { read: "Read", partial: "Partly read", none: "Nothing readable yet", failed: "Could not be reached",
+      blocked: "Doesn't allow automated reading", unavailable: "No machine-readable count", later: "Certified files only, after the count", norace: "No race this year" };
     const stText = stBusy ? `${esc(st.step || "Reading state results sites")}…${st.read ? ` ${st.read} read so far.` : ""}` : !list.length ? "not read yet." :
       `${st.read} of ${list.length} states read${st.certified ? `, ${st.certified} certified` : ""}, ${st.races} race${st.races === 1 ? "" : "s"} for this office, read ${esc(ago(st.fetched))}. Counts are unofficial until a state certifies them.`;
     const wpText = wpBusy ? "reading…" : l.error && !l.wikipedia_races ? `${wp} could not be read (${esc(l.error)}).` :
       `${wp}: ${l.wikipedia_races ?? 0} race${l.wikipedia_races === 1 ? "" : "s"}, read ${esc(ago(l.fetched))}. Its results tables say which races are decided; editors update them by hand.`;
     const why = (v) => {
-      if (v.status === "read" || v.status === "partial") return v.status === "partial" && v.counties ? `${v.counties.read} of ${v.counties.found} county sites` : v.certified ? "certified" : "";
+      if (v.status === "read" || v.status === "partial") return [v.status === "partial" && v.counties ? `${v.counties.read} of ${v.counties.found} county sites` : v.certified ? "certified" : "", esc(v.note || "")].filter(Boolean).join(". ");
       return esc(v.error || "");
     };
     const tried = (v) => (v.tried || []).length ? `<details><summary>${v.tried.length} address${v.tried.length === 1 ? "" : "es"} tried</summary><ul>${v.tried.map((t) => `<li><a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">${esc(t.url.replace(/^https?:\/\//, "").slice(0, 70))}</a>: ${esc(t.result)}</li>`).join("")}</ul></details>` : "";
     const table = list.length ? `<details class="usStates"><summary>Each state's results site</summary><table class="elTable"><thead><tr><th>State</th><th>Status</th><th class="num">Races</th><th>Details</th><th>Official site</th></tr></thead><tbody>${list.map(([k, v]) =>
       `<tr class="usSt_${esc(v.status || "none")}"><td>${esc(STN[k] || k)}</td><td>${esc(label[v.status] || v.status || "")}</td><td class="num">${v.races || ""}</td><td><small>${why(v)}</small>${tried(v)}</td><td>${v.page ? `<a href="${esc((v.used && v.used[0]) || v.page)}" target="_blank" rel="noopener noreferrer">Open</a>` : ""}</td></tr>`).join("")}</tbody></table>
       <p class="fine">Where a state's site can't be read automatically, open it with the link. Its races still show from Wikipedia.</p></details>` : "";
+    const cvText = !cv.enabled ? "" : cvBusy ? `${esc(cv.step || "Searching")}…` : cv.fetched ?
+      `${cv.races} race${cv.races === 1 ? "" : "s"} without a state count now show numbers reported in Sanjaya's news coverage (searched ${esc(ago(cv.fetched))}, ${cv.method === "embeddings" ? "ranked with the language model" : "matched by words; install the language model for better matching"}).${cv.error ? ` ${esc(cv.error)}` : ""}` :
+      `${cv.missing} race${cv.missing === 1 ? " has" : "s have"} no state count. Search the news coverage Sanjaya holds for the numbers it reports; this runs only when you ask.`;
     return `<div class="panel elNote usLive" role="status"><div class="usLiveText"><p><b>State counts:</b> ${stText}</p><p><b>Wikipedia:</b> ${wpText}</p>
-      <p class="fine">A race counts as called when the state certifies it, or when Wikipedia lists it as decided and the state's count has the same party ahead. Until then it is striped toward whoever is ahead in the count.</p>${table}</div>
-      <div class="usLiveBtns">${btnS}${btnW}</div></div>`;
+      ${cvText ? `<p><b>News coverage:</b> ${cvText}</p>` : ""}
+      <p class="fine">A race counts as called when the state certifies it, or when Wikipedia lists it as decided and the state's count has the same party ahead. Numbers from news coverage never call a race. Until then a race is striped toward whoever is ahead.</p>${table}</div>
+      <div class="usLiveBtns">${btnS}${btnW}${btnC}</div></div>`;
   }
 
   // ---------------------------------------------------------------- charts
@@ -289,10 +297,15 @@ window.ATLASElectionsUS = (() => {
   function srcLine(s) {
     const o = s.origin || "";
     const site = s.source ? `<a href="${esc(s.source)}" target="_blank" rel="noopener noreferrer">${esc(STN[s.state] || s.state)}'s results site</a>` : "the state's results site";
+    if (o.includes("coverage") && s.coverage) {
+      const c = s.coverage;
+      return `<p class="fine">Numbers: reported by <a href="${esc(s.coverage_source || "#")}" target="_blank" rel="noopener noreferrer">${esc(c.publisher || "news coverage")}</a>${c.date ? `, ${esc(c.date)}` : ""}${c.cites_official ? ", citing the official count" : ""}. Not a state count; it never calls a race.${o.startsWith("wikipedia") ? ` Call: Wikipedia${s.wiki_status ? ` (${esc(s.wiki_status)})` : ""}.` : ""}</p>`;
+    }
+    const note = s.coverage_note ? `<p class="fine">${esc(s.coverage_note)}.</p>` : "";
     if (s.certified) return `<p class="fine">Count and result: ${site}, certified.${o === "wikipedia+state" ? " Wikipedia also lists this race." : ""}</p>`;
     if (o === "wikipedia+state") return `<p class="fine">Count: ${site}. Call: Wikipedia${s.wiki_status ? ` (${esc(s.wiki_status)})` : ""}.</p>`;
     if (o === "state") return `<p class="fine">Count: ${site}. Wikipedia has not listed this race yet.</p>`;
-    if (o === "wikipedia") return `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it. The state's own count could not be read for this race.</p>`;
+    if (o === "wikipedia") return `<p class="fine">Source: Wikipedia, as edited when Sanjaya last read it. The state's own count could not be read for this race.</p>${note}`;
     return "";
   }
 
@@ -304,7 +317,7 @@ window.ATLASElectionsUS = (() => {
       const c = (s.cands || []).filter((x) => x[0]);
       return `<div class="usPick"><h4>${esc(seatName(s))}${U.office === "S" ? ` <small>Class ${esc(s.seat)}${s.up === false ? `, elected ${s.cycle}` : ""}</small>` : ""}${U.office === "P" && s.ev ? ` <small>${s.ev} electoral vote${s.ev > 1 ? "s" : ""}</small>` : ""}</h4>
         <p class="fine">${s.called ? `${esc(s.winner || PN[s.party])} (${esc(s.party)})${s.unopposed ? " · unopposed" : s.margin != null ? ` · margin ${s.margin} pts` : ""}${s.previous && s.previous !== s.party ? ` · seat changed from ${esc(PN[s.previous])}` : ""}` :
-          `Not yet called.${s.leader_party ? ` ${esc(s.leader || PN[s.leader_party])} (${esc(s.leader_party)}) is ahead${s.margin != null ? ` by ${s.margin} pts` : ""}.` : ""}${s.counted != null ? (s.counted_basis === "precincts" ? ` ${Math.round(s.counted)}% of precincts reporting.` : ` About ${Math.round(s.counted)}% of the expected vote counted.`) : ""}${s.status && !/count$/.test(s.status) ? ` ${esc(s.status)}.` : ""}`}</p>
+          `Not yet called.${s.leader_party ? ` ${esc(s.leader || PN[s.leader_party])} (${esc(s.leader_party)}) is ahead${s.margin != null ? ` by ${s.margin} pts` : ""}.` : ""}${s.counted != null ? (s.counted_basis === "precincts" ? ` ${Math.round(s.counted)}% of precincts reporting.` : s.counted_basis === "reported" ? ` About ${Math.round(s.counted)}% counted, as reported.` : ` About ${Math.round(s.counted)}% of the expected vote counted.`) : ""}${s.status && !/count$/.test(s.status) && !/^Reported by/.test(s.status) ? ` ${esc(s.status)}.` : ""}`}</p>
         ${c.length ? `<table class="elTable"><tbody>${c.map((x) => `<tr><td><span class="elSw" style="background:${PC[x[1]] || PC.O}"></span>${esc(x[0])} <small>${esc(x[1])}</small>${x[4] ? " ✓" : ""}</td><td class="num">${x[2] ? Number(x[2]).toLocaleString("en-US") : ""}</td><td class="num">${x[3] != null ? `${x[3]}%` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
         ${srcLine(s)}</div>`;
     }).join("");

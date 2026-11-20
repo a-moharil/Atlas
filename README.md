@@ -458,16 +458,22 @@ Choose **United States** at the top of Elections. Results only: Sanjaya never ca
   - Click a state or a district for its result.
 - **Electoral votes** are as pledged by each state's result. Maine and Nebraska's district votes are counted; faithless electors (2016) are not.
 - **2026 sources:** FiveThirtyEight's archive ends in 2024, so 2026 comes from two free sources. No news agency's data is used.
-  - **Each state's own count.** Election results are public records, and every state and DC publishes its count on its own results site. `us_official.py` reads them:
-    - Known data files where a state offers one: California's results API, Arizona's JSON export, Minnesota's results text files, North Carolina's results zip and Florida's election-night file.
-    - Enhanced Voting's public results API for Washington, Utah, Virginia, Georgia and Arizona. It also says when a state's results are official, so a certified state's races count as decided.
-    - Every other state starts from its official results page. Sanjaya follows that page's links to the results system behind it (Clarity, Enhanced Voting, or a CSV, JSON or ZIP file dated for this election). If there are none, it reads results tables on the page itself. New Jersey's county-run sites are added together.
-    - All states are read in the background, one at a time, every 30 minutes while a 2026 page is open, or now with **Re-read state sites**. **Re-read Wikipedia** re-reads Wikipedia only. One state failing never stops the rest.
-    - State sites are requested with browser-style headers, because many state firewalls refuse plain scripts. Plain-HTTP state sites are allowed; local and private addresses are still refused.
-    - **Each state's results site**, under the status line, lists every state as *Read*, *Partly read*, *Nothing readable yet* or *Could not be reached*. Each state shows every address tried and what happened (for example "HTTP 404 Not Found", or "the page is probably built by JavaScript"), with a link to its official site.
-    - Where counts are added up from county sites (New Jersey) and one of them fails, the state shows as *Partly read*. Its races show no counted percentage, and their cards say how many county sites were read.
-    - If a state changes its site, correct it without code: put `{"XX": {"page": "...", "feeds": ["..."]}}` in `election_data/us/state_sources.json`.
-    - Counts are unofficial until the state certifies them.
+  - **Each state's own count.** Election results are public records, and every state and DC publishes its count. `us_official.py` reads them, state by state, from the sources researched in `docs/STATE_RESULT_SOURCES_2026.md`:
+    - Clarity results sites (Colorado, Iowa, South Carolina, West Virginia, and New Jersey's county sites).
+    - Enhanced Voting exports and its public results API (Arizona, Georgia, Utah, Virginia, Idaho, Washington). Where the API says the results are official, the state's races count as certified.
+    - State data files: California, Minnesota, North Carolina, Florida, South Dakota, Alaska, Delaware, Hawaii.
+    - One small reader each for Rhode Island, Oregon, Louisiana, North Dakota, Connecticut, Vermont, Indiana, Ohio and Pennsylvania.
+    - The results pages of Nebraska, New Mexico, Montana, Kansas, Illinois and Texas.
+    - Fourteen states can't be read automatically. Eight refuse automated reading (KY, MO, NV, NH, NY, OK, TN, WI); six publish no machine-readable count (AL, AR, ME, MA, MI, WY). Maryland and Mississippi publish certified files only after the count, and DC has no race. None of these is fetched; their races come from Wikipedia.
+    - Requests go out with browser-style headers. If a site answers 403, Sanjaya asks once more under its own name. Nothing gets around a bot check or an access gate.
+    - Errors say what happened ("HTTP 404 Not Found", "the site did not answer (it may not accept connections from outside the US)").
+    - States are read in the background every 30 minutes while a 2026 page is open, or now with **Re-read state sites**.
+    - **Each state's results site** lists every state's status, the addresses tried and a link.
+    - To correct an address without code, use `election_data/us/state_sources.json`.
+  - **News coverage (third source, on request).** For races with no state count, **Search news coverage** looks through the articles Sanjaya already holds. It ranks them against each race (state, office, the candidates Wikipedia lists) with the language model's embeddings, or by matching words without the language-model pack. It then reads the vote counts or shares printed next to each candidate's name.
+    - The most recent article with numbers wins, preferring one that cites the official count.
+    - Race cards name the publisher and date.
+    - These numbers never call a race and never override a state count. If they contradict a Wikipedia call, they are set aside.
   - **Wikipedia's results pages** say which races are decided: a race counts as decided only when its status says so (hold, gain, elected, defeated). Editors update them by hand. They are read every six hours, or now with **Check now**.
   - **A call needs certification or both sources to agree.** A race is shown as won when the state has certified it, or when Wikipedia lists it as decided and the state's count has the same party ahead. If they disagree, the race stays uncalled and its card says why. A race Wikipedia hasn't listed yet shows from the state's count, uncalled.
   - **Not yet called** races, including ranked-choice counts and runoffs, are **striped in the colour of whoever is ahead**, with a dashed edge, on the maps and in the chamber chart. The party list shows how many lean each way ("46 called + 1 ahead"). A lead is never shown as a win.
@@ -768,6 +774,7 @@ atlas/
 ├─ us_elections_data.py    US elections: results pack builder, state map projection, House tiles
 ├─ us_live.py              US elections: 2026 results read from Wikipedia
 ├─ us_official.py          US elections: 2026 vote counts from each state's own results site
+├─ us_coverage.py          US elections: 2026 numbers reported in Sanjaya's news coverage (on request)
 ├─ us_officials.py         US office-holders (congress-legislators, Wikipedia)
 ├─ wikitables.py           Reads Wikipedia tables (rowspans, split headers) for office-holders
 ├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)

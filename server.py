@@ -269,25 +269,40 @@ class PublicRecordRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+PLAIN_UA = 'Sanjaya/6.5 (local results reader; +https://github.com/a-moharil/Atlas)'
 STATE_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 '
             'Sanjaya/6.5 (+https://github.com/a-moharil/Atlas)')
 
 
-def fetch_public_record(url, max_bytes=60_000_000, timeout=45):
+def fetch_public_record(url, max_bytes=80_000_000, timeout=45):
     """State election results sites: many sit behind firewalls that refuse requests without browser-like headers,
     and a few still serve plain HTTP. Same public-address checks as every other fetch; errors name the HTTP status."""
     validate_external_url(url, allow_http=True)
-    req = urllib.request.Request(url, headers={'User-Agent': STATE_UA, 'Accept-Language': 'en-US,en;q=0.9',
-                                               'Accept': 'text/html,application/xhtml+xml,application/json,text/csv,text/plain,*/*;q=0.8'})
-    try:
-        with urllib.request.build_opener(PublicRecordRedirectHandler()).open(req, timeout=timeout) as res:
-            block = res.read(max_bytes + 1)
-    except urllib.error.HTTPError as exc:
-        raise OSError(f'HTTP {exc.code} {exc.reason or ""}'.strip()) from None
-    except urllib.error.URLError as exc:
-        raise OSError(f'not reachable ({exc.reason})') from None
+    browser = {'User-Agent': STATE_UA, 'Accept-Language': 'en-US,en;q=0.9',
+               'Accept': 'text/html,application/xhtml+xml,application/json,text/csv,text/plain,*/*;q=0.8'}
+    plain = {'User-Agent': PLAIN_UA, 'Accept': '*/*'}
+    for n, headers in enumerate((browser, plain)):
+        try:
+            with urllib.request.build_opener(PublicRecordRedirectHandler()).open(urllib.request.Request(url, headers=headers), timeout=timeout) as res:
+                block = res.read(max_bytes + 1)
+            break
+        except urllib.error.HTTPError as exc:
+            # Some state servers turn away browser-style requests but answer a plainly named client: ask once more
+            # as Sanjaya. This is honest identification, not a way around a bot check.
+            if exc.code in (403, 405, 406) and n == 0:
+                continue
+            raise OSError(f'HTTP {exc.code} {exc.reason or ""}'.strip()) from None
+        except urllib.error.URLError as exc:
+            reason = str(exc.reason)
+            if 'CERTIFICATE_VERIFY_FAILED' in reason:
+                reason = "the site's security certificate could not be verified"
+            elif 'timed out' in reason or '10060' in reason:
+                reason = 'the site did not answer (it may not accept connections from outside the US)'
+            raise OSError(f'not reachable: {reason}') from None
+        except (TimeoutError, socket.timeout):
+            raise OSError('not reachable: the site did not answer in time (it may not accept connections from outside the US)') from None
     if len(block) > max_bytes:
-        raise ValueError('response larger than 60 MB')
+        raise ValueError('response larger than 80 MB')
     return block
 
 
@@ -1271,7 +1286,9 @@ class Handler(BaseHTTPRequestHandler):
                     if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
                     which=params.get('refresh',[''])[0]
                     try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,
-                                                                     which in ('1','wiki'),fetch_public_record,force_states=which in ('1','states')))
+                                                                     which in ('1','wiki'),fetch_public_record,force_states=which in ('1','states'),
+                                                                     news_db=DB_FILE if DB_FILE.exists() else None,model_cache=DB_FILE.parent/'model_cache',
+                                                                     search_coverage=which=='coverage'))
                     except ValueError as e:return self.send_payload({'error':str(e)},400)
                 if parsed.path == '/api/us/officials':
                     try:return self.send_payload(us_officials.request(params.get('scope',['us'])[0][:20],getter,DB_FILE.parent/'research_cache',force))
