@@ -541,7 +541,7 @@ DISCLAIMER = ('A statistical model, not a poll and not a prediction of who will 
               'candidates, alliances or campaigns that are not in past results.')
 
 
-def for_state(state, now=None, hidden=()):
+def for_state(state, now=None, hidden=(), force=False):
     """What the Elections page shows for one state's next election."""
     now = now or dt.datetime.now(dt.timezone.utc)
     base = {'state': state, 'method': METHOD, 'disclaimer': DISCLAIMER, 'model': MODEL_VERSION}
@@ -554,6 +554,8 @@ def for_state(state, now=None, hidden=()):
     if not (DATA_DIR / 'elections.sqlite3').exists():
         return {**base, 'status': 'needs_pack', 'message': 'Download the results pack first.'}
     d = cached()
+    if force:
+        start()
     if not d:
         start()
         return {**base, 'status': 'computing', 'step': _job.get('step') or 'Starting',
@@ -566,6 +568,7 @@ def for_state(state, now=None, hidden=()):
     ey, em = (int(x) for x in rec['expected'].split('-'))
     away = _mkey(ey, em) - nowk
     out = {**base, **{k: v for k, v in rec.items() if k not in ('ranges', 'trust')}, 'months_away': away,
+           'updating': _job['state'] == 'running', 'step': _job.get('step') if _job['state'] == 'running' else None,
            'backtest': d['backtest'], 'generated': d['generated'], 'noise': d['noise']}
     if away > SHOW_WITHIN_MONTHS:
         out.update(status='waiting', message='Wait for more data. Ranges appear about six months before the expected poll, '
