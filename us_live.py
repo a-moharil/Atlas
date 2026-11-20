@@ -24,6 +24,8 @@ NAMES = sorted(STATES.items(), key=lambda kv: -len(kv[1]))
 PARTY = [(r'democratic|dfl|democratic–farmer–labor|democratic-npl', 'D'), (r'republican', 'R'), (r'independent', 'I')]
 CALLED = re.compile(r'\b(hold|gain|elected|re-elected|reelected|defeated|won|lost re-?election|lost renomination|retired)\b', re.I)
 OPEN = re.compile(r'\b(advanced|renominated|to be elected|undecided|too close|tbd|pending|runoff|running for|seeking|not yet)\b', re.I)
+PENDING = re.compile(r'\b(too close|undecided|runoff|recount|pending|not yet|uncalled)\b', re.I)
+TICK = re.compile(r'^(?:▌\s*)*[✓✔]')
 CAND = re.compile(r'^(?:[✓✔▌]\s*|Y\s+)*(?P<name>[^()]+?)\s*\((?P<party>[^)]{1,60})\)\s*(?P<pct>\d{1,3}(?:\.\d+)?)?\s*%?')
 ROMAN = {'1': 'I', '2': 'II', '3': 'III', 'I': 'I', 'II': 'II', 'III': 'III'}
 
@@ -88,27 +90,38 @@ def parse_page(office, cycle, html):
             if office == 'H' and not seat:
                 continue
             status = (cell(sj) or {}).get('text', '') if sj is not None else ''
-            cands = []
+            cands, ticked = [], []
             for line in (cell(cj) or {}).get('lines', []):
-                m = CAND.match(line.strip())
+                line = line.strip()
+                m = CAND.match(line)
                 if m:
                     pct = float(m.group('pct')) if m.group('pct') else None
-                    cands.append([m.group('name').strip(' ;,'), party_code(m.group('party')), None, pct, 0])
+                    c = [m.group('name').strip(' ;,'), party_code(m.group('party')), None, pct, 0]
+                    cands.append(c)
+                    if TICK.match(line):
+                        ticked.append(c)
             if not cands:
                 continue
-            called = bool(CALLED.search(status)) and not OPEN.search(status)
+            inc_party = party_code((cell(pj) or {}).get('text', '')) if pj is not None and cell(pj) and cell(pj)['text'] else None
+            said, held_open = bool(CALLED.search(status)), bool(OPEN.search(status))
+            # Wikipedia marks a decided race in two ways: the status text, and a tick beside the winner. Editors often add
+            # the tick (and the percentages) before they rewrite a pre-election status such as "Incumbent renominated."
+            tick = ticked[0] if len(ticked) == 1 else None
+            called = (said and not held_open) or (tick is not None and not PENDING.search(status))
             with_pct = [c for c in cands if c[3] is not None]
-            win = None
-            if with_pct:
+            win = tick
+            if win is None and with_pct:
                 win = max(with_pct, key=lambda c: c[3])
             party_known = None
             if called:
                 m = re.search(r'(democratic|republican|independent)\s+(hold|gain)', status, re.I)
                 if m:
                     party_known = party_code(m.group(1))
-                    if not with_pct:
-                        hits = [c for c in cands if c[1] == party_known]
-                        win = hits[0] if len(hits) == 1 else None
+                elif re.search(r'\bre-?elected\b', status, re.I) and inc_party in ('D', 'R', 'I'):
+                    party_known = inc_party          # "Incumbent re-elected." keeps the incumbent's party
+                if party_known and win is None:
+                    hits = [c for c in cands if c[1] == party_known]
+                    win = hits[0] if len(hits) == 1 else None
             if win:
                 win[4] = 1 if called else 0
             ranked = sorted(cands, key=lambda c: -(c[3] or 0))
@@ -116,7 +129,6 @@ def parse_page(office, cycle, html):
             special = special_table or bool(re.search(r'special', loc['text'] + ' ' + status, re.I))
             if office == 'S' and not seat:
                 seat = ''          # filled in later from the state's classes
-            inc_party = party_code((cell(pj) or {}).get('text', '')) if pj is not None and cell(pj) and cell(pj)['text'] else None
             margin = round(win[3] - run[3], 2) if win and run and win[3] is not None and run[3] is not None else None
             wparty = win[1] if win else party_known     # same-party contests: the party is known before the name
             rid = {'H': f'H-{cycle}-{st}-{seat}', 'S': f'S-{cycle}-{st}-{seat}', 'G': f'G-{cycle}-{st}'}[office]
