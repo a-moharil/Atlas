@@ -10,6 +10,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 os.environ['OBS_SKIP_NETWORK']='1'
 import server
+from tests.tmpdir import TempDir
 
 RSS=b'''<?xml version="1.0"?><rss version="2.0"><channel><title>Research</title>
 <item><title>India and maritime strategy</title><link>https://example.org/a</link><description><![CDATA[<p>An &amp; article.</p>]]></description><pubDate>Sun, 15 Nov 2026 11:00:00 GMT</pubDate></item>
@@ -34,7 +35,8 @@ class FeedTest(unittest.TestCase):
         for url in ('http://example.org/feed','https://localhost/feed','https://127.0.0.1/feed','file:///etc/passwd'):
             with self.assertRaises(ValueError):server.validate_external_url(url)
     def test_store_and_fetch_status(self):
-        with tempfile.TemporaryDirectory() as d:
+        # TempDir: the language-model pack (when installed) may still hold the test database for a moment on Windows.
+        with TempDir() as d:
             with patch.object(server,'DB_FILE',Path(d)/'test.sqlite3'):
                 server.init_db()
                 with patch.object(server,'fetch_bytes',return_value=RSS):

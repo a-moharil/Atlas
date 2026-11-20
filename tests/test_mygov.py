@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import mygov,server
+from tests.tmpdir import TempDir
 NOW=dt.datetime(2026,11,16,tzinfo=dt.timezone.utc)
 FEEDS=[{'id':'mygov_meity','mygov':True,'ministry':'meity','name':'MeitY discovery','tier':'discovery'}, {'id':'mygov_pib','mygov':True,'name':'PIB','tier':'primary'}, {'id':'mygov_evaluation','mygov':True,'name':'Evaluation','tier':'analysis'}]
 def entry(**kw):
@@ -37,7 +38,7 @@ class MyGovTest(unittest.TestCase):
   self.assertEqual(sum(bool(f.get('mygov')) for f in feeds),63)
   self.assertEqual(sum(q['id'].startswith('mygov_') for q in server.REGISTRY['research']),3)
  def test_scoped_refresh_excludes_other_desks(self):
-  with tempfile.TemporaryDirectory() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'),patch.object(server,'FETCH_RUNNING',False),patch.object(server,'fetch_source',return_value=0) as f,patch.object(server,'fetch_papers') as p,patch.object(server,'refresh_live_channels') as live,patch.object(server.atlas_plus,'fetch_one_layer') as layer:
+  with TempDir() as td,patch.object(server,'DB_FILE',Path(td)/'test.sqlite'),patch.object(server,'FETCH_RUNNING',False),patch.object(server,'fetch_source',return_value=0) as f,patch.object(server,'fetch_papers') as p,patch.object(server,'refresh_live_channels') as live,patch.object(server.atlas_plus,'fetch_one_layer') as layer:
    server.init_db();server.refresh_cycle(force_local=True,scope='mygov')
    self.assertEqual(f.call_count,63);self.assertTrue(all(c.args[0].get('mygov') for c in f.call_args_list));p.assert_called_once_with('mygov');live.assert_not_called();layer.assert_not_called();self.assertFalse(server.FETCH_RUNNING)
 if __name__=='__main__':unittest.main()

@@ -19,6 +19,7 @@ import lm_labels  # noqa: E402
 import semantic  # noqa: E402
 import server  # noqa: E402
 import wiki  # noqa: E402
+from tests.tmpdir import TempDir
 
 PAGE = '''<html><head><title>Red Sea</title><style>p{}</style></head><body>
 <section><p id="intro" onclick="steal()">The <b>Red Sea</b> is a <a rel="mw:WikiLink" href="./Seawater" title="Seawater">seawater</a> inlet<sup class="reference"><a href="#cite_note-1">[1]</a></sup>.</p>
@@ -59,7 +60,7 @@ class Clean(unittest.TestCase):
 
 class Cache(unittest.TestCase):
     def test_fresh_then_stale(self):
-        with tempfile.TemporaryDirectory() as td:
+        with TempDir() as td:
             db = lambda: __import__('sqlite3').connect(Path(td) / 'w.db')
             calls = []
             get = lambda url, *a: calls.append(url) or json.dumps({'query': {'search': [{'title': 'Red Sea', 'snippet': '<span>Red</span> Sea', 'wordcount': 5000}]}}).encode()
@@ -126,7 +127,7 @@ class Endpoints(unittest.TestCase):
             if 'prop=extracts' in url:
                 return json.dumps({'query': {'pages': [{'extract': 'The Red Sea is a seawater inlet of the Indian Ocean.\n== Shipping ==\nThe Red Sea carries shipping through the Suez Canal.'}]}}).encode()
             raise AssertionError(url)
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'o.sqlite3'), \
                 patch.object(semantic, 'ready', lambda: False), patch.object(server, 'graph_entries', lambda: ENTRIES), \
                 patch.object(server, 'wiki_get', fake_get):
             server.init_db()
