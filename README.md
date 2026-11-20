@@ -404,6 +404,15 @@ When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live 
 
 **Elections** (in the sidebar under Monitor) shows results as declared. Sanjaya never calls a winner itself.
 
+> **Full guide:** [docs/ELECTIONS.md](docs/ELECTIONS.md) explains every view, where each number comes from, and how the seat forecast and the pulse work, step by step, with their backtests.
+
+**Models at a glance** (all run only when you press their button, and are labelled as models, not polls):
+
+| | When | What it gives | How | Trust at release |
+|---|---|---|---|---|
+| **Seat forecast** (`forecast.py`) | Assembly elections within 6 months | A 10th–90th percentile seat range per party, the majority line | Tree ensembles (bagging + boosting) predict each party's share in each seat from past results; 1,000 simulated elections with the model's own errors | **Low**: 52% of seats called vs 48% for "nothing changes" |
+| **Pulse** (`pulse.py`) | Further away, and Lok Sabha 2029 | Where today's signals point, per hypothesis, and where the uncertainty comes from | Five named hypotheses (national mood, Lok Sabha anchor, time for change, seat patterns, news-coverage tone), each fitted on past elections, simulated and pooled | **Low**: 48% of seats a year ahead; ranges held the result 67% of the time |
+
 - **Levels:** *Lok Sabha* (2009 to 2024), *State assemblies* (every state since the 2008 delimitation, up to the 2026 round) and *Municipal corporations* (Mumbai, Pune, Pimpri-Chinchwad, Nagpur, Delhi, Hyderabad, Chennai and Bengaluru). *United States* is described in 5.3c; *Israel* is a placeholder for a later release.
 - **Parliament chart:** one dot per seat, grouped by alliance (or by party), with the majority line. The outer arc is each group's share of seats and the inner arc its share of the vote, so first-past-the-post distortions are visible at a glance. Click parties to test whether a coalition reaches a majority.
 - **Map:** constituencies coloured by the winning party, by margin (darker means closer), or by whether the seat changed hands since the previous election. The national map is drawn inside the Survey of India outline and state maps inside the Survey of India state boundary. Hover for the winner and margin; click for the full contest.
@@ -443,6 +452,8 @@ What it does not do yet:
 Alliances are drawn only where their totals were checked against published figures (Lok Sabha 2024; Uttar Pradesh, Punjab and Goa 2022; Maharashtra 2024). Elsewhere results are shown party by party. Party colours and names are in `election_parties.json`, alliances in `election_alliances.json`, and the municipal results with their sources in `election_municipal.json`.
 
 ### 5.3c Elections: United States
+
+> Also covered in [docs/ELECTIONS.md](docs/ELECTIONS.md), section 7. Where each state publishes its 2026 count: [docs/STATE_RESULT_SOURCES_2026.md](docs/STATE_RESULT_SOURCES_2026.md).
 
 Choose **United States** at the top of Elections. Results only: Sanjaya never calls a race.
 
