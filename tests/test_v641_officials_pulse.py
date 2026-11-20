@@ -203,6 +203,15 @@ class Pulse(unittest.TestCase):
             self.assertAlmostEqual(sum(lead['variance'].values()), 1, places=2)
         self.assertEqual(out['national']['status'], 'ready')
 
+    def test_pulse_runs_only_on_request(self):
+        from unittest import mock
+        with mock.patch.object(P, 'cached', return_value=None), mock.patch.object(P, 'start') as start, \
+                mock.patch.object(Path, 'exists', return_value=True):
+            self.assertEqual(P.for_scope('Gujarat')['status'], 'not_run')
+            start.assert_not_called()
+            P.for_scope('Gujarat', force=True)
+            start.assert_called_once()
+
     def test_hidden_during_silence(self):
         self.assertEqual(P.for_scope('Gujarat', hidden={'projection'})['status'], 'hidden')
 

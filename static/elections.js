@@ -47,6 +47,7 @@ window.ATLASElections = (() => {
     if (main) main.scrollTop = my;
   }
   async function refreshIfStale(force = false) {
+    if (S.country !== "india") return;              // other countries refresh themselves
     if (S.refreshing || S.loading || (!force && Date.now() - S.checked < 60000)) return;
     if (!document.querySelector(".elPage")) return;
     S.refreshing = true; S.checked = Date.now();
@@ -65,7 +66,7 @@ window.ATLASElections = (() => {
     } catch (e) { /* a missed background check is not worth interrupting the reader */ }
     S.refreshing = false;
   }
-  function destroy() { clearTimeout(S.timer); clearTimeout(S.govTimer); hideTip(); }
+  function destroy() { clearTimeout(S.timer); clearTimeout(S.govTimer); hideTip(); window.ATLASElectionsUS?.destroy?.(); }
 
   async function loadCatalog() {
     try { S.cat = await A().api("/api/elections/catalog"); S.error = ""; }
@@ -124,6 +125,7 @@ window.ATLASElections = (() => {
   function draw() {
     const body = $("#elBody"); if (!body) return;
     document.querySelectorAll("[data-el-country]").forEach((b) => { const on = b.dataset.elCountry === S.country; b.classList.toggle("active", on); b.setAttribute("aria-pressed", on); });
+    if (S.country === "us" && window.ATLASElectionsUS) { hideTip(); window.ATLASElectionsUS.mount(body); return; }
     if (S.country !== "india") { body.innerHTML = planned(S.country); return; }
     const c = S.cat;
     body.innerHTML = `${blackoutBanner()}<div class="elLevels filterTabs" role="tablist" aria-label="Level">${[["national", "Lok Sabha"], ["state", "State assemblies"], ["municipal", "Municipal corporations"]].map(([k, n]) => `<button class="choice ${S.level === k ? "active" : ""}" data-el-level="${k}" role="tab" aria-selected="${S.level === k}">${n}</button>`).join("")}</div>
@@ -232,16 +234,16 @@ window.ATLASElections = (() => {
     if (wantOff) jobs.push(A().api(`/api/elections/officials?scope=${encodeURIComponent(scope)}${force === "officials" ? "&refresh=1" : ""}`).then((d) => { d.at = Date.now(); S.off[scope] = d; if (d.pending) again = true; else if (d.error && !d.people?.length) slow = true; }).catch((e) => { S.off[scope] = { error: e.message, people: [], at: Date.now() }; }));
     const fc = S.fc[fk];
     if (fk !== null && (force === "forecast" || !fc || fc.status === "computing" || fc.updating)) jobs.push(A().api(`/api/elections/forecast?state=${encodeURIComponent(fk)}${force === "forecast" ? "&refresh=1" : ""}`).then((d) => { S.fc[fk] = d; if ((d.status === "computing" && !d.error) || d.updating) again = true; }).catch((e) => { S.fc[fk] = { status: "error", message: e.message }; }));
-    const needPulse = fk !== null && fc && fc.status !== "ready" && fc.status !== "computing";
+    const needPulse = fk !== null && fc && fc.status === "waiting";
     const pu = S.pu[fk];
-    if (needPulse && (force === "forecast" || !pu || pu.status === "computing" || pu.updating)) jobs.push(A().api(`/api/elections/pulse?state=${encodeURIComponent(fk)}${force === "forecast" ? "&refresh=1" : ""}`).then((d) => { S.pu[fk] = d; if ((d.status === "computing" && !d.error) || d.updating) again = true; }).catch((e) => { S.pu[fk] = { status: "error", message: e.message }; }));
+    if (needPulse && (force === "pulse" || !pu || pu.status === "computing" || pu.updating)) jobs.push(A().api(`/api/elections/pulse?state=${encodeURIComponent(fk)}${force === "pulse" ? "&refresh=1" : ""}`).then((d) => { S.pu[fk] = d; if ((d.status === "computing" && !d.error) || d.updating) again = true; }).catch((e) => { S.pu[fk] = { status: "error", message: e.message }; }));
     if (force) paintGov(force);
     if (!jobs.length) return paintGov();
     Promise.all(jobs).then(() => {
       if (scopeOf() !== scope) return;
       paintGov();
       const fresh = S.fc[fk];
-      const pulseNext = fk !== null && fresh && fresh.status !== "ready" && fresh.status !== "computing" && !S.pu[fk];
+      const pulseNext = fk !== null && fresh && fresh.status === "waiting" && !S.pu[fk];
       if (pulseNext) return loadGov();
       if (again || slow) S.govTimer = setTimeout(loadGov, again ? 2500 : 61000);
     });
@@ -249,7 +251,7 @@ window.ATLASElections = (() => {
   function paintGov(busy = "") {
     const o = $("#elOfficials"), f = $("#elForecast");
     if (o) { const top = o.querySelector(".elTimeline")?.scrollTop || 0; o.innerHTML = officialsPanel(busy === "officials"); const t = o.querySelector(".elTimeline"); if (t) t.scrollTop = top; }
-    if (f) f.innerHTML = forecastPanel(busy === "forecast");
+    if (f) f.innerHTML = forecastPanel(busy);
   }
 
   function stepsList(steps) {
@@ -299,32 +301,38 @@ window.ATLASElections = (() => {
         <span class="elRgNum">${g.lo}–${g.hi}</span></li>`).join("")}</ol>`;
   }
 
-  function forecastPanel(busy = false) {
+  function forecastPanel(busy = "") {
     const r = S.res;
     const fk = fcKey();
-    const head = (sub, btn = true) => `<div class="elPanelBar"><h3>Next election</h3><span class="elBarRight">${sub ? `<span class="fine">${esc(sub)}</span>` : ""}${btn ? refreshBtn("forecast", busy || S.fc[fk]?.updating || S.pu[fk]?.updating, "Recompute") : ""}</span></div>`;
-    if (!r) return head("", false);
-    if (r.kind === "MC") return head("", false) + `<p class="fine">No forecast for municipal corporations: ward boundaries change between polls, so there is no seat history to learn from.</p>`;
+    const head = (sub, btn = false) => `<div class="elPanelBar"><h3>Next election</h3><span class="elBarRight">${sub ? `<span class="fine">${esc(sub)}</span>` : ""}${btn ? refreshBtn("forecast", busy === "forecast" || S.fc[fk]?.updating, "Run again") : ""}</span></div>`;
+    const runBtn = (what, label, on) => `<button class="action primary elRun" data-el-refresh="${what}" ${on ? "disabled" : ""}>${on ? "Running…" : label}</button>`;
+    if (!r) return head("");
+    if (r.kind === "MC") return head("") + `<p class="fine">No forecast for municipal corporations: ward boundaries change between polls, so there is no seat history to learn from.</p>`;
     const d = S.fc[fk];
     if (!d) return head("") + `<p class="fine elWait">Checking…</p>`;
     const when = d.expected ? `Expected around ${longDate(d.expected)}` : "";
     const foot = `<details class="elMethod"><summary>How this works</summary><p class="fine">${esc(d.method || "")}</p></details><p class="fine elDisc">${esc(d.disclaimer || "")}</p>`;
-    const working = d.updating ? `<p class="fine elWait">Retraining: ${esc(d.step || "")}</p>` : "";
+    const working = d.updating && d.status === "ready" ? `<p class="fine elWait">Retraining: ${esc(d.step || "")}</p>` : "";
+    if (d.status === "not_run" || d.status === "computing") {
+      const on = d.status === "computing" || busy === "forecast";
+      return head(when) + `<div class="elRunBox"><p>${esc(d.message || "")}</p>${d.error ? `<p class="elError">The last run failed: ${esc(d.error)}</p>` : ""}${runBtn("forecast", "Run forecast", on)}${on && d.step ? `<p class="fine elWait">${esc(d.step)}</p>` : ""}</div>${foot}`;
+    }
     if (d.status !== "ready") {
       const away = d.months_away != null && d.months_away > 0 ? `<div class="elAway"><b>${d.months_away}</b><span>months to go</span></div>` : "";
       const step = d.status === "computing" ? `<p class="fine elWait">${esc(d.error ? "The model could not be trained: " + d.error : d.step || "")}</p>` : "";
-      return head(when) + `<div class="elWaitBox">${away}<p>${esc(d.message || "")}</p></div>${step}${working}${pulseBlock(S.pu[fk])}${foot}`;
+      return head(when) + `<div class="elWaitBox">${away}<p>${esc(d.message || "")}</p></div>${step}${pulseBlock(S.pu[fk], busy === "pulse")}${foot}`;
     }
     const bt = d.backtest || {}, tr = d.trust || {};
-    return head(when) + working + `<div class="elTrust elTrust${esc(tr.label || "Low")}"><b>${esc(tr.label || "Low")} trust</b><span>In a backtest on ${bt.elections} assembly elections (${esc(bt.years || "")}), the model picked the right party in ${pctS(bt.call_accuracy)} of seats; simply keeping every seat with its last winner gets ${pctS(bt.baseline_accuracy)}. Actual seat totals fell inside its ranges ${pctS(bt.coverage)} of the time.${tr.state_call_accuracy != null ? ` In ${esc(stateLabel(r.state))} alone: ${pctS(tr.state_call_accuracy)} of seats.` : ""}</span></div>
+    return head(when, true) + working + `<div class="elTrust elTrust${esc(tr.label || "Low")}"><b>${esc(tr.label || "Low")} trust</b><span>In a backtest on ${bt.elections} assembly elections (${esc(bt.years || "")}), the model picked the right party in ${pctS(bt.call_accuracy)} of seats; simply keeping every seat with its last winner gets ${pctS(bt.baseline_accuracy)}. Actual seat totals fell inside its ranges ${pctS(bt.coverage)} of the time.${tr.state_call_accuracy != null ? ` In ${esc(stateLabel(r.state))} alone: ${pctS(tr.state_call_accuracy)} of seats.` : ""}</span></div>
       <p class="elRgCap">Seat range for each party, 10th to 90th percentile. The tick is the middle of the simulations; the line is the majority mark, ${d.majority} of ${d.seats_total}.</p>
       ${rangeBars(d.ranges, d.seats_total, d.majority)}
       <p class="fine">Based on the ${esc((d.previous_two || []).map((x) => x.split("-").pop()).join(" and "))} assembly results${d.lok_sabha_trend ? ` and the ${esc(d.lok_sabha_trend)} Lok Sabha swing` : ""}. Model, not a poll. Alliances are not merged until they are announced.</p>${foot}`;
   }
 
   const VAR_LABEL = { between: "Which hypothesis holds", state: "State-wide swing we can't see yet", drift: "Months left until the poll", seat: "Seat-by-seat local factors" };
-  function pulseBlock(p) {
-    if (!p) return `<div class="elPulse"><p class="fine elWait">Reading today's signals…</p></div>`;
+  function pulseBlock(p, busy = false) {
+    if (!p) return `<div class="elPulse"><p class="fine elWait">Checking for a saved pulse…</p></div>`;
+    if (p.status === "not_run" || (busy && p.status !== "ready")) return `<div class="elPulse"><h4>Pulse</h4><div class="elRunBox"><p>${esc(p.message || "")}</p>${p.error ? `<p class="elError">The last run failed: ${esc(p.error)}</p>` : ""}<button class="action primary elRun" data-el-refresh="pulse" ${busy ? "disabled" : ""}>${busy ? "Running…" : "Run pulse"}</button></div></div>`;
     if (p.status === "computing") return `<div class="elPulse"><h4>Pulse</h4><p class="fine elWait">${esc(p.error ? "The pulse could not be computed: " + p.error : p.message || "")} ${esc(p.step || "")}</p></div>`;
     if (p.status !== "ready") return p.message ? `<div class="elPulse"><h4>Pulse</h4><p class="fine">${esc(p.message)}</p></div>` : "";
     const bt = p.backtest || {}, sig = p.significance || {}, sg = p.signals || {};
@@ -343,7 +351,9 @@ window.ATLASElections = (() => {
     const cov = sg.coverage || {};
     const covText = Object.keys(cov).length ? Object.entries(cov).map(([k, v]) => `${k} ${v.delta > 0 ? "+" : ""}${v.delta.toFixed(2)} (${v.recent} articles)`).join(", ") : "";
     const signals = [sg.mood_elections != null ? `${sg.mood_elections} elections held elsewhere since the last poll` : "", sg.lok_sabha ? `the ${sg.lok_sabha} Lok Sabha vote here` : "", sg.states_with_own_swing != null ? `${sg.states_with_own_swing} states' assembly swings since ${String(sg.base || "").replace("GE-", "")}` : "", sg.term_elapsed != null ? `${Math.round(sg.term_elapsed * 100)}% of the term gone` : ""].filter(Boolean).join("; ");
-    return `<div class="elPulse"><div class="elPulseHead"><h4>Pulse: where today's signals point</h4><span class="fine">${p.months_left} months out</span></div>
+    const again = `<button class="choice elRefresh" data-el-refresh="pulse" ${busy || p.updating ? "disabled" : ""}>${busy || p.updating ? "Running…" : "Run again"}</button>`;
+    const age = p.age_hours == null ? "" : p.age_hours < 1 ? "run under an hour ago" : p.age_hours < 48 ? `run ${Math.round(p.age_hours)} h ago` : `run ${Math.round(p.age_hours / 24)} days ago`;
+    return `<div class="elPulse"><div class="elPulseHead"><h4>Pulse: where today's signals point</h4><span class="elBarRight"><span class="fine">${p.months_left} months out · ${esc(age)}</span>${again}</span></div>
       <div class="elTrust elTrust${esc(p.trust?.label || "Low")}"><b>${esc(p.trust?.label || "Low")} trust</b><span>Pulses taken a year before ${bt.elections} past state elections picked the right party in ${pctS(bt.call_accuracy)} of seats; seat totals fell inside the ranges ${pctS(bt.coverage)} of the time. ${esc(p.trust?.note || "")}</span></div>
       <p class="elRgCap">Pooled seat range across the hypotheses, 10th to 90th percentile, with drift for the months left. Majority: ${p.majority} of ${p.seats_total}.</p>
       ${rangeBars(p.ranges, p.seats_total, p.majority)}

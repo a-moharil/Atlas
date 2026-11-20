@@ -637,18 +637,22 @@ def for_scope(state, news_db=None, hidden=(), force=False):
         return {**base, 'status': 'needs_numpy', 'message': 'The pulse needs numpy, which comes with the language-model pack.'}
     if not (DATA_DIR / 'elections.sqlite3').exists():
         return {**base, 'status': 'needs_pack', 'message': 'Download the results pack first.'}
+    if force:
+        start(news_db, force)         # the pulse runs only when the reader asks
     d = cached()
-    if force or not d or d.get('_stale'):
-        start(news_db, force)
+    running = _job['state'] == 'running'
     if not d:
-        return {**base, 'status': 'computing', 'step': _job.get('step') or 'Starting',
-                'error': _job.get('error') if _job['state'] == 'error' else None,
-                'message': 'Reading today\'s signals and fitting the pulse. This takes about a minute.'}
+        if running:
+            return {**base, 'status': 'computing', 'step': _job.get('step') or 'Starting',
+                    'message': 'Reading today\'s signals and fitting the pulse. This takes about a minute.'}
+        return {**base, 'status': 'not_run', 'error': _job.get('error') if _job['state'] == 'error' else None,
+                'message': 'The pulse has not been run yet. Run it to read today\'s signals (about a minute); '
+                           'the result is kept until you run it again.'}
     rec = d['national'] if not state else d['states'].get(state)
     if not rec:
         return {**base, 'status': 'none', 'message': 'No pulse for this election: it is either close enough for the seat model or has no history.'}
     out = {**base, **rec, 'backtest': d['backtest'], 'params': d['params'], 'generated': d['generated'],
-           'updating': _job['state'] == 'running', 'step': _job.get('step') if _job['state'] == 'running' else None}
+           'updating': running, 'step': _job.get('step') if running else None, 'age_hours': round((time.time() - d.get('_t', time.time())) / 3600, 1)}
     if out.get('status') == 'ready':
         out['trust'] = {'label': d['backtest']['label'], 'note': 'Backtest covers H1 to H3 a year before past state elections. '
                         'H4 is backtested in the seat model; H5 is not backtested.'}

@@ -12,8 +12,13 @@ import urllib.parse
 from html.parser import HTMLParser
 
 MONTHS = ('january february march april may june july august september october november december').split()
-DATE = re.compile(r'(\d{1,2})\s+(' + '|'.join(MONTHS) + r')\s+(\d{4})', re.I)
-DATE_US = re.compile(r'(' + '|'.join(MONTHS) + r')\s+(\d{1,2}),\s+(\d{4})', re.I)
+_MON = r'(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?'
+DATE = re.compile(r'(\d{1,2})\s+' + _MON + r'\s+(\d{4})', re.I)
+DATE_US = re.compile(_MON + r'\s+(\d{1,2}),\s+(\d{4})', re.I)
+
+
+def _month(m):
+    return [x[:3] for x in MONTHS].index(m.lower()[:3]) + 1
 SKIP_TAGS = {'style', 'script', 'sup'}
 BLOCK = {'br', 'p', 'li', 'div', 'ul', 'ol', 'dd', 'dt'}
 
@@ -21,10 +26,10 @@ BLOCK = {'br', 'p', 'li', 'div', 'ul', 'ol', 'dd', 'dt'}
 def iso_date(text):
     m = DATE.search(text or '')
     if m:
-        return f'{int(m.group(3)):04d}-{MONTHS.index(m.group(2).lower()) + 1:02d}-{int(m.group(1)):02d}'
+        return f'{int(m.group(3)):04d}-{_month(m.group(2)):02d}-{int(m.group(1)):02d}'
     m = DATE_US.search(text or '')
     if m:
-        return f'{int(m.group(3)):04d}-{MONTHS.index(m.group(1).lower()) + 1:02d}-{int(m.group(2)):02d}'
+        return f'{int(m.group(3)):04d}-{_month(m.group(1)):02d}-{int(m.group(2)):02d}'
     return None
 
 
@@ -208,7 +213,7 @@ ROLE_COLS = {
     'portfolio': ['portfolio', 'department', 'ministry', 'designation', 'office'],
     'state': ['state/ut', 'state', 'union territory', 'state or ut'],
     'party': ['political party', 'party'],
-    'took': ['took office', 'assumed office', 'term start', 'since', 'tenure'],
+    'took': ['took office', 'assumed office', 'term start', 'since', 'tenure', 'inauguration', 'date entered office', 'entered office'],
     'left': ['left office', 'term end'],
     'portrait': ['portrait', 'photo', 'image'],
 }
@@ -246,13 +251,15 @@ def records(table):
     out = []
     for r in table['rows']:
         def cell(role):
-            first = None
-            for j in cols.get(role, []):
-                if j < len(r):
-                    first = first or r[j]
-                    if r[j]['text'] or r[j].get('img') or r[j]['links']:
-                        return r[j]
-            return first
+            cands = [r[j] for j in cols.get(role, []) if j < len(r)]
+            for c in cands:                      # a cell with text wins over a seal or portrait next to it
+                if c['text']:
+                    return c
+            if role != 'name':
+                for c in cands:
+                    if c.get('img') or c['links']:
+                        return c
+            return cands[0] if cands else None
         n = cell('name')
         if not n or not n['text'] or n['text'].lower() in ('vacant', 'none', '—', '-'):
             continue
@@ -263,8 +270,9 @@ def records(table):
         left = cell('left')
         lt = (left['text'] if left else '').strip().lower()
         pic = cell('portrait')
-        img = (pic or {}).get('img') or n.get('img')
-        file = (pic or {}).get('file') or n.get('file')
+        near = [r[j] for j in cols.get('name', []) if j < len(r) and r[j] is not n]
+        img = (pic or {}).get('img') or n.get('img') or next((c['img'] for c in near if c.get('img')), None)
+        file = (pic or {}).get('file') or n.get('file') or next((c['file'] for c in near if c.get('file')), None)
         port = cell('portfolio')
         ministry = cell('ministry')
         st = cell('state')
