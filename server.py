@@ -51,6 +51,7 @@ import elections
 import elections_data
 import officials
 import forecast
+import pulse
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -626,11 +627,11 @@ def _single(e):
 WIKI_UA = 'Sanjaya/5.9 (local news and research dashboard; https://github.com/a-moharil/Atlas)'
 
 
-def wiki_get(url, max_bytes=2_000_000):
+def wiki_get(url, max_bytes=2_000_000, timeout=20):
     """Wikipedia asks API clients for an identifying User-Agent."""
     validate_external_url(url)
     req = urllib.request.Request(url, headers={'User-Agent': WIKI_UA, 'Accept': 'application/json, text/html'})
-    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=20) as res:
+    with urllib.request.build_opener(SafeRedirectHandler()).open(req, timeout=timeout) as res:
         block = res.read(max_bytes + 1)
     if len(block) > max_bytes:
         raise ValueError('Wikipedia response exceeded size limit')
@@ -1219,11 +1220,15 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == '/api/elections/officials':
                 try:scope=officials.parse_scope(params.get('scope',['IN'])[0][:80])[1]
                 except ValueError as e:return self.send_payload({'error':str(e)},400)
-                return self.send_payload(retrieval_jobs.request('officials:'+scope,lambda:officials.build(scope,lambda u:wiki_get(u,3_000_000)),DB_FILE.parent/'research_cache',params.get('refresh',['0'])[0]=='1',ttl=officials.TTL))
+                getter=lambda u:wiki_get(u,6_000_000,timeout=60 if 'wikidata' in u else 30)
+                return self.send_payload(officials.request(scope,getter,DB_FILE.parent/'research_cache',params.get('refresh',['0'])[0]=='1'))
             if parsed.path == '/api/elections/forecast':
-                st=params.get('state',[''])[0][:60]
+                st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
                 if not st:return self.send_payload(forecast.national())
-                return self.send_payload(forecast.for_state(st,hidden=elections.hidden_kinds(st)))
+                return self.send_payload(forecast.for_state(st,hidden=elections.hidden_kinds(st),force=force))
+            if parsed.path == '/api/elections/pulse':
+                st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
+                return self.send_payload(pulse.for_scope(st,news_db=DB_FILE,hidden=elections.hidden_kinds(st or None),force=force))
             if parsed.path == '/api/elections/geo':
                 try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
                 except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)

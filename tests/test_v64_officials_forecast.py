@@ -93,6 +93,7 @@ class Officials(unittest.TestCase):
     def test_offline_still_answers_from_the_shipped_file(self):
         def down(url):
             raise OSError('offline')
+        O._pages.clear()
         d = O.build('IN', down)
         self.assertTrue(d['live_error'])
         self.assertEqual([p['position'] for p in d['people']][:3], ['President of India', 'Vice President of India', 'Prime Minister of India'])
@@ -215,7 +216,7 @@ class Wiring(unittest.TestCase):
         self.assertIn("'/api/elections/forecast'", server)
         self.assertIn('hidden_kinds', server)
         js = (ROOT / 'static' / 'elections.js').read_text(encoding='utf-8')
-        for needle in ('In office now', 'Next election', 'Model, not a poll', 'Wikimedia Commons', 'loading="lazy"'):
+        for needle in ('In office now', 'Next election', 'Model, not a poll', 'Photo: Wikimedia', 'loading="lazy"', 'data-el-refresh', 'Under which hypothesis'):
             self.assertIn(needle, js)
 
     def test_coverage_embeddings_are_not_used_yet(self):
