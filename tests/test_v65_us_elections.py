@@ -16,6 +16,7 @@ import us_elections_data as UD
 import us_live as L
 import us_officials as UO
 import us_official as SO
+from tests.tmpdir import TempDir
 
 ROOT = Path(__file__).resolve().parents[1]
 FIX = ROOT / 'tests' / 'fixtures'
@@ -363,7 +364,7 @@ class Officials(unittest.TestCase):
     def test_national(self):
         import officials as O
         O._pages.clear()
-        with tempfile.TemporaryDirectory() as d:
+        with TempDir() as d:
             out = UO.build('us', self.getter(), d)
         names = [(p['group'], p['name'], p['position']) for p in out['people']]
         self.assertEqual(names[0], ('Head of state and government', 'Pres Ident', 'President of the United States'))
@@ -376,7 +377,7 @@ class Officials(unittest.TestCase):
     def test_state(self):
         import officials as O
         O._pages.clear()
-        with tempfile.TemporaryDirectory() as d:
+        with TempDir() as d:
             out = UO.build('us-state:CA', self.getter(), d)
         names = [(p['group'], p['name']) for p in out['people']]
         self.assertEqual(names, [('Governor', 'Frankie Lane'), ('U.S. Senators', 'Sen One'), ('U.S. Representatives', 'Rep Two')])
@@ -426,7 +427,7 @@ class Wiring(unittest.TestCase):
 
     def test_download_steps_advance(self):
         seen = []
-        with tempfile.TemporaryDirectory() as d, mock.patch.object(UD, 'read_races', return_value=[]), \
+        with TempDir() as d, mock.patch.object(UD, 'read_races', return_value=[]), \
                 mock.patch.object(UD, 'write_db'), mock.patch.object(UD, 'build_geo', return_value={}), \
                 mock.patch.object(UD, 'OUT', Path(d)), mock.patch.object(UD, 'DB', Path(d) / 'x.sqlite3'):
             Path(d, 'us_elections.tmp.sqlite3').write_text('')

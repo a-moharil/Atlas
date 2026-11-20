@@ -14,6 +14,7 @@ from unittest import mock
 
 import forecast as F
 import officials as O
+from tests.tmpdir import TempDir
 
 ROOT = Path(__file__).resolve().parents[1]
 HAS_NUMPY = F.numpy_ok()
@@ -165,7 +166,7 @@ class Trees(unittest.TestCase):
         self.assertEqual(F.trust_label(0.85, 0.4), 'Low')
 
     def test_run_on_synthetic_results(self):
-        with tempfile.TemporaryDirectory() as d:
+        with TempDir() as d:
             db = Path(d) / 'e.sqlite3'; synthetic_db(db)
             out = F.run(db, now=dt.datetime(2026, 11, 19, tzinfo=dt.timezone.utc),
                         bag={'trees': 6, 'depth': 4, 'min_leaf': 20, 'feat_frac': 0.7},
