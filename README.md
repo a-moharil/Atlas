@@ -80,6 +80,7 @@ PASTE-THE-USER-ATTACHMENTS-LINK-HERE
 | **Earth watch** | Earthquakes, cyclones, floods, wildfires and volcanoes from GDACS, NASA EONET and USGS. Also global temperature and sea-surface anomalies (Copernicus ERA5), and Windy's live wind, rain and temperature map for India. |
 | **Satellite atlas** | Esri, OpenStreetMap and NASA imagery with hazard layers and the official Survey of India boundary. |
 | **India regional map** | Where Indian coverage is concentrated, drawn on the Survey of India state map. |
+| **Elections** | Lok Sabha and state assembly results since 2008, and eight municipal corporations: a parliament chart with seats against votes and a coalition tester, constituency maps inside the Survey of India boundary, equal-area hex maps, closest contests and seats that changed hands. Who is in office now for each level, with photos and official contacts, and seat ranges for the next assembly elections with a trust label. |
 | **Conflict atlas, Geopolitics, Macroeconomics** | Published conflict maps, summit and bloc calendars, and economic indicators with their source links. |
 | **Article constellation** | A 3-D map of retrieved reporting, clustered by shared vocabulary. |
 | **Research library, MyGov policy** | Think-tank analysis, scholarly metadata from OpenAlex, and ministry and scheme updates. |
@@ -399,6 +400,47 @@ The **Geopolitics reel** on *Live TV and video* plays recent news videos from in
 
 When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live stream it asks for a fresh live check and tries the channel's current live stream; if that fails too, it says why and offers *Watch on YouTube*.
 
+### 5.3b Elections
+
+**Elections** (in the sidebar under Monitor) shows results as declared. Sanjaya never calls a winner itself.
+
+- **Levels:** *Lok Sabha* (2009 to 2024), *State assemblies* (every state since the 2008 delimitation, up to the 2026 round) and *Municipal corporations* (Mumbai, Pune, Pimpri-Chinchwad, Nagpur, Delhi, Hyderabad, Chennai and Bengaluru). The *United States* and *Israel* tabs are placeholders for a later release.
+- **Parliament chart:** one dot per seat, grouped by alliance (or by party), with the majority line. The outer arc is each group's share of seats and the inner arc its share of the vote, so first-past-the-post distortions are visible at a glance. Click parties to test whether a coalition reaches a majority.
+- **Map:** constituencies coloured by the winning party, by margin (darker means closer), or by whether the seat changed hands since the previous election. The national map is drawn inside the Survey of India outline and state maps inside the Survey of India state boundary. Hover for the winner and margin; click for the full contest.
+- **Equal-area hexes:** one hexagon per seat, placed near its real location, so a dense city seat weighs as much as a large rural one.
+- **Tables:** parties with seats, vote share and the change from the previous election, the closest contests, and the seats that changed hands.
+
+- **In office now:** beside the results, a scrolling list of who governs the selected place, in order of precedence. Nationally: the President and Vice President (non-party offices), the Prime Minister, then the Union Cabinet led by Home, Defence, Finance and External Affairs, then Ministers of State. In a state: the Governor or Lieutenant Governor, the Chief Minister and deputies, then the council of ministers. In a municipal corporation: the Mayor and Deputy Mayor. Each entry shows the photo, office, other portfolios, party, date in office and **official contacts only** (the office's website, and an email address when it is on a government domain).
+  - Sources, fetched in the background with a progress list: Wikipedia's current-office lists (chief ministers, deputy chief ministers, governors, lieutenant governors) and the *Union Council of Ministers* article; the state's current ministry article for the cabinet (found from the chief-ministers list, or by Wikipedia search); Wikidata for official contacts and photos; Wikipedia page images for anyone still without a photo. Pages are cached for six hours and the list for twelve; a stale copy is used when the sites can't be reached.
+  - **Refresh** fetches everything again now. The list stays on screen while it updates.
+  - `election_officials.json` ships with Sanjaya and corrects the live sources (`hide`, `edit`, `people`). It also carries the 2026 mayors, which neither source lists reliably. Wikipedia and Wikidata are volunteer-edited: when something is wrong, fix it there or in this file.
+  - Photos are Wikimedia files, loaded by your browser when you look and credited to their file page; none are stored.
+- **Next election:** for each state, Sanjaya estimates the next assembly election as five years after the last one.
+  - More than six months away: *Wait for more data*, with a countdown.
+  - Within six months: a seat range per party (10th to 90th percentile), the majority line, and a **trust label** (Low, Medium or High).
+  - The model is a bagging ensemble and a gradient-boosted ensemble of decision trees, averaged and written with numpy. It learns from every assembly result since 2008: each seat's party shares one and two elections back, state-wide shares, the swing in the Lok Sabha election held in between, incumbency, margin, turnout, candidates and reserved-seat status. Ranges come from 1,000 simulations that use the model's own backtest errors.
+  - The trust label comes from a rolling backtest (train on everything before a year, predict that year, 2017 to 2026). At release it calls 52% of seats correctly, against 48% for "every seat stays with its last winner", so the label is **Low**. That is honest: Indian assembly elections swing hard, and the model knows nothing about candidates, alliances or campaigns.
+  - News coverage is not used yet. It joins as a feature once Sanjaya has archived coverage for a full election cycle.
+  - **Recompute** retrains the model and refreshes the pulse.
+  - **Pulse, for elections more than six months away** (and the 2029 Lok Sabha): where today's signals point, from an ensemble of hypotheses about how votes move between elections. Each is fitted on past results and shown on its own row with its median seats, weight and backtest accuracy:
+    - *H1 National mood:* the swing in every election held elsewhere since this state last voted, recent ones weighted more, scaled by a fitted coefficient.
+    - *H2 Lok Sabha anchor:* a drift toward how the state voted in the latest Lok Sabha election (for the Lok Sabha pulse: each state's own assembly swing since 2024).
+    - *H3 Time for change:* a ridge regression on incumbency and last share, scaled by how much of the term has gone.
+    - *H4 Seat patterns:* the tree ensemble above, fed the national mood (state elections only).
+    - *H5 Coverage tone:* H1 tilted by how the tone of news coverage of each party in Sanjaya's own archive has moved (last 30 days against the five months before; a small news lexicon, averaged with a language-model similarity score when articles have been embedded). Used only with at least 25 recent single-party articles, and not backtested yet.
+    - The pooled range adds drift for the months left. **Where the uncertainty comes from** splits each leading party's spread with the law of total variance: which hypothesis holds, state-wide swing nobody can see yet, months left, and seat-level noise. When the choice of hypothesis explains 10% or more of the spread, the page says so and points you to the per-hypothesis table.
+    - Trust: pulses taken a year before 60 past state elections (2017 to 2026) called 48% of seats, about the same as assuming nothing changes. Ranges held the result 67% of the time. Label: **Low**. Far from an election, the pulse mostly tells you how uncertain things are.
+  - Forecasts need numpy, which comes with the language-model pack. The first view trains the model in the background (about a minute) and keeps it until the results pack changes. Projections are hidden during the Election Commission's silence period. There is no Lok Sabha forecast before 2029, and none for municipal corporations (wards are redrawn between polls).
+
+**The data is downloaded on first use**, like the language model: open Elections and click *Download election data* (about 36 MB, once). Municipal corporations work without it. The download needs GitHub to be reachable.
+
+What it does not do yet:
+- **Polls:** opinion polls and exit polls with each pollster's record come next. While the Election Commission's blackout windows are in force (Representation of the People Act 1951, sections 126 and 126A), they will be hidden automatically. Add notified windows to `election_blackout.json`.
+- **Some maps are unavailable:** where constituencies were redrawn after the map data was made (Assam 2026, Jammu and Kashmir 2024), there is no map for that election; the chart and tables are complete. Gujarat's map source lacks 20 city constituencies in Ahmedabad and Surat.
+- **No ward maps:** municipal corporations show seat totals only. The public ward maps don't match the boundaries used in these elections, and ward-level results aren't published in a form Sanjaya can read yet.
+
+Alliances are drawn only where their totals were checked against published figures (Lok Sabha 2024; Uttar Pradesh, Punjab and Goa 2022; Maharashtra 2024). Elsewhere results are shown party by party. Party colours and names are in `election_parties.json`, alliances in `election_alliances.json`, and the municipal results with their sources in `election_municipal.json`.
+
 ### 5.4 Research radar
 
 The radar ranks new research against **your papers**, a list you control under **Research radar → Your papers**. It comes seeded with six papers. Add more by pasting an arXiv link or ID, a DOI, or an exact title; Sanjaya looks each one up on arXiv, Crossref or OpenAlex.
@@ -642,7 +684,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # ~129 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # 239 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -654,7 +696,9 @@ Browser tests (`test_browser.py`, `test_india_browser.py`, `test_v33_browser.py`
 pip install playwright && python -m playwright install chromium
 ```
 
-The language model tests use a stand-in for Ollama. They don't need the real model.
+The language model tests use a stand-in for Ollama. They don't need the real model. The election tests use a small synthetic results database and copies of Wikipedia pages in `tests/fixtures/`, so they don't need the results pack or a network; the forecast and pulse tests are skipped when numpy isn't installed.
+
+On Windows, tests that create a temporary database use `tests/tmpdir.py`, because Windows won't delete a file that is still open. Lines such as `ResourceWarning: unclosed socket` and the Hugging Face symlink notice are warnings, not failures: only the final `OK` or `FAILED` counts.
 
 **Updating the screenshots.** With Sanjaya running and some news collected, run `pip install playwright` then `python tools/take_screenshots.py`. It uses Microsoft Edge or Google Chrome, captures every page into `docs/screenshots/`, and rewrites `docs/SCREENSHOTS.md`.
 
@@ -675,6 +719,13 @@ atlas/
 ├─ geo_video.py            geopolitics reel: news-only filter, geopolitics score, channel rotation
 ├─ find.py                 panel search: query syntax, BM25 keywords, meaning blend, web queries
 ├─ wiki.py                 Wikipedia: search, cleaned article HTML, offline cache, passages
+├─ elections.py            Elections: results, alliances, comparisons, maps, ECI blackout windows
+├─ officials.py            Elections: who is in office now (Wikidata + election_officials.json)
+├─ forecast.py             Elections: bagging + boosting seat ranges, backtest and trust label
+├─ pulse.py                Elections: pulse ensemble for far elections, variance decomposition
+├─ wikitables.py           Reads Wikipedia tables (rowspans, split headers) for office-holders
+├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)
+├─ election_*.json         party colours, alliances, municipal results, blackout windows
 ├─ (static/calibrate.js)  your lean calibration; (static/about.js) the Why Sanjaya page
 ├─ ask.py                  Ask drawer: retrieval, cited prompt, local Ollama answers, citation check
 ├─ research_radar.py       research radar: arXiv, lab trace, themes, related work, queue, deadlines
@@ -713,6 +764,9 @@ atlas/
 | Geopolitics reel is empty | Press *Refresh feeds*, wait a few minutes for YouTube's playability check, or switch to *All news*. Run `python tools/check_geo_channels.py` to see which channels answer. |
 | Research radar sources fail | Run `python tools/check_radar_sources.py`. A firewall or proxy may block arXiv, Hugging Face or OpenAlex. *OpenAlex: daily budget used up* means adding a free OpenAlex key. |
 | Map tiles fail | Use **Test tiles** on the Satellite atlas. Tile providers must be reachable from the server. |
+| Elections page asks to download data again | The results pack format changed (it does after some updates). Press **Download election data**: files already downloaded are reused, so it takes seconds. |
+| *In office now* is short or empty | The progress list shows which source answered. Press **Refresh**. If Wikipedia or Wikidata can't be reached, the last good copy is shown; to correct a person, edit `election_officials.json`. |
+| *Next election* says forecasts need numpy | Install the language-model pack, or just `python -m pip install numpy`. |
 
 ---
 
@@ -733,6 +787,7 @@ atlas/
 - **Grouping:** grouping by meaning can still occasionally join separate events or split one. The borderline-pairs view exists to help you calibrate.
 - **Generated labels:** small local models can make mistakes. Labels are aids for scanning, not summaries to cite.
 - **Earth watch:** hazard and climate data depend on provider uptime and update schedules.
+- **Elections:** results come from TCPD and in-rolls (2008 onward) and municipal totals as reported; Assam 2026 and Jammu and Kashmir 2024 have no constituency map yet. Office-holders come from Wikipedia and Wikidata, which are volunteer-edited and can lag a reshuffle by hours or days. The seat model and the pulse are labelled **Low** trust because their backtests are barely better than "nothing changes"; they show ranges, never winners, and know nothing about candidates, alliances or campaigns.
 - **Single user:** Sanjaya is designed for one reader on one machine.
 
 ---
@@ -753,6 +808,9 @@ atlas/
   - [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
+- **Election results:** "TCPD Indian Elections Data v2.0", [Trivedi Centre for Political Data](https://tcpd.ashoka.edu.in), Ashoka University (Lok Dhaba, free and open use with citation), and [in-rolls/eci_results](https://github.com/in-rolls/eci_results) (MIT) for Lok Sabha 2024 and the assemblies from November 2023. Both come from Election Commission of India statistical reports. Municipal results are State Election Commission totals as reported; sources are listed in `election_municipal.json`.
+- **Office-holders:** [Wikipedia](https://en.wikipedia.org) current-office lists and ministry articles (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0), with corrections and sources in `election_officials.json`. Photos: [Wikimedia Commons](https://commons.wikimedia.org), each credited to its file page with its own licence.
+- **Constituency maps:** [DataMeet](https://github.com/datameet/maps) assembly constituencies (CC BY 2.5 India) and Lok Sabha constituencies, simplified by Arun Ganesh (CC0).
 - **Research metadata:**
   - [OpenAlex](https://openalex.org) (CC0)
   - [Crossref](https://www.crossref.org)
