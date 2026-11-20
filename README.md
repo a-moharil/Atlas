@@ -80,7 +80,7 @@ PASTE-THE-USER-ATTACHMENTS-LINK-HERE
 | **Earth watch** | Earthquakes, cyclones, floods, wildfires and volcanoes from GDACS, NASA EONET and USGS. Also global temperature and sea-surface anomalies (Copernicus ERA5), and Windy's live wind, rain and temperature map for India. |
 | **Satellite atlas** | Esri, OpenStreetMap and NASA imagery with hazard layers and the official Survey of India boundary. |
 | **India regional map** | Where Indian coverage is concentrated, drawn on the Survey of India state map. |
-| **Elections** | Lok Sabha and state assembly results since 2008, and eight municipal corporations: a parliament chart with seats against votes and a coalition tester, constituency maps inside the Survey of India boundary, equal-area hex maps, closest contests and seats that changed hands. Who is in office now for each level, with photos and official contacts, and seat ranges for the next assembly elections with a trust label. |
+| **Elections** | Lok Sabha and state assembly results since 2008, and eight municipal corporations: a parliament chart with seats against votes and a coalition tester, constituency maps inside the Survey of India boundary, equal-area hex maps, closest contests and seats that changed hands. Who is in office now for each level, with photos and official contacts, and seat ranges for the next assembly elections with a trust label, run only when you ask. **United States:** House since 1976, Senate, governors and president since the late 1990s, 2026 midterms read live from Wikipedia, a state map and a district tile map, and members of Congress with official contacts. |
 | **Conflict atlas, Geopolitics, Macroeconomics** | Published conflict maps, summit and bloc calendars, and economic indicators with their source links. |
 | **Article constellation** | A 3-D map of retrieved reporting, clustered by shared vocabulary. |
 | **Research library, MyGov policy** | Think-tank analysis, scholarly metadata from OpenAlex, and ministry and scheme updates. |
@@ -155,7 +155,7 @@ Sanjaya runs on **Python 3.9 or newer**. Python 3.12 is the recommended version.
 There are two ways:
 
 - **Easiest:** on the Atlas GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the downloaded file and choose **Extract All**, and put the folder somewhere permanent, such as `Documents\Sanjaya`. Don't run Sanjaya from inside the ZIP.
-- **With Git:** run `git clone https://github.com/a-moharil/Sanjaya.git`. Git makes later updates easier; see [section 5.6](#56-updating).
+- **With Git:** run `git clone https://github.com/a-moharil/Atlas.git`. Git makes later updates easier; see [section 5.6](#56-updating).
 
 The folder keeps the repository's original name, `Atlas` (or `Atlas-main` from a ZIP).
 
@@ -404,7 +404,7 @@ When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live 
 
 **Elections** (in the sidebar under Monitor) shows results as declared. Sanjaya never calls a winner itself.
 
-- **Levels:** *Lok Sabha* (2009 to 2024), *State assemblies* (every state since the 2008 delimitation, up to the 2026 round) and *Municipal corporations* (Mumbai, Pune, Pimpri-Chinchwad, Nagpur, Delhi, Hyderabad, Chennai and Bengaluru). The *United States* and *Israel* tabs are placeholders for a later release.
+- **Levels:** *Lok Sabha* (2009 to 2024), *State assemblies* (every state since the 2008 delimitation, up to the 2026 round) and *Municipal corporations* (Mumbai, Pune, Pimpri-Chinchwad, Nagpur, Delhi, Hyderabad, Chennai and Bengaluru). *United States* is described in 5.3c; *Israel* is a placeholder for a later release.
 - **Parliament chart:** one dot per seat, grouped by alliance (or by party), with the majority line. The outer arc is each group's share of seats and the inner arc its share of the vote, so first-past-the-post distortions are visible at a glance. Click parties to test whether a coalition reaches a majority.
 - **Map:** constituencies coloured by the winning party, by margin (darker means closer), or by whether the seat changed hands since the previous election. The national map is drawn inside the Survey of India outline and state maps inside the Survey of India state boundary. Hover for the winner and margin; click for the full contest.
 - **Equal-area hexes:** one hexagon per seat, placed near its real location, so a dense city seat weighs as much as a large rural one.
@@ -430,7 +430,8 @@ When YouTube shows *This video is unavailable*, Sanjaya now notices. For a live 
     - *H5 Coverage tone:* H1 tilted by how the tone of news coverage of each party in Sanjaya's own archive has moved (last 30 days against the five months before; a small news lexicon, averaged with a language-model similarity score when articles have been embedded). Used only with at least 25 recent single-party articles, and not backtested yet.
     - The pooled range adds drift for the months left. **Where the uncertainty comes from** splits each leading party's spread with the law of total variance: which hypothesis holds, state-wide swing nobody can see yet, months left, and seat-level noise. When the choice of hypothesis explains 10% or more of the spread, the page says so and points you to the per-hypothesis table.
     - Trust: pulses taken a year before 60 past state elections (2017 to 2026) called 48% of seats, about the same as assuming nothing changes. Ranges held the result 67% of the time. Label: **Low**. Far from an election, the pulse mostly tells you how uncertain things are.
-  - Forecasts need numpy, which comes with the language-model pack. The first view trains the model in the background (about a minute) and keeps it until the results pack changes. Projections are hidden during the Election Commission's silence period. There is no Lok Sabha forecast before 2029, and none for municipal corporations (wards are redrawn between polls).
+  - **Models run only when you ask.** Nothing is trained or simulated when you open the page: press **Run forecast** or **Run pulse** (about a minute each). The result is saved and shown on later visits until the results pack changes or you run it again. Whether an election is near or far is read from the calendar, which needs no model.
+  - Forecasts need numpy, which comes with the language-model pack. Projections are hidden during the Election Commission's silence period. There is no Lok Sabha forecast before 2029, and none for municipal corporations (wards are redrawn between polls).
 
 **The data is downloaded on first use**, like the language model: open Elections and click *Download election data* (about 36 MB, once). Municipal corporations work without it. The download needs GitHub to be reachable.
 
@@ -440,6 +441,51 @@ What it does not do yet:
 - **No ward maps:** municipal corporations show seat totals only. The public ward maps don't match the boundaries used in these elections, and ward-level results aren't published in a form Sanjaya can read yet.
 
 Alliances are drawn only where their totals were checked against published figures (Lok Sabha 2024; Uttar Pradesh, Punjab and Goa 2022; Maharashtra 2024). Elsewhere results are shown party by party. Party colours and names are in `election_parties.json`, alliances in `election_alliances.json`, and the municipal results with their sources in `election_municipal.json`.
+
+### 5.3c Elections: United States
+
+Choose **United States** at the top of Elections. Results only: Sanjaya never calls a race.
+
+- **Offices:** *House* (435 seats; 1976 to 1980 and 1992 to 2026), *Senate* and *Governors* (2000 to 2026), and *President* (electoral votes by state, 2000 to 2024).
+- **Each election shows:**
+  - The chamber chart with the majority line. For the Senate and governors, seats won that year are solid dots and seats elected earlier are hollow rings.
+  - The parties with seats won that year, the popular vote, and the seats that changed party.
+  - The closest races.
+  - A map. Senate, governors and president use a state map with Alaska and Hawaii as insets. For the Senate and governors, choose **<year> races** (only that year's races coloured, grey where there was none) or **Whole Senate / All governors after it** (every seat, with split Senate delegations striped in both colours).
+  - **Colours have one meaning each.** Solid party colour means won, and lighter means a closer race (under 5 points, 5 to 15, over 15). Party stripes with a dashed edge mean not yet called, striped toward whoever is ahead. Slate grey means no race for that office there that year.
+  - The net change against the previous election ("R +4 since 2022") is shown at the top and beside each party.
+  - The House uses a tile map: one hexagon per district, grouped by state. Tiles don't depend on district lines, which several states redrew in 2025 and 2026.
+  - Click a state or a district for its result.
+- **Electoral votes** are as pledged by each state's result. Maine and Nebraska's district votes are counted; faithless electors (2016) are not.
+- **2026 sources:** FiveThirtyEight's archive ends in 2024, so 2026 comes from two free sources. No news agency's data is used.
+  - **Each state's own count.** Election results are public records, and every state and DC publishes its count. `us_official.py` reads them, state by state, from the sources researched in `docs/STATE_RESULT_SOURCES_2026.md`:
+    - Clarity results sites (Colorado, Iowa, South Carolina, West Virginia, and New Jersey's county sites).
+    - Enhanced Voting exports and its public results API (Arizona, Georgia, Utah, Virginia, Idaho, Washington). Where the API says the results are official, the state's races count as certified.
+    - State data files: California, Minnesota, North Carolina, Florida, South Dakota, Alaska, Delaware, Hawaii.
+    - One small reader each for Rhode Island, Oregon, Louisiana, North Dakota, Connecticut, Vermont, Indiana, Ohio and Pennsylvania.
+    - The results pages of Nebraska, New Mexico, Montana, Kansas, Illinois and Texas.
+    - Fourteen states can't be read automatically. Eight refuse automated reading (KY, MO, NV, NH, NY, OK, TN, WI); six publish no machine-readable count (AL, AR, ME, MA, MI, WY). Maryland and Mississippi publish certified files only after the count, and DC has no race. None of these is fetched; their races come from Wikipedia.
+    - Requests go out with browser-style headers. If a site answers 403, Sanjaya asks once more under its own name. Nothing gets around a bot check or an access gate.
+    - Errors say what happened ("HTTP 404 Not Found", "the site did not answer (it may not accept connections from outside the US)").
+    - States are read in the background every 30 minutes while a 2026 page is open, or now with **Re-read state sites**.
+    - **Each state's results site** lists every state's status, the addresses tried and a link.
+    - To correct an address without code, use `election_data/us/state_sources.json`.
+  - **News coverage (third source, on request).** For races with no state count, **Search news coverage** looks through the articles Sanjaya already holds. It ranks them against each race (state, office, the candidates Wikipedia lists) with the language model's embeddings, or by matching words without the language-model pack. It then reads the vote counts or shares printed next to each candidate's name.
+    - The most recent article with numbers wins, preferring one that cites the official count.
+    - Race cards name the publisher and date.
+    - These numbers never call a race and never override a state count. If they contradict a Wikipedia call, they are set aside.
+  - **Wikipedia's results pages** say which races are decided: a race counts as decided only when its status says so (hold, gain, elected, defeated). Editors update them by hand. They are read every six hours, or now with **Check now**.
+  - **A call needs certification or both sources to agree.** A race is shown as won when the state has certified it, or when Wikipedia lists it as decided and the state's count has the same party ahead. If they disagree, the race stays uncalled and its card says why. A race Wikipedia hasn't listed yet shows from the state's count, uncalled.
+  - **Not yet called** races, including ranked-choice counts and runoffs, are **striped in the colour of whoever is ahead**, with a dashed edge, on the maps and in the chamber chart. The party list shows how many lean each way ("46 called + 1 ahead"). A lead is never shown as a win.
+  - Each race card names where its count and its call came from, and how many precincts are reporting where the state says.
+  - The 2025 New Jersey and Virginia and the 2023 Kentucky, Louisiana and Mississippi governor races come from `us_elections_extra.json`.
+- **In office now:** the President, Vice President and Cabinet. Choose a state, or click it on the map, for its governor, two senators and House delegation.
+  - Contacts are official only: office websites, contact forms and Capitol office numbers.
+  - Members' photos are the public-domain congressional portraits.
+  - Members elected in November 2026 take office on 3 January 2027.
+- **Forecasts** for US races come in a later step and, as on the India page, will run only when you ask.
+
+**Download:** the first time, click *Download US results* (about 9 MB, from GitHub). It builds the results database and the map on your computer.
 
 ### 5.4 Research radar
 
@@ -486,6 +532,7 @@ python migrate_database.py "path/to/old/observatory.sqlite3"
 - **If you downloaded a ZIP:** download the new ZIP, extract it to a new folder, then copy `observatory.sqlite3` (and `model_cache/`) from the old folder into it.
 
 ---
+
 
 ## 6. How Sanjaya is built
 
@@ -684,7 +731,7 @@ Language model settings (strictness, time window, labels on/off, Ollama model) a
 ## 10. Running the tests
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"   # 239 tests, no network needed
+python -m unittest discover -s tests -p "test_*.py"   # 259 tests, no network needed
 node tests/check_frontend.cjs                          # front-end logic checks (Node 18+)
 node tests/check_mygov_frontend.cjs
 node tests/check_v43_frontend.cjs
@@ -723,6 +770,12 @@ atlas/
 ├─ officials.py            Elections: who is in office now (Wikidata + election_officials.json)
 ├─ forecast.py             Elections: bagging + boosting seat ranges, backtest and trust label
 ├─ pulse.py                Elections: pulse ensemble for far elections, variance decomposition
+├─ us_elections.py         US elections: House, Senate, governors, president
+├─ us_elections_data.py    US elections: results pack builder, state map projection, House tiles
+├─ us_live.py              US elections: 2026 results read from Wikipedia
+├─ us_official.py          US elections: 2026 vote counts from each state's own results site
+├─ us_coverage.py          US elections: 2026 numbers reported in Sanjaya's news coverage (on request)
+├─ us_officials.py         US office-holders (congress-legislators, Wikipedia)
 ├─ wikitables.py           Reads Wikipedia tables (rowspans, split headers) for office-holders
 ├─ elections_data.py       elections data pack: downloads, constituency maps, hex layouts (geo_shapes.py reads shapefiles)
 ├─ election_*.json         party colours, alliances, municipal results, blackout windows
@@ -765,6 +818,7 @@ atlas/
 | Research radar sources fail | Run `python tools/check_radar_sources.py`. A firewall or proxy may block arXiv, Hugging Face or OpenAlex. *OpenAlex: daily budget used up* means adding a free OpenAlex key. |
 | Map tiles fail | Use **Test tiles** on the Satellite atlas. Tile providers must be reachable from the server. |
 | Elections page asks to download data again | The results pack format changed (it does after some updates). Press **Download election data**: files already downloaded are reused, so it takes seconds. |
+| US elections: 2026 shows many races not yet called | Counting continues in some states and Wikipedia lists a race as decided only once it is called. Press **Read again** later. |
 | *In office now* is short or empty | The progress list shows which source answered. Press **Refresh**. If Wikipedia or Wikidata can't be reached, the last good copy is shown; to correct a person, edit `election_officials.json`. |
 | *Next election* says forecasts need numpy | Install the language-model pack, or just `python -m pip install numpy`. |
 
@@ -775,6 +829,7 @@ atlas/
 - Sanjaya binds to `127.0.0.1`, so only your computer can reach it. **It has no login.** Don't expose it to a network without a reverse proxy and authentication.
 - Outbound requests go only to the feeds and data providers listed in this README and in `source_registry.json`, plus Ollama on your own machine if you enable labels.
 - No analytics or telemetry. Your reading, removals, blocks and settings stay in `observatory.sqlite3`, which is excluded from Git.
+- API keys you add (OpenAlex) are stored in `observatory.sqlite3` and used only for requests to that provider.
 - The optional cloud analysis (7.5) is the only feature that can send text off your machine. It is inactive without an API key you provide.
 
 ---
@@ -788,6 +843,7 @@ atlas/
 - **Generated labels:** small local models can make mistakes. Labels are aids for scanning, not summaries to cite.
 - **Earth watch:** hazard and climate data depend on provider uptime and update schedules.
 - **Elections:** results come from TCPD and in-rolls (2008 onward) and municipal totals as reported; Assam 2026 and Jammu and Kashmir 2024 have no constituency map yet. Office-holders come from Wikipedia and Wikidata, which are volunteer-edited and can lag a reshuffle by hours or days. The seat model and the pulse are labelled **Low** trust because their backtests are barely better than "nothing changes"; they show ranges, never winners, and know nothing about candidates, alliances or campaigns.
+- **US elections:** FiveThirtyEight's archive has no House results for 1982 to 1990, so those years are missing; 2026 results are only as current and correct as Wikipedia's pages when they were read. Senate classes for 2026 specials are inferred. Governors elected between regular rounds are counted from `us_elections_extra.json`.
 - **Single user:** Sanjaya is designed for one reader on one machine.
 
 ---
@@ -809,6 +865,7 @@ atlas/
   - [NASA GIBS](https://www.earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs)
   - India boundaries: [Survey of India](https://surveyofindia.gov.in) maps via the [DataMeet India community](https://github.com/datameet/maps) (CC BY 4.0)
 - **Election results:** "TCPD Indian Elections Data v2.0", [Trivedi Centre for Political Data](https://tcpd.ashoka.edu.in), Ashoka University (Lok Dhaba, free and open use with citation), and [in-rolls/eci_results](https://github.com/in-rolls/eci_results) (MIT) for Lok Sabha 2024 and the assemblies from November 2023. Both come from Election Commission of India statistical reports. Municipal results are State Election Commission totals as reported; sources are listed in `election_municipal.json`.
+- **US election results:** [FiveThirtyEight election-results](https://github.com/fivethirtyeight/election-results) (CC BY 4.0) through 2024; for 2026, each state's and DC's official results site (public records) and Wikipedia (CC BY-SA). US state outlines: US Census Bureau (public domain), via PublicaMundi. Members of Congress: [unitedstates/congress-legislators](https://github.com/unitedstates/congress-legislators) (CC0) and the public-domain portraits in [unitedstates/images](https://github.com/unitedstates/images).
 - **Office-holders:** [Wikipedia](https://en.wikipedia.org) current-office lists and ministry articles (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0), with corrections and sources in `election_officials.json`. Photos: [Wikimedia Commons](https://commons.wikimedia.org), each credited to its file page with its own licence.
 - **Constituency maps:** [DataMeet](https://github.com/datameet/maps) assembly constituencies (CC BY 2.5 India) and Lok Sabha constituencies, simplified by Arun Ganesh (CC0).
 - **Research metadata:**

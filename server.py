@@ -52,6 +52,9 @@ import elections_data
 import officials
 import forecast
 import pulse
+import us_elections
+import us_elections_data
+import us_officials
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -231,12 +234,12 @@ PROXY_PROVIDER_HOSTS={urllib.parse.urlparse(f.get('url','')).hostname for f in R
  'eonet.gsfc.nasa.gov','earthquake.usgs.gov','api.open-meteo.com',
  'public.api.bsky.app','static.geodataviewer.com'}
 
-def validate_external_url(url):
+def validate_external_url(url, allow_http=False):
     """Disallow local/private target URLs for user-defined RSS and redirects."""
     p = urllib.parse.urlparse(url)
-    if p.scheme != 'https' or not p.hostname or p.username or p.password:
+    if p.scheme not in (('https', 'http') if allow_http else ('https',)) or not p.hostname or p.username or p.password:
         raise ValueError('A public HTTPS feed URL is required.')
-    if p.port not in (None, 443):
+    if p.port not in (None, 443, 80 if allow_http else 443):
         raise ValueError('Only standard HTTPS ports are allowed.')
     host = p.hostname.lower()
     if host in ('localhost', 'localhost.localdomain') or host.endswith(('.local', '.internal', '.test')):
@@ -258,6 +261,49 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         validate_external_url(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+class PublicRecordRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_external_url(newurl, allow_http=True)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+PLAIN_UA = 'Sanjaya/6.5 (local results reader; +https://github.com/a-moharil/Atlas)'
+STATE_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 '
+            'Sanjaya/6.5 (+https://github.com/a-moharil/Atlas)')
+
+
+def fetch_public_record(url, max_bytes=80_000_000, timeout=45):
+    """State election results sites: many sit behind firewalls that refuse requests without browser-like headers,
+    and a few still serve plain HTTP. Same public-address checks as every other fetch; errors name the HTTP status."""
+    validate_external_url(url, allow_http=True)
+    browser = {'User-Agent': STATE_UA, 'Accept-Language': 'en-US,en;q=0.9',
+               'Accept': 'text/html,application/xhtml+xml,application/json,text/csv,text/plain,*/*;q=0.8'}
+    plain = {'User-Agent': PLAIN_UA, 'Accept': '*/*'}
+    for n, headers in enumerate((browser, plain)):
+        try:
+            with urllib.request.build_opener(PublicRecordRedirectHandler()).open(urllib.request.Request(url, headers=headers), timeout=timeout) as res:
+                block = res.read(max_bytes + 1)
+            break
+        except urllib.error.HTTPError as exc:
+            # Some state servers turn away browser-style requests but answer a plainly named client: ask once more
+            # as Sanjaya. This is honest identification, not a way around a bot check.
+            if exc.code in (403, 405, 406) and n == 0:
+                continue
+            raise OSError(f'HTTP {exc.code} {exc.reason or ""}'.strip()) from None
+        except urllib.error.URLError as exc:
+            reason = str(exc.reason)
+            if 'CERTIFICATE_VERIFY_FAILED' in reason:
+                reason = "the site's security certificate could not be verified"
+            elif 'timed out' in reason or '10060' in reason:
+                reason = 'the site did not answer (it may not accept connections from outside the US)'
+            raise OSError(f'not reachable: {reason}') from None
+        except (TimeoutError, socket.timeout):
+            raise OSError('not reachable: the site did not answer in time (it may not accept connections from outside the US)') from None
+    if len(block) > max_bytes:
+        raise ValueError('response larger than 80 MB')
+    return block
 
 
 def fetch_bytes(url, max_bytes=MAX_XML_BYTES, timeout=None):
@@ -1229,6 +1275,25 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == '/api/elections/pulse':
                 st=params.get('state',[''])[0][:60];force=params.get('refresh',['0'])[0]=='1'
                 return self.send_payload(pulse.for_scope(st,news_db=DB_FILE,hidden=elections.hidden_kinds(st or None),force=force))
+            if parsed.path.startswith('/api/us/'):
+                getter=lambda u:wiki_get(u,6_000_000,timeout=60 if 'wikidata' in u else 30)
+                force=params.get('refresh',['0'])[0]=='1'
+                if parsed.path == '/api/us/catalog':return self.send_payload(us_elections.catalog())
+                if parsed.path == '/api/us/geo':
+                    if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
+                    return self.send_payload(us_elections.geo())
+                if parsed.path == '/api/us/result':
+                    if not us_elections.ready():return self.send_payload({'error':'Download the US results first.'},409)
+                    which=params.get('refresh',[''])[0]
+                    try:return self.send_payload(us_elections.result(params.get('office',['H'])[0][:1],int(params.get('cycle',['2024'])[0][:4]),getter,
+                                                                     which in ('1','wiki'),fetch_public_record,force_states=which in ('1','states'),
+                                                                     news_db=DB_FILE if DB_FILE.exists() else None,model_cache=DB_FILE.parent/'model_cache',
+                                                                     search_coverage=which=='coverage'))
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                if parsed.path == '/api/us/officials':
+                    try:return self.send_payload(us_officials.request(params.get('scope',['us'])[0][:20],getter,DB_FILE.parent/'research_cache',force))
+                    except ValueError as e:return self.send_payload({'error':str(e)},400)
+                return self.send_payload({'error':'Not found'},404)
             if parsed.path == '/api/elections/geo':
                 try:return self.send_payload(elections.geo(params.get('layer',['ac'])[0],params.get('state',[''])[0][:60]))
                 except (LookupError,ValueError) as e:return self.send_payload({'error':str(e)},404)
@@ -1311,6 +1376,9 @@ class Handler(BaseHTTPRequestHandler):
                 vid=str(data.get('video_id',''))[:11]
                 with closing(db_connect()) as con:ok=video_check.report_player_error(con,vid,data.get('code'),utc_now())
                 return self.send_payload({'ok':ok})
+            if path == '/api/us/download':
+                started=us_elections_data.start(lambda u:fetch_bytes(u,max_bytes=30_000_000,timeout=300))
+                return self.send_payload({'started':started,**us_elections_data.status()})
             if path == '/api/elections/download':
                 started=elections_data.start(lambda u,timeout=None:fetch_bytes(u,max_bytes=60_000_000,timeout=timeout or 600))
                 return self.send_payload({'started':started,**elections_data.status()})

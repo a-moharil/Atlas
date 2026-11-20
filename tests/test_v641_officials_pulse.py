@@ -17,6 +17,7 @@ import officials as O
 import pulse as P
 import wikitables as W
 from test_v64_officials_forecast import synthetic_db
+from tests.tmpdir import TempDir
 
 ROOT = Path(__file__).resolve().parents[1]
 FIX = ROOT / 'tests' / 'fixtures'
@@ -106,7 +107,7 @@ class Pipeline(unittest.TestCase):
         self.assertIn('Department of Space', modi['portfolios'])
 
     def test_background_job_reports_progress_and_refreshes(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TempDir() as tmp:
             O._jobs.clear()
             calls = []
             first = O.request('state:Uttar_Pradesh', fake_getter(calls), tmp)
@@ -171,7 +172,7 @@ class Pulse(unittest.TestCase):
         self.assertEqual(w, {'H1': 0.5, 'H2': 0.5})
 
     def test_coverage_tone_counts_single_party_articles_only(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TempDir() as tmp:
             db = Path(tmp) / 'news.sqlite3'
             con = sqlite3.connect(str(db))
             con.execute('CREATE TABLE entries(id TEXT, title TEXT, summary TEXT, published TEXT, retrieved TEXT)')
@@ -189,7 +190,7 @@ class Pulse(unittest.TestCase):
         self.assertNotIn('INC', t)
 
     def test_run_on_synthetic_results(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TempDir() as tmp:
             db = Path(tmp) / 'e.sqlite3'; synthetic_db(db)
             out = P.run(db, now=dt.datetime(2026, 11, 19, tzinfo=dt.timezone.utc), sims=300, with_trees=False)
         self.assertIn('kappa', out['params'])
@@ -202,6 +203,15 @@ class Pulse(unittest.TestCase):
             self.assertTrue(lead['lo'] <= lead['median'] <= lead['hi'])
             self.assertAlmostEqual(sum(lead['variance'].values()), 1, places=2)
         self.assertEqual(out['national']['status'], 'ready')
+
+    def test_pulse_runs_only_on_request(self):
+        from unittest import mock
+        with mock.patch.object(P, 'cached', return_value=None), mock.patch.object(P, 'start') as start, \
+                mock.patch.object(Path, 'exists', return_value=True):
+            self.assertEqual(P.for_scope('Gujarat')['status'], 'not_run')
+            start.assert_not_called()
+            P.for_scope('Gujarat', force=True)
+            start.assert_called_once()
 
     def test_hidden_during_silence(self):
         self.assertEqual(P.for_scope('Gujarat', hidden={'projection'})['status'], 'hidden')

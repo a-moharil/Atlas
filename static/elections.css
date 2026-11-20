@@ -185,3 +185,76 @@
 .elVar_seat{background:#7FC8A9}
 .elVarLegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 4px;font-size:.74rem;color:var(--muted)}
 .elVarLegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* v6.5 · models run on request */
+.elRunBox{display:grid;gap:10px;justify-items:start;padding:10px 0 6px}
+.elRunBox p{margin:0;color:var(--ink-2);line-height:1.5;font-size:.92rem}
+.elRun{min-height:34px}
+
+/* v6.5 · United States */
+.usLive{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:.88rem;line-height:1.45}
+.usLive a{color:var(--glacier)}
+.usMap .usMapWrap{width:100%;overflow:hidden}
+.usSvg{width:100%;height:auto;display:block;max-height:640px}
+.usSvg [data-us-state],.usSvg [data-us-seat]{cursor:pointer}
+.usSvg [data-us-state]:hover,.usSvg [data-us-seat]:hover{fill-opacity:1;stroke:#fff}
+.usTileLbl{font-size:9px;font-weight:700;fill:rgba(255,255,255,.85);text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:rgba(8,16,24,.55);stroke-width:2px}
+.usMapLbl{font-size:12px;fill:var(--ink-2)}
+.usLegend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:8px 0 4px;font-size:.8rem;color:var(--ink-2)}
+.usLegend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.usPick{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.usPick h4{margin:0 0 4px;font-size:1rem}
+.usPick h4 small{color:var(--muted);font-weight:500}
+.usClick tbody tr{cursor:pointer}
+.usClick tbody tr:hover{background:rgba(190,228,240,.06)}
+.usEv{display:grid;gap:14px;padding:16px 4px}
+.usEvBar{position:relative;height:30px;border-radius:8px;overflow:hidden;background:var(--well)}
+.usEvBar span{position:absolute;top:0;bottom:0}
+.usEvBar i{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed rgba(240,248,252,.85)}
+.usEvNames{display:flex;justify-content:space-between;gap:16px}
+.usEvNames div{display:grid;gap:2px}
+.usEvNames div:last-child{text-align:right}
+.usEvNames b{font-size:2rem;font-weight:720;font-variant-numeric:tabular-nums;line-height:1}
+.usEvNames small{color:var(--muted)}
+#usScope{max-width:180px}
+
+/* v6.5.1 · US download progress */
+.usProgress{position:relative;height:10px;margin:14px 0 6px;overflow:hidden}
+.usProgress i{transition:width .4s ease}
+.usProgress::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:translateX(-100%);animation:usSweep 1.4s linear infinite}
+@keyframes usSweep{to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.usProgress::after{animation:none}}
+.usProgressText{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:0 0 12px;font-size:.88rem;color:var(--ink-2)}
+.usProgressText b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.usProgressText small{color:var(--muted)}
+
+/* v6.5.2 · AP source and lean shading */
+.usLive{align-items:flex-start}
+.usLiveText{display:grid;gap:6px}
+.usLiveText p{margin:0}
+.usStates summary{cursor:pointer;color:var(--glacier);font-size:.84rem}
+.usStates table{margin-top:6px;font-size:.8rem}
+.usStates .usSt_failed td:nth-child(2),.usStates .usSt_none td:nth-child(2){color:var(--muted)}
+.usStates small{color:var(--muted)}
+.usStates td details{font-size:.76rem;margin-top:2px}
+.usStates td details summary{color:var(--muted)}
+.usStates td ul{margin:4px 0 0;padding-left:16px;max-width:520px;overflow-wrap:anywhere}
+.usLiveBtns{display:grid;gap:6px;flex:none}
+.usLeanHead{margin-top:8px;color:var(--muted);font-size:.78rem;font-weight:600;list-style:none}
+.usLeanSw,.usLeanKey{background:repeating-linear-gradient(45deg,var(--c) 0 2px,transparent 2px 5px)!important;outline:1px dashed var(--c);outline-offset:-1px}
+.usLeanKey{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-2px}
+
+/* v6.5.3 · one meaning per colour */
+.usLegend i{flex:none}
+.usRamp{display:inline-flex;align-items:center;gap:2px}
+.usRamp i{width:14px!important;height:11px!important;margin:0!important;border-radius:0!important}
+.usRamp b{width:8px}
+.usRamp em{font-style:normal;margin-left:8px;color:var(--muted)}
+.usLegendNote{margin:2px 0 6px}
+.usChamberKey{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0 0}
+.usDotSolid,.usDotHollow,.usDotLean{display:inline-block;width:10px;height:10px;border-radius:50%}
+.usDotSolid{background:var(--ink-2)}
+.usDotHollow{border:1.6px solid var(--ink-2)}
+.usDotLean{border:1.3px dashed var(--ink-2);background:repeating-linear-gradient(45deg,var(--ink-2) 0 1.5px,transparent 1.5px 3.5px)}
+.elBlocRow small.up{color:var(--mint)}
+.elBlocRow small.down{color:var(--coral)}
