@@ -613,10 +613,14 @@ def _cache_file(cache_dir, scope_id):
     return Path(cache_dir) / ('officials_' + re.sub(r'[^A-Za-z0-9_]', '_', scope_id) + '.json')
 
 
-def request(scope, getter, cache_dir, force=False):
+def request(scope, getter, cache_dir, force=False, builder=None):
     """Serve what we have now; fetch in the background when it is missing, stale or a refresh was asked for.
-    While a fetch runs, the answer carries its steps and whatever people are known so far."""
-    kind, scope_id, _ = parse_scope(scope)
+    While a fetch runs, the answer carries its steps and whatever people are known so far.
+    builder: an alternative build(scope_id, getter, cache_dir, report, force) for other countries."""
+    if builder:
+        kind, scope_id = 'other', scope
+    else:
+        kind, scope_id, _ = parse_scope(scope)
     now = time.time()
     with _lock:
         job = _jobs.get(scope_id)
@@ -639,7 +643,7 @@ def request(scope, getter, cache_dir, force=False):
 
             def work():
                 try:
-                    d = build(scope_id, getter, cache_dir=cache_dir, report=report, force=force)
+                    d = builder(scope_id, getter, cache_dir, report, force) if builder else build(scope_id, getter, cache_dir=cache_dir, report=report, force=force)
                     with _lock:
                         if d['people'] or not job['data']:
                             job['data'] = d
@@ -661,7 +665,10 @@ def request(scope, getter, cache_dir, force=False):
         out.update(pending=job['running'], steps=job['steps'] if job['running'] else out.get('steps', []),
                    last_checked=job['checked'], error=job['error'])
         if job['running'] and not (job['data'] or {}).get('people') and job['partial']:
-            partial, _ = apply_overrides(kind, scope_id, [dict(p) for p in job['partial']])
-            _colour(partial)
-            out['people'] = partial
+            if builder:
+                out['people'] = [dict(p) for p in job['partial']]
+            else:
+                partial, _ = apply_overrides(kind, scope_id, [dict(p) for p in job['partial']])
+                _colour(partial)
+                out['people'] = partial
         return out

@@ -1,0 +1,10 @@
+{
+  "_about": "Results after FiveThirtyEight's archive ends (2024) that the live Wikipedia reader does not cover: off-year governor races. Winners and parties only; reviewed 20 November 2026. 2026 midterm results are read from Wikipedia at view time (us_live.py).",
+  "races": [
+    {"office": "G", "cycle": 2023, "state": "KY", "date": "2023-11-07", "winner": "Andy Beshear", "party": "D", "runner": "Daniel Cameron", "runner_party": "R", "incumbent_party": "D", "source": "https://en.wikipedia.org/wiki/2023_Kentucky_gubernatorial_election"},
+    {"office": "G", "cycle": 2023, "state": "LA", "date": "2023-10-14", "winner": "Jeff Landry", "party": "R", "runner": "Shawn Wilson", "runner_party": "D", "incumbent_party": "D", "source": "https://en.wikipedia.org/wiki/2023_Louisiana_gubernatorial_election"},
+    {"office": "G", "cycle": 2023, "state": "MS", "date": "2023-11-07", "winner": "Tate Reeves", "party": "R", "runner": "Brandon Presley", "runner_party": "D", "incumbent_party": "R", "source": "https://en.wikipedia.org/wiki/2023_Mississippi_gubernatorial_election"},
+    {"office": "G", "cycle": 2025, "state": "NJ", "date": "2025-11-04", "winner": "Mikie Sherrill", "party": "D", "runner": "Jack Ciattarelli", "runner_party": "R", "incumbent_party": "D", "source": "https://en.wikipedia.org/wiki/2025_New_Jersey_gubernatorial_election"},
+    {"office": "G", "cycle": 2025, "state": "VA", "date": "2025-11-04", "winner": "Abigail Spanberger", "party": "D", "runner": "Winsome Earle-Sears", "runner_party": "R", "incumbent_party": "R", "source": "https://en.wikipedia.org/wiki/2025_Virginia_gubernatorial_election"}
+  ]
+}
