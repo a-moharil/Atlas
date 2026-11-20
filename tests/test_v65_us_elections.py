@@ -221,7 +221,7 @@ class StateCounts(unittest.TestCase):
                 if not out['pending']:
                     break
                 time.sleep(0.02)
-        self.assertEqual((out['states']['AK']['status'], out['states']['AL']['status']), ('failed', 'none'))
+        self.assertEqual((out['states']['AK']['status'], out['states']['AL']['status']), ('failed', 'unavailable'))
         SO._jobs.clear()
 
     def test_calls_need_the_count_to_agree(self):
@@ -288,9 +288,11 @@ class StateCounts(unittest.TestCase):
             return b'<html><head><script>app()</script></head><body><div id="root"></div></body></html>'
         ak = SO.read_state('AK', 2026, getter)
         self.assertEqual((ak['status'], ak['error']), ('failed', 'HTTP 403 Forbidden'))
-        self.assertEqual(ak['tried'][0]['url'], SO.SOURCES['AK']['page'])
-        al = SO.read_state('AL', 2026, getter)
-        self.assertEqual(al['status'], 'none'); self.assertIn('JavaScript', al['error'])
+        self.assertEqual(ak['tried'][0]['url'], 'https://www.elections.alaska.gov/results/26GENR/ENRbyPrecinct.csv')
+        nj = SO.read_state('NJ', 2026, getter)
+        self.assertEqual(nj['status'], 'none'); self.assertIn('JavaScript', nj['error'])
+        al = SO.read_state('AL', 2026, lambda u: self.fail('no request for a state without a feed'))
+        self.assertEqual(al['status'], 'unavailable')
 
     def test_missing_county_sites_mark_counts_partial(self):
         page = ''.join(f'<a href="https://results.enr.clarityelections.com/NJ/{c}/{e}/">{c}</a>' for c, e in (('Essex', 127486), ('Mercer', 127554)))
