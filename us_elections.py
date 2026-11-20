@@ -11,6 +11,7 @@ import json
 import sqlite3
 
 import us_elections_data as UD
+import us_coverage
 import us_live
 import us_official
 
@@ -80,7 +81,8 @@ def _seat_of(r):
             'margin': r.get('margin_pct'), 'called': bool(r.get('called', 1) and r['winner_party']), 'special': bool(r.get('special')),
             'unopposed': bool(r.get('unopposed')), 'cycle': r['cycle'], 'cands': _cand(r), 'origin': r.get('origin'),
             'status': r.get('status_text'), 'source': r.get('source'), 'counted_basis': r.get('counted_basis'),
-            'wiki_status': r.get('wiki_status'), 'certified': bool(r.get('certified'))}
+            'wiki_status': r.get('wiki_status'), 'certified': bool(r.get('certified')), 'coverage': r.get('coverage'),
+            'coverage_source': r.get('coverage_source'), 'coverage_note': r.get('coverage_note')}
 
 
 def _latest(rows):
@@ -91,7 +93,8 @@ def _latest(rows):
     return best
 
 
-def result(office, cycle, getter=None, force=False, state_getter=None, force_states=False):
+def result(office, cycle, getter=None, force=False, state_getter=None, force_states=False, news_db=None, model_cache=None,
+           search_coverage=False):
     if office not in OFFICES:
         raise ValueError('Unknown office')
     cycle = int(cycle)
@@ -105,9 +108,19 @@ def result(office, cycle, getter=None, force=False, state_getter=None, force_sta
             hist = [h for h in _rows('S', upto=cycle - 1) if h['cycle'] >= cycle - 8]
             us_live.assign_senate_classes(st_races, hist)
         merged = us_official.merge(live['races'], st_races)
+        # Third source: numbers reported in Sanjaya's own news coverage, for races no state count covers. On request only.
+        missing = [r for r in merged if 'state' not in str(r.get('origin') or '')]
+        cov = us_coverage.request(cycle, office, missing, news_db, model_cache, force=search_coverage) if news_db else \
+            {'races': {}, 'pending': False, 't': None}
+        merged = us_coverage.apply(merged, cov.get('races') or {})
         have = {r['id'] for r in rows}
         rows += [r for r in merged if r['id'] not in have]
-        live = {**live, 'wiki_pending': live.get('pending', False), 'pending': live.get('pending') or st.get('pending', False),
+        live = {**live, 'wiki_pending': live.get('pending', False),
+                'pending': live.get('pending') or st.get('pending', False) or cov.get('pending', False),
+                'coverage': {'pending': cov.get('pending', False), 'step': cov.get('step', ''), 'fetched': cov.get('t'),
+                             'error': cov.get('error'), 'method': cov.get('method'), 'searched': cov.get('searched', 0),
+                             'missing': len(missing), 'enabled': bool(news_db),
+                             'races': sum(1 for r in merged if 'coverage' in str(r.get('origin') or '') and r['office'] == office)},
                 'states': {'enabled': st.get('enabled', False), 'pending': st.get('pending', False), 'step': st.get('step', ''),
                            'fetched': st.get('fetched'), 'list': st.get('states', {}),
                            'races': len(st_races), 'read': sum(1 for v in st.get('states', {}).values() if v.get('status') in ('read', 'partial')),
