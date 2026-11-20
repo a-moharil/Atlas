@@ -553,29 +553,36 @@ def for_state(state, now=None, hidden=(), force=False):
                 'message': 'Forecasts need numpy, which comes with the language-model pack. Install it with install_language_model.bat (Windows) or pip install numpy.'}
     if not (DATA_DIR / 'elections.sqlite3').exists():
         return {**base, 'status': 'needs_pack', 'message': 'Download the results pack first.'}
-    d = cached()
-    if force:
-        start()
-    if not d:
-        start()
-        return {**base, 'status': 'computing', 'step': _job.get('step') or 'Starting',
-                'error': _job.get('error') if _job['state'] == 'error' else None,
-                'message': 'Training the forecast model on past results. This takes a minute or two, once per results pack.'}
-    rec = d['states'].get(state)
-    if not rec:
+    # Gate on the calendar first: that needs no model, so a far-off election costs nothing.
+    sched = schedule(state, now)
+    if not sched:
         return {**base, 'status': 'no_history', 'message': 'Sanjaya needs at least two past assembly elections for this state.'}
-    nowk = _mkey(now.year, now.month)
-    ey, em = (int(x) for x in rec['expected'].split('-'))
-    away = _mkey(ey, em) - nowk
-    out = {**base, **{k: v for k, v in rec.items() if k not in ('ranges', 'trust')}, 'months_away': away,
-           'updating': _job['state'] == 'running', 'step': _job.get('step') if _job['state'] == 'running' else None,
-           'backtest': d['backtest'], 'generated': d['generated'], 'noise': d['noise']}
-    if away > SHOW_WITHIN_MONTHS:
+    out = {**base, **sched, 'updating': _job['state'] == 'running',
+           'step': _job.get('step') if _job['state'] == 'running' else None,
+           'error': _job.get('error') if _job['state'] == 'error' else None}
+    if sched['months_away'] > SHOW_WITHIN_MONTHS:
         out.update(status='waiting', message='Wait for more data. Ranges appear about six months before the expected poll, '
                                              'once the most recent results and Lok Sabha swing are as close as they will get.')
         return out
-    if away < -3 or 'ranges' not in rec:
+    if sched['months_away'] < -3:
         out.update(status='stale', message='The expected poll date has passed. Download the results pack again to add the new results.')
+        return out
+    if force:
+        start()                       # models run only when the reader asks
+        out['updating'] = True
+    d = cached()
+    if not d:
+        if _job['state'] == 'running' or force:
+            out.update(status='computing', step=_job.get('step') or 'Starting',
+                       message='Training the forecast model on past results. This takes a minute or two.')
+        else:
+            out.update(status='not_run', message='The forecast model has not been run for this results pack. '
+                                                 'Run it to train on past results (about a minute); the result is kept until the data changes.')
+        return out
+    rec = d['states'].get(state) or {}
+    out.update(backtest=d['backtest'], generated=d['generated'], noise=d['noise'])
+    if 'ranges' not in rec:
+        out.update(status='not_run', message='The saved forecast does not cover this election yet. Run it again to include it.')
         return out
     try:
         import elections
@@ -586,6 +593,24 @@ def for_state(state, now=None, hidden=(), force=False):
     out.update(status='ready', ranges=rec['ranges'], trust=rec['trust'], seats_modelled=rec.get('seats_modelled'),
                lok_sabha_trend=rec.get('lok_sabha_trend'), previous_two=rec.get('previous_two'))
     return out
+
+
+def schedule(state, now=None):
+    """Last assembly poll and the expected next one, straight from the results database (no model)."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    try:
+        con = sqlite3.connect(f'file:{DATA_DIR / "elections.sqlite3"}?mode=ro', uri=True)
+        row = con.execute("SELECT id, year, month, seats FROM elections WHERE kind='AE' AND state=? ORDER BY year DESC, month DESC LIMIT 1", (state,)).fetchone()
+        n = con.execute("SELECT COUNT(*) FROM elections WHERE kind='AE' AND state=?", (state,)).fetchone()[0]
+        con.close()
+    except sqlite3.Error:
+        return None
+    if not row or n < 2:
+        return None
+    eid, y, m, seats = row
+    ey, em = y + TERM_YEARS, m or 1
+    return {'last': eid, 'expected': f'{ey}-{em:02d}', 'months_away': _mkey(ey, em) - _mkey(now.year, now.month),
+            'seats_total': seats, 'majority': (seats or 0) // 2 + 1}
 
 
 def national(now=None):

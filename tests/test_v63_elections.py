@@ -17,6 +17,7 @@ from unittest import mock
 import elections
 import elections_data as D
 import geo_shapes as G
+from tests.tmpdir import TempDir
 
 ROOT = Path(__file__).resolve().parents[1]
 REAL = D.DB.exists() and (D.manifest() or {}).get('version') == D.PACK_VERSION
@@ -65,7 +66,7 @@ class TinyPack(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory()
+        cls.tmp = TempDir()
         t = Path(cls.tmp.name)
         raw, data = t / 'raw', t / 'data'
         raw.mkdir()

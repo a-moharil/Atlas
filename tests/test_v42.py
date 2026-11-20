@@ -6,6 +6,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from tmpdir import TempDir
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import content_cleanup as cc,retrieval_jobs as jobs,tile_gateway as tiles,server,atlas_v3
+from tests.tmpdir import TempDir
 class Reliability(unittest.TestCase):
  def test_crime_and_policy_distinction(self):
   for title in ['Police arrest robbery suspect in Mumbai','Murder investigation opened','Woman kidnapped in Delhi']:
@@ -16,7 +17,7 @@ class Reliability(unittest.TestCase):
  def test_async_dedup_and_persistence(self):
   gate=threading.Event();count=[]
   def loader():count.append(1);gate.wait(2);return {'points':[{'value':4}],'data_status':'retrieved'}
-  with tempfile.TemporaryDirectory() as td:
+  with TempDir() as td:
    key='test-persistence';jobs.JOBS.pop(key,None)
    a=jobs.request(key,loader,td);b=jobs.request(key,loader,td,True)
    self.assertTrue(a['pending']);self.assertTrue(b['pending']);gate.set()
@@ -27,7 +28,7 @@ class Reliability(unittest.TestCase):
    jobs.JOBS.pop(key);out=jobs.request(key,lambda:self.fail('disk cache missed'),td)
    self.assertEqual(out['points'][0]['value'],4)
  def test_stale_data_survives_failure(self):
-  with tempfile.TemporaryDirectory() as td:
+  with TempDir() as td:
    jobs.JOBS['stale-test']={'data':{'points':[1]},'checked':0,'running':False,'error':None}
    def bad():raise TimeoutError('provider read timeout')
    jobs.request('stale-test',bad,td)

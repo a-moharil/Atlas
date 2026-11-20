@@ -6,11 +6,12 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import server
+from tests.tmpdir import TempDir
 
 
 class WallTest(unittest.TestCase):
     def test_hide_undo_clear(self):
-        with tempfile.TemporaryDirectory() as td, patch.object(server, 'DB_FILE', Path(td) / 'observatory.sqlite3'):
+        with TempDir() as td, patch.object(server, 'DB_FILE', Path(td) / 'observatory.sqlite3'):
             server.init_db()
             srv = ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
             threading.Thread(target=srv.serve_forever, daemon=True).start()
