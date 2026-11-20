@@ -12,7 +12,7 @@ window.ATLASElections = (() => {
     id: saved.id || "", mapMode: saved.mapMode || "geo", colorBy: saved.colorBy || "party", group: saved.group || "alliance",
     cat: null, res: null, geo: {}, outline: null, states: null, coalition: new Set(), seat: null,
     loading: false, error: "", timer: 0, seq: 0, checked: 0, refreshing: false,
-    off: {}, fc: {}, govTimer: 0,
+    off: {}, fc: {}, pu: {}, govTimer: 0,
   };
   const remember = () => { try { localStorage.setItem(KEY, JSON.stringify({ country: S.country, level: S.level, state: S.state, id: S.id, mapMode: S.mapMode, colorBy: S.colorBy, group: S.group })); } catch (e) { /* storage off */ } };
   const $ = (s) => document.querySelector(s);
@@ -219,88 +219,140 @@ window.ATLASElections = (() => {
   const fcKey = () => (S.res?.kind === "AE" ? S.res.state : S.res?.kind === "GE" ? "" : null);
   const longDate = (d) => { if (!d) return ""; const t = new Date(d.length === 7 ? d + "-01" : d); return isNaN(t) ? d : t.toLocaleDateString("en-GB", d.length === 7 ? { month: "long", year: "numeric" } : { day: "numeric", month: "long", year: "numeric" }); };
   const initials = (n) => String(n || "?").replace(/^(Shri|Smt|Dr)\.?\s+/i, "").split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-  const groupOf = (p, kind) => {
-    if (p.apolitical) return "Constitutional office";
-    if ((kind === "national" && p.rank === 2) || (kind === "state" && (p.rank === 2 || p.rank === 3))) return "Head of government";
-    if (/^(Mayor|Deputy Mayor)/i.test(p.position)) return "Elected by the corporation";
-    if (p.rank >= 300 && p.rank < 400) return "Ministers of State";
-    if (p.rank >= 400) return "Other offices";
-    return kind === "national" ? "Union Cabinet" : "Council of Ministers";
-  };
+  const pctS = (v) => (v == null ? "–" : `${Math.round(v * 100)}%`);
+  const refreshBtn = (what, busy, label = "Refresh") => `<button class="choice elRefresh" data-el-refresh="${what}" ${busy ? "disabled" : ""} title="Fetch again now">${busy ? "Updating…" : label}</button>`;
 
-  function loadGov() {
+  function loadGov(force = "") {
     const scope = scopeOf(), fk = fcKey();
     clearTimeout(S.govTimer);
-    let again = false;
+    let again = false, slow = false;
     const jobs = [];
-    let slow = false;
     const off = S.off[scope];
-    if (scope && (!off || off.pending || (off.error && !off.people?.length && Date.now() - (off.at || 0) > 60000))) jobs.push(A().api(`/api/elections/officials?scope=${encodeURIComponent(scope)}`).then((d) => { d.at = Date.now(); S.off[scope] = d; if (d.pending) again = true; else if (d.error && !d.people?.length) slow = true; }).catch((e) => { S.off[scope] = { error: e.message, people: [] }; }));
-    if (fk !== null && (!S.fc[fk] || S.fc[fk].status === "computing")) jobs.push(A().api(`/api/elections/forecast?state=${encodeURIComponent(fk)}`).then((d) => { S.fc[fk] = d; if (d.status === "computing" && !d.error) again = true; }).catch((e) => { S.fc[fk] = { status: "error", message: e.message }; }));
+    const wantOff = scope && (force === "officials" || !off || off.pending || (off.error && !off.people?.length && Date.now() - (off.at || 0) > 60000));
+    if (wantOff) jobs.push(A().api(`/api/elections/officials?scope=${encodeURIComponent(scope)}${force === "officials" ? "&refresh=1" : ""}`).then((d) => { d.at = Date.now(); S.off[scope] = d; if (d.pending) again = true; else if (d.error && !d.people?.length) slow = true; }).catch((e) => { S.off[scope] = { error: e.message, people: [], at: Date.now() }; }));
+    const fc = S.fc[fk];
+    if (fk !== null && (force === "forecast" || !fc || fc.status === "computing" || fc.updating)) jobs.push(A().api(`/api/elections/forecast?state=${encodeURIComponent(fk)}${force === "forecast" ? "&refresh=1" : ""}`).then((d) => { S.fc[fk] = d; if ((d.status === "computing" && !d.error) || d.updating) again = true; }).catch((e) => { S.fc[fk] = { status: "error", message: e.message }; }));
+    const needPulse = fk !== null && fc && fc.status !== "ready" && fc.status !== "computing";
+    const pu = S.pu[fk];
+    if (needPulse && (force === "forecast" || !pu || pu.status === "computing" || pu.updating)) jobs.push(A().api(`/api/elections/pulse?state=${encodeURIComponent(fk)}${force === "forecast" ? "&refresh=1" : ""}`).then((d) => { S.pu[fk] = d; if ((d.status === "computing" && !d.error) || d.updating) again = true; }).catch((e) => { S.pu[fk] = { status: "error", message: e.message }; }));
+    if (force) paintGov(force);
     if (!jobs.length) return paintGov();
-    Promise.all(jobs).then(() => { if (scopeOf() !== scope) return; paintGov(); if (again || slow) S.govTimer = setTimeout(loadGov, again ? 4000 : 61000); });
+    Promise.all(jobs).then(() => {
+      if (scopeOf() !== scope) return;
+      paintGov();
+      const fresh = S.fc[fk];
+      const pulseNext = fk !== null && fresh && fresh.status !== "ready" && fresh.status !== "computing" && !S.pu[fk];
+      if (pulseNext) return loadGov();
+      if (again || slow) S.govTimer = setTimeout(loadGov, again ? 2500 : 61000);
+    });
   }
-  function paintGov() {
+  function paintGov(busy = "") {
     const o = $("#elOfficials"), f = $("#elForecast");
-    if (o) { const top = o.querySelector(".elTimeline")?.scrollTop || 0; o.innerHTML = officialsPanel(); const t = o.querySelector(".elTimeline"); if (t) t.scrollTop = top; }
-    if (f) f.innerHTML = forecastPanel();
+    if (o) { const top = o.querySelector(".elTimeline")?.scrollTop || 0; o.innerHTML = officialsPanel(busy === "officials"); const t = o.querySelector(".elTimeline"); if (t) t.scrollTop = top; }
+    if (f) f.innerHTML = forecastPanel(busy === "forecast");
   }
 
-  function officialsPanel() {
+  function stepsList(steps) {
+    if (!steps?.length) return "";
+    const icon = { running: "elStRun", done: "elStOk", empty: "elStNone", failed: "elStFail" };
+    const word = { running: "fetching", done: "found", empty: "nothing found", failed: "unreachable" };
+    return `<ol class="elSteps" aria-label="Fetching progress">${steps.map((s) => `<li class="${icon[s.state] || ""}"><span class="elStDot"></span>${esc(s.label)} <small>${esc(word[s.state] || s.state)}${s.state === "done" && s.count != null ? ` · ${s.count}` : ""}${s.detail && s.state !== "failed" ? ` · ${esc(s.detail)}` : ""}</small></li>`).join("")}</ol>`;
+  }
+
+  function officialsPanel(busy = false) {
     const scope = scopeOf(), d = S.off[scope];
-    const head = (t) => `<div class="elPanelBar"><h3>In office now</h3>${t ? `<span class="fine">${esc(t)}</span>` : ""}</div>`;
+    const head = (t) => `<div class="elPanelBar"><h3>In office now</h3><span class="elBarRight">${t ? `<span class="fine">${esc(t)}</span>` : ""}${scope ? refreshBtn("officials", busy || d?.pending) : ""}</span></div>`;
     if (!scope) return head("") + `<p class="fine">Pick an election to see who governs there.</p>`;
-    if (!d || (d.pending && !d.people?.length)) return head("") + `<p class="fine elWait">Looking up current office-holders on Wikidata…</p>`;
-    const kind = d.kind || (scope === "IN" ? "national" : scope.split(":")[0]);
+    if (!d || busy) return head(d?.title || "") + `<p class="fine elWait">Fetching current office-holders…</p>${stepsList(d?.steps)}`;
     const people = d.people || [];
     let last = "", rows = "";
     for (const p of people) {
-      const g = groupOf(p, kind);
+      const g = p.group || "Other offices";
       if (g !== last) { rows += `<li class="elTlGroup">${esc(g)}</li>`; last = g; }
-      const ph = p.photo?.src ? `<img src="${esc(p.photo.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'elAv',textContent:'${esc(initials(p.name))}'}))">` : `<span class="elAv">${esc(initials(p.name))}</span>`;
+      const ph = p.photo?.src ? `<img src="${esc(p.photo.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-el-initials="${esc(initials(p.name))}">` : `<span class="elAv">${esc(initials(p.name))}</span>`;
       const party = p.apolitical ? `<span class="elTag">Non-party office</span>` : p.party ? `<span class="elTag"><span class="elSw" style="background:${esc(p.party_color || "#8A96A3")}"></span>${esc(p.party)}</span>` : "";
       const links = (p.contacts || []).map((c) => `<a href="${esc(c.url)}" ${c.url.startsWith("http") ? 'target="_blank" rel="noopener noreferrer"' : ""}>${esc(c.label)}</a>`);
       if (p.wikipedia) links.push(`<a href="${esc(p.wikipedia)}" target="_blank" rel="noopener noreferrer">Wikipedia</a>`);
-      const credit = p.photo?.credit ? `<a href="${esc(p.photo.credit)}" target="_blank" rel="noopener noreferrer">${esc(p.photo.credit_label || "Photo: Wikimedia Commons")}</a>` : "";
+      const credit = p.photo?.credit ? `<a href="${esc(p.photo.credit)}" target="_blank" rel="noopener noreferrer">${esc(p.photo.credit_label || "Photo: Wikimedia")}</a>` : "";
       const src = p.source_url ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener noreferrer">${esc(p.source || "Source")}</a>` : esc(p.source || "");
+      const ports = (p.portfolios || []).filter((x) => x !== p.position);
       rows += `<li class="elTlItem"><div class="elPhoto">${ph}</div><div class="elWho"><b>${esc(p.name)}</b><span class="elPos">${esc(p.position)}</span>
+        ${ports.length ? `<span class="elPorts">Also ${esc(ports.slice(0, 4).join("; "))}${ports.length > 4 ? ` and ${ports.length - 4} more` : ""}</span>` : ""}
         <div class="elMeta">${party}${p.since ? `<span>Since ${esc(longDate(p.since))}</span>` : ""}</div>
         ${p.note ? `<p class="fine">${esc(p.note)}</p>` : ""}
         ${links.length ? `<div class="elLinks">${links.join("")}</div>` : ""}
         <div class="elCred">${[src, credit].filter(Boolean).join(" · ")}</div></div></li>`;
     }
-    const offline = d.live_error || d.error;
-    const empty = !people.length && !d.note ? `<p class="fine">${offline ? "Wikidata could not be reached, and Sanjaya's own file has no entry for this place yet. Sanjaya tries again in a minute." : "Wikidata lists no current office-holders for this place yet."}</p>` : "";
-    return head(d.title || "") + (d.note ? `<p class="elOffNote">${esc(d.note)}</p>` : "") + empty +
+    const offline = d.live_error || (d.error && !people.length);
+    const empty = !people.length && !d.note && !d.pending ? `<p class="fine">${offline ? "Wikipedia and Wikidata could not be reached, and Sanjaya's own file has no entry for this place yet. Sanjaya tries again in a minute, or press Refresh." : "No current office-holders were found for this place."}</p>` : "";
+    const progress = d.pending ? `<p class="fine elWait">${people.length ? "Still fetching; the list fills in as sources answer." : "Fetching current office-holders…"}</p>${stepsList(d.steps)}` : "";
+    const partial = !d.pending && (d.partial_sources || []).length && people.length ? ` · ${esc(d.partial_sources.join(" and "))} unreachable this time` : "";
+    return head(d.title || "") + (d.note ? `<p class="elOffNote">${esc(d.note)}</p>` : "") + progress + empty +
       (people.length ? `<ol class="elTimeline">${rows}</ol>` : "") +
-      `<p class="fine elOffFoot">${d.portal ? `<a href="${esc(d.portal.url)}" target="_blank" rel="noopener noreferrer">${esc(d.portal.label)}</a> · ` : ""}${d.as_of ? `Checked ${esc(longDate(d.as_of.slice(0, 10)))}` : "Not checked yet"}${d.live_error && people.length ? " · Wikidata unreachable, showing Sanjaya's reviewed file" : ""}. Official contacts only.</p>`;
+      `<p class="fine elOffFoot">${d.portal ? `<a href="${esc(d.portal.url)}" target="_blank" rel="noopener noreferrer">${esc(d.portal.label)}</a> · ` : ""}${d.as_of ? `Checked ${esc(longDate(d.as_of.slice(0, 10)))}` : "Not checked yet"} · ${people.length} listed${partial}. Official contacts only.</p>`;
   }
 
-  function forecastPanel() {
+  function rangeBars(list, total, maj) {
+    const x = (v) => (100 * v) / total;
+    return `<ol class="elRanges" style="--maj:${x(maj)}%">${list.filter((g) => g.hi > 0).map((g) => `<li class="elRange"><span class="elRgName" title="${esc(g.name || g.code)}">${esc(g.code === "OTH" ? "Others" : g.code)}</span>
+        <span class="elRgTrack"><span class="elRgBar" style="left:${x(g.lo)}%;width:${Math.max(0.6, x(g.hi - g.lo))}%;background:${esc(g.color || "#8A96A3")}"></span><span class="elRgMid" style="left:${x(g.median)}%"></span></span>
+        <span class="elRgNum">${g.lo}–${g.hi}</span></li>`).join("")}</ol>`;
+  }
+
+  function forecastPanel(busy = false) {
     const r = S.res;
-    const head = (sub) => `<div class="elPanelBar"><h3>Next election</h3>${sub ? `<span class="fine">${esc(sub)}</span>` : ""}</div>`;
-    if (!r) return head("");
-    if (r.kind === "MC") return head("") + `<p class="fine">No forecast for municipal corporations: ward boundaries change between polls, so there is no seat history to learn from.</p>`;
-    const d = S.fc[fcKey()];
+    const fk = fcKey();
+    const head = (sub, btn = true) => `<div class="elPanelBar"><h3>Next election</h3><span class="elBarRight">${sub ? `<span class="fine">${esc(sub)}</span>` : ""}${btn ? refreshBtn("forecast", busy || S.fc[fk]?.updating || S.pu[fk]?.updating, "Recompute") : ""}</span></div>`;
+    if (!r) return head("", false);
+    if (r.kind === "MC") return head("", false) + `<p class="fine">No forecast for municipal corporations: ward boundaries change between polls, so there is no seat history to learn from.</p>`;
+    const d = S.fc[fk];
     if (!d) return head("") + `<p class="fine elWait">Checking…</p>`;
     const when = d.expected ? `Expected around ${longDate(d.expected)}` : "";
     const foot = `<details class="elMethod"><summary>How this works</summary><p class="fine">${esc(d.method || "")}</p></details><p class="fine elDisc">${esc(d.disclaimer || "")}</p>`;
+    const working = d.updating ? `<p class="fine elWait">Retraining: ${esc(d.step || "")}</p>` : "";
     if (d.status !== "ready") {
       const away = d.months_away != null && d.months_away > 0 ? `<div class="elAway"><b>${d.months_away}</b><span>months to go</span></div>` : "";
       const step = d.status === "computing" ? `<p class="fine elWait">${esc(d.error ? "The model could not be trained: " + d.error : d.step || "")}</p>` : "";
-      return head(when) + `<div class="elWaitBox">${away}<p>${esc(d.message || "")}</p></div>${step}${foot}`;
+      return head(when) + `<div class="elWaitBox">${away}<p>${esc(d.message || "")}</p></div>${step}${working}${pulseBlock(S.pu[fk])}${foot}`;
     }
     const bt = d.backtest || {}, tr = d.trust || {};
-    const total = d.seats_total, maj = d.majority;
-    const x = (v) => (100 * v) / total;
-    const bars = d.ranges.filter((g) => g.hi > 0).map((g) => `<li class="elRange"><span class="elRgName" title="${esc(g.name || g.code)}">${esc(g.code === "OTH" ? "Others" : g.code)}</span>
-        <span class="elRgTrack"><span class="elRgBar" style="left:${x(g.lo)}%;width:${Math.max(0.6, x(g.hi - g.lo))}%;background:${esc(g.color || "#8A96A3")}"></span><span class="elRgMid" style="left:${x(g.median)}%"></span></span>
-        <span class="elRgNum">${g.lo}–${g.hi}</span></li>`).join("");
-    const pctS = (v) => (v == null ? "–" : `${Math.round(v * 100)}%`);
-    return head(when) + `<div class="elTrust elTrust${esc(tr.label || "Low")}"><b>${esc(tr.label || "Low")} trust</b><span>In a backtest on ${bt.elections} assembly elections (${esc(bt.years || "")}), the model picked the right party in ${pctS(bt.call_accuracy)} of seats; simply keeping every seat with its last winner gets ${pctS(bt.baseline_accuracy)}. Actual seat totals fell inside its ranges ${pctS(bt.coverage)} of the time.${tr.state_call_accuracy != null ? ` In ${esc(stateLabel(r.state))} alone: ${pctS(tr.state_call_accuracy)} of seats.` : ""}</span></div>
-      <p class="elRgCap">Seat range for each party, 10th to 90th percentile. The tick is the middle of the simulations; the line is the majority mark, ${maj} of ${total}.</p>
-      <ol class="elRanges" style="--maj:${x(maj)}%">${bars}</ol>
+    return head(when) + working + `<div class="elTrust elTrust${esc(tr.label || "Low")}"><b>${esc(tr.label || "Low")} trust</b><span>In a backtest on ${bt.elections} assembly elections (${esc(bt.years || "")}), the model picked the right party in ${pctS(bt.call_accuracy)} of seats; simply keeping every seat with its last winner gets ${pctS(bt.baseline_accuracy)}. Actual seat totals fell inside its ranges ${pctS(bt.coverage)} of the time.${tr.state_call_accuracy != null ? ` In ${esc(stateLabel(r.state))} alone: ${pctS(tr.state_call_accuracy)} of seats.` : ""}</span></div>
+      <p class="elRgCap">Seat range for each party, 10th to 90th percentile. The tick is the middle of the simulations; the line is the majority mark, ${d.majority} of ${d.seats_total}.</p>
+      ${rangeBars(d.ranges, d.seats_total, d.majority)}
       <p class="fine">Based on the ${esc((d.previous_two || []).map((x) => x.split("-").pop()).join(" and "))} assembly results${d.lok_sabha_trend ? ` and the ${esc(d.lok_sabha_trend)} Lok Sabha swing` : ""}. Model, not a poll. Alliances are not merged until they are announced.</p>${foot}`;
+  }
+
+  const VAR_LABEL = { between: "Which hypothesis holds", state: "State-wide swing we can't see yet", drift: "Months left until the poll", seat: "Seat-by-seat local factors" };
+  function pulseBlock(p) {
+    if (!p) return `<div class="elPulse"><p class="fine elWait">Reading today's signals…</p></div>`;
+    if (p.status === "computing") return `<div class="elPulse"><h4>Pulse</h4><p class="fine elWait">${esc(p.error ? "The pulse could not be computed: " + p.error : p.message || "")} ${esc(p.step || "")}</p></div>`;
+    if (p.status !== "ready") return p.message ? `<div class="elPulse"><h4>Pulse</h4><p class="fine">${esc(p.message)}</p></div>` : "";
+    const bt = p.backtest || {}, sig = p.significance || {}, sg = p.signals || {};
+    const lead = p.ranges.filter((r) => r.code !== "OTH" && r.variance).slice(0, 3);
+    const comps = ["between", "state", "drift", "seat"];
+    const varRows = lead.map((r) => `<li><span class="elRgName">${esc(r.code)}</span><span class="elVarBar">${comps.filter((k) => (r.variance[k] || 0) >= 0.005).map((k) => `<span class="elVar elVar_${k}" style="width:${(100 * r.variance[k]).toFixed(1)}%" title="${esc(VAR_LABEL[k])}: ${pctS(r.variance[k])}"></span>`).join("")}</span><span class="elRgNum">± ${r.sd ?? "–"}</span></li>`).join("");
+    const shown = comps.filter((k) => lead.some((r) => (r.variance[k] || 0) >= 0.05));
+    const legend = shown.map((k) => `<span><i class="elVar_${k}"></i>${esc(VAR_LABEL[k])}</span>`).join("");
+    const hyp = p.hypotheses || [];
+    const codes = (hyp[0]?.medians || []).map((m) => m.code);
+    const table = `<table class="elTable elHyp"><thead><tr><th>Hypothesis</th>${codes.map((c) => `<th class="num">${esc(c)}</th>`).join("")}<th class="num">Weight</th><th class="num">Backtest</th></tr></thead><tbody>${hyp.map((h) => `<tr><td><b>${esc(h.id)}</b> ${esc(h.name)}<small>${esc(h.about)}</small></td>${codes.map((c) => `<td class="num">${h.medians.find((m) => m.code === c)?.median ?? "–"}</td>`).join("")}<td class="num">${pctS(h.weight)}</td><td class="num">${h.id === "H4" ? "seat model" : h.id === "H5" ? "untested" : pctS((bt.per_hypothesis || {})[h.id])}</td></tr>`).join("")}</tbody></table>`;
+    const leadName = lead[0]?.code || "";
+    const verdict = sig.significant
+      ? `Which hypothesis you believe matters: it accounts for up to ${pctS(sig.between_share)} of the spread for the leading parties, and the hypotheses' middles differ by up to ${sig.max_shift} seats. Read the table, not just the pooled range.`
+      : `The hypotheses broadly agree (the choice between them explains under ${pctS(sig.threshold || 0.1)} of the spread). Most of the uncertainty is ${lead[0] && lead[0].variance.drift > lead[0].variance.state ? "the time left until the poll" : "state-wide swing that today's signals can't see"}.`;
+    const cov = sg.coverage || {};
+    const covText = Object.keys(cov).length ? Object.entries(cov).map(([k, v]) => `${k} ${v.delta > 0 ? "+" : ""}${v.delta.toFixed(2)} (${v.recent} articles)`).join(", ") : "";
+    const signals = [sg.mood_elections != null ? `${sg.mood_elections} elections held elsewhere since the last poll` : "", sg.lok_sabha ? `the ${sg.lok_sabha} Lok Sabha vote here` : "", sg.states_with_own_swing != null ? `${sg.states_with_own_swing} states' assembly swings since ${String(sg.base || "").replace("GE-", "")}` : "", sg.term_elapsed != null ? `${Math.round(sg.term_elapsed * 100)}% of the term gone` : ""].filter(Boolean).join("; ");
+    return `<div class="elPulse"><div class="elPulseHead"><h4>Pulse: where today's signals point</h4><span class="fine">${p.months_left} months out</span></div>
+      <div class="elTrust elTrust${esc(p.trust?.label || "Low")}"><b>${esc(p.trust?.label || "Low")} trust</b><span>Pulses taken a year before ${bt.elections} past state elections picked the right party in ${pctS(bt.call_accuracy)} of seats; seat totals fell inside the ranges ${pctS(bt.coverage)} of the time. ${esc(p.trust?.note || "")}</span></div>
+      <p class="elRgCap">Pooled seat range across the hypotheses, 10th to 90th percentile, with drift for the months left. Majority: ${p.majority} of ${p.seats_total}.</p>
+      ${rangeBars(p.ranges, p.seats_total, p.majority)}
+      <h5>Under which hypothesis</h5>${table}
+      <h5>Where the uncertainty comes from</h5>
+      <ol class="elVarList">${varRows}</ol><div class="elVarLegend">${legend}</div>
+      <p class="fine">${esc(verdict)}</p>
+      <p class="fine">Signals: ${esc(signals)}.${sg.coverage_used ? ` Coverage tone change, last 30 days against the five months before: ${esc(covText)}.` : ` Coverage tone (H5) is left out: Sanjaya's archive has fewer than 25 recent articles that mention one party ${p.state ? "and this state" : ""}.`}</p>
+    </div>`;
   }
 
   function blocList(r) {
@@ -537,6 +589,8 @@ window.ATLASElections = (() => {
 
   document.addEventListener("click", (e) => {
     if (!document.querySelector(".elPage")) return;
+    const rb = e.target.closest("[data-el-refresh]");
+    if (rb && document.querySelector(".elPage")) { rb.disabled = true; loadGov(rb.dataset.elRefresh); return; }
     const t = e.target.closest("[data-el-country],[data-el-level],[data-el-id],[data-el-group],[data-el-mapmode],[data-el-color],[data-el-party],[data-el-seat],[data-el-pick],[data-el-clear],#elDownload");
     if (!t) return;
     const d = t.dataset;
@@ -559,6 +613,13 @@ window.ATLASElections = (() => {
       A().api("/api/elections/download", "POST", {}).then(loadCatalog).catch((err) => { S.error = err.message; draw(); });
     }
   });
+  // A portrait that fails to load becomes initials.
+  document.addEventListener("error", (e) => {
+    const im = e.target;
+    if (im && im.tagName === "IMG" && im.dataset && im.dataset.elInitials !== undefined) {
+      const sp = document.createElement("span"); sp.className = "elAv"; sp.textContent = im.dataset.elInitials; im.replaceWith(sp);
+    }
+  }, true);
   document.addEventListener("change", (e) => {
     if (e.target.id === "elState") { S.state = e.target.value; remember(); choose(); }
   });
